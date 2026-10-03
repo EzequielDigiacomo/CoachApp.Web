@@ -1,0 +1,1353 @@
+:root {
+  --fondo: #f6f7f9;
+  --superficie: #ffffff;
+  --borde: #d9dde3;
+  --texto: #1c1f24;
+  --texto-suave: #6b7280;
+  --acento: #2563eb;
+  --error: #b42318;
+  --radio: 8px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 20px;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+/* ---------- Login ---------- */
+
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+.login-tarjeta {
+  width: 100%;
+  max-width: 340px;
+  display: grid;
+  gap: 12px;
+}
+
+/* ---------- Marco ---------- */
+
+.app {
+  min-height: 100dvh;
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+}
+
+.marca {
+  font-weight: 600;
+}
+
+.barra-nav {
+  display: flex;
+  gap: 14px;
+}
+
+.barra-nav a {
+  color: var(--texto-suave);
+  text-decoration: none;
+}
+
+.barra-nav a:hover {
+  color: var(--acento);
+}
+
+.barra-usuario {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.usuario {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.rol {
+  color: var(--texto-suave);
+}
+
+.contenido {
+  padding: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pagina {
+  display: grid;
+  gap: 14px;
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---------- Superficies ---------- */
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+}
+
+.sin-relleno {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.formulario {
+  display: grid;
+  gap: 14px;
+}
+
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+input {
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+}
+
+input:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: -1px;
+}
+
+.busqueda {
+  max-width: 340px;
+}
+
+/* ---------- Botones ---------- */
+
+.boton {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--acento);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.boton-fantasma {
+  padding: 6px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  cursor: pointer;
+}
+
+.boton-fantasma:hover {
+  color: var(--texto);
+  border-color: var(--texto-suave);
+}
+
+/* ---------- Tabla ---------- */
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texto-suave);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--borde);
+  vertical-align: top;
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.derecha {
+  text-align: right;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Varios ---------- */
+
+.etiqueta {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+}
+
+.sutil {
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.bloque {
+  display: block;
+}
+
+.error {
+  margin: 0;
+  color: var(--error);
+  font-size: 13px;
+}
+
+/* ---------- Agenda de entrenamientos ---------- */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.filtros label {
+  min-width: 140px;
+}
+
+.agenda {
+  display: grid;
+  gap: 20px;
+}
+
+.titulo-dia {
+  margin: 0 0 8px;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.titulo-dia.pasado {
+  color: var(--texto-suave);
+}
+
+.sesiones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.sesion {
+  display: grid;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sesion:hover {
+  border-color: var(--acento);
+}
+
+.sesion p {
+  margin: 0;
+}
+
+.sesion-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.etiqueta-sesion {
+  font-weight: 600;
+}
+
+.turno {
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.sesion-pie {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.volver {
+  color: var(--texto-suave);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.volver:hover {
+  color: var(--acento);
+}
+
+.cabecera-sesion {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cabecera-sesion p {
+  margin: 4px 0 0;
+}
+
+.titulo-seccion {
+  margin: 0;
+  font-size: 16px;
+}
+
+select {
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+}
+
+.lista-disponibles {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.lista-disponibles li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+}
+
+.asistencia {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--texto-suave);
+  color: var(--texto);
+}
+
+.chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.chip.activo-presente {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #166534;
+}
+
+.chip.activo-ausente {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+.peligro:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* ---------- Trabajos del atleta ---------- */
+
+.fila-clicable {
+  cursor: pointer;
+}
+
+.fila-clicable:hover {
+  background: var(--superficie);
+}
+
+.acciones-fila {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(15 23 42 / 55%);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  background: var(--fondo);
+  border-radius: 10px;
+  box-shadow: 0 18px 45px rgb(15 23 42 / 30%);
+}
+
+.modal-cabecera {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.modal-cabecera h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.modal-cabecera p {
+  margin: 4px 0 0;
+}
+
+.modal-cuerpo {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.trabajos {
+  display: grid;
+  gap: 12px;
+}
+
+/* Tres botones, uno por tipo de trabajo. */
+.acciones-trabajo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+
+.boton-tipo {
+  flex: 1 1 auto;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radio);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.boton-tipo:hover {
+  filter: brightness(1.08);
+}
+
+.etiqueta-tipo {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Un color por lugar: gimnasio, tierra y agua. */
+.tipo-gimnasio {
+  background: #6d28d9;
+}
+
+.tipo-tierra {
+  background: #15803d;
+}
+
+.tipo-agua {
+  background: #0369a1;
+}
+
+.trabajo {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.trabajo p {
+  margin: 0;
+}
+
+.trabajo-cabecera {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trabajo-acciones {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla-parciales {
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-parciales th:first-child,
+.tabla-parciales th:nth-child(2),
+.tabla-parciales th:nth-child(3) {
+  width: 33%;
+}
+
+/* Con paladas la distancia se pega al numero para dejarle lugar a las ppm:
+   # | Distancia | Ppm | Tiempo | Dif. */
+.tabla-parciales.con-paladas th:first-child {
+  width: 34px;
+}
+
+.tabla-parciales.con-paladas th:nth-child(2) {
+  width: 88px;
+}
+
+.tabla-parciales.con-paladas th:nth-child(3) {
+  width: 34%;
+}
+
+.tabla-parciales.con-paladas th:nth-child(4) {
+  width: 88px;
+}
+
+.tabla-parciales.con-paladas th:nth-child(5) {
+  width: 64px;
+}
+
+/* Las muestras de un tramo, apiladas: puede haber mas de una en el mismo parcial. */
+.paladas {
+  display: grid;
+  gap: 2px;
+}
+
+.palada {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.palada strong {
+  font-weight: 600;
+}
+
+.palada small {
+  font-size: 11px;
+}
+
+/* ---------- Gimnasio: ejercicios y series ---------- */
+
+.ejercicios {
+  display: grid;
+  gap: 14px;
+}
+
+.ejercicio-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.ejercicio-bloque {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.ejercicio-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ejercicio-nombre {
+  flex: 1;
+}
+
+.series-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.series-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serie-campo {
+  width: 84px;
+}
+
+.tabla-series th:first-child,
+.tabla-series td:first-child {
+  width: 36px;
+}
+
+.trabajo-form {
+  display: grid;
+  gap: 14px;
+}
+
+.trabajo-form h4 {
+  margin: 0;
+}
+
+.parciales {
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.parciales-cabecera {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.parciales-cabecera h5 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.parciales-cabecera p {
+  margin: 2px 0 0;
+}
+
+.parciales-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.parciales-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Numero del parcial: es el orden en que se tomo con el cronometro. */
+.parcial-numero {
+  min-width: 22px;
+  text-align: right;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.parcial-distancia {
+  width: 110px;
+}
+
+.parcial-tiempo {
+  width: 110px;
+}
+
+.parcial-dif {
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Paladas por minuto: filas de tiempo + ppm con su destino calculado. */
+.paladas-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.paladas-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.palada-tiempo {
+  width: 110px;
+}
+
+.palada-ppm {
+  width: 84px;
+}
+
+/* A que parcial va a caer la muestra; se recalcula mientras se escribe. */
+.palada-destino {
+  min-width: 150px;
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+/* Se pasa de la ultima marca: se avisa antes de guardar. */
+.palada-destino.aviso {
+  color: var(--error);
+}
+
+.form-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- Grafico de paladas ---------- */
+
+.grafico {
+  position: relative;
+  width: 100%;
+}
+
+/* Cartel que aparece al pararse sobre la linea de un parcial. */
+.parcial-cartel {
+  position: absolute;
+  top: 4px;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-left: 3px solid #1c1f24;
+  border-radius: var(--radio);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 12%);
+  font-size: 12px;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.parcial-cartel strong {
+  font-size: 13px;
+  color: var(--texto);
+}
+
+.parcial-cartel b {
+  color: var(--texto);
+}
+
+/* El tooltip de recharts lo dibuja el componente, asi que se estila aca. */
+.grafico-tooltip {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 12%);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grafico-tooltip strong {
+  font-size: 13px;
+}
+
+/* Leyenda propia del grafico: linea de ppm y las dos verticales. */
+.grafico-leyenda {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.grafico-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Muestra de color: replica el trazo que representa cada item. */
+.grafico-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-top-width: 2px;
+}
+
+.swatch-ppm {
+  border-top-style: solid;
+  border-top-color: #2563eb;
+}
+
+.swatch-muestra {
+  border-top-style: dotted;
+  border-top-color: #2563eb;
+  opacity: 0.7;
+}
+
+.swatch-parcial {
+  border-top-style: dashed;
+  border-top-color: #94a3b8;
+}
+
+.grafico-pie {
+  margin: 12px 0 0;
+}
+
+.grafico-vacio {
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* ---------- Anotaciones ---------- */
+
+textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  resize: vertical;
+}
+
+textarea:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: -1px;
+}
+
+/* Modal chico, para el que se abre por delante de otro. */
+.modal-fondo.apilado {
+  z-index: 60;
+}
+
+.modal.modal-chico {
+  max-width: 460px;
+}
+
+/* El modal ancho: para la tabla de una planilla, que tiene columnas de sobra. */
+.modal.modal-grande {
+  max-width: 1080px;
+}
+
+.nota-form {
+  display: grid;
+  gap: 12px;
+}
+
+.notas {
+  margin-top: 16px;
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.notas h4 {
+  margin: 0;
+}
+
+.notas-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+/* En la vista de anotaciones la lista puede ser mas ancha. */
+.notas-lista.ancho {
+  max-width: none;
+}
+
+.nota {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.nota.chica {
+  padding: 8px 10px;
+  background: var(--fondo);
+}
+
+.nota-cabecera {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nota-acciones {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* El texto se escribe a mano: se respetan los saltos de linea. */
+.nota-texto {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Las direcciones dentro de una nota se abren en otra pestaña. */
+.enlace {
+  color: var(--acento);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  /* Una direccion larga no debe desbordar la tarjeta. */
+  overflow-wrap: anywhere;
+}
+
+.enlace:hover {
+  color: #1d4ed8;
+}
+
+.contexto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.etiqueta-contexto {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+}
+
+/* Las notas de un trabajo, dentro de su tarjeta del historial. */
+.notas-trabajo {
+  border-top: 1px dashed var(--borde);
+  padding-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.notas-trabajo h6 {
+  margin: 0;
+  font-size: 13px;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Historial del atleta ---------- */
+
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.dato {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 10px 12px;
+  display: grid;
+  gap: 2px;
+}
+
+.dato-valor {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Un Link con el aspecto de boton. */
+.enlace {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--texto);
+}
+
+.casilla input {
+  padding: 0;
+}
+
+.inactivo td {
+  opacity: 0.6;
+}
+
+.etiqueta.baja {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ---------- Celular ---------- */
+
+@media (max-width: 640px) {
+  .barra {
+    gap: 10px;
+  }
+
+  .barra-usuario .rol,
+  .usuario {
+    display: none;
+  }
+
+  .busqueda {
+    max-width: none;
+  }
+
+  .filtros label {
+    min-width: 0;
+    flex: 1 1 130px;
+  }
+
+  .sesiones {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-fondo {
+    padding: 0;
+  }
+
+  .modal {
+    max-width: none;
+    max-height: 100vh;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .parciales-lista li {
+    display: grid;
+    grid-template-columns: 22px 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .parcial-distancia,
+  .parcial-tiempo {
+    width: 100%;
+  }
+
+  /* La diferencia y el boton bajan a un segundo renglon. */
+  .parcial-dif {
+    grid-column: 2 / span 1;
+    min-width: 0;
+  }
+
+  .parciales-lista li .boton-fantasma {
+    grid-column: 3 / -1;
+  }
+
+  .paladas-lista li {
+    display: grid;
+    grid-template-columns: 22px 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .palada-tiempo,
+  .palada-ppm {
+    width: 100%;
+  }
+
+  /* El destino y el boton bajan a un segundo renglon. */
+  .palada-destino {
+    grid-column: 2 / span 2;
+    min-width: 0;
+  }
+
+  .paladas-lista li .boton-fantasma {
+    grid-column: 2 / -1;
+  }
+
+  /* El modal de anotaciones no necesita ocupar toda la pantalla. */
+  .modal.modal-chico {
+    height: auto;
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+
+  /* En gimnasio se apilan el encabezado del ejercicio y las series. */
+  .ejercicio-cabecera {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 8px;
+  }
+
+  .series-lista li {
+    display: grid;
+    grid-template-columns: 22px 1fr 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .serie-campo {
+    width: 100%;
+  }
+
+  .series-lista li .boton-fantasma {
+    grid-column: 2 / -1;
+  }
+}
+
+/* ---------- Importar desde una planilla de Google Sheets ---------- */
+
+/* La descripcion es el unico campo que ademas se puede traer de una planilla. */
+.campo-descripcion {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.campo-descripcion label {
+  width: 100%;
+}
+
+.planilla-form {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-bottom: 14px;
+}
+
+.planilla-form label {
+  width: 100%;
+}
+
+/* ---------- Paso a paso del modal de la planilla ---------- */
+
+.planilla-paso {
+  display: grid;
+  gap: 6px;
+}
+
+.planilla-paso + .planilla-paso {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+.planilla-paso h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.planilla-paso-numero {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--texto);
+  color: var(--fondo);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.planilla-paso .planilla-form {
+  margin: 6px 0 0;
+}
+
+.planilla-paso p {
+  margin: 0;
+}
+
+/* El selector de pestañas: es la lista de todo el libro. */
+.planilla-pestana {
+  margin: 6px 0;
+}
+
+.planilla-pestana select {
+  width: 100%;
+}
+
+/* El error del paso a paso va entre medio, con aire propio. */
+.planilla-error {
+  margin: 12px 0 0;
+}
+
+/* La referencia del recuadro que se esta viendo, por ejemplo B7:E49. */
+.planilla-encuadre {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto);
+}
+
+.planilla-ayuda {
+  margin: 0 0 10px;
+}
+
+.planilla-tabla {
+  max-height: 55vh;
+  overflow: auto;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+
+/* El encabezado queda fijo mientras se recorre una planilla larga. */
+.planilla-tabla .tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--fondo);
+}
+
+/* Celdas ajustadas: el boton que se toca ocupa casi toda la celda. */
+.planilla-tabla .tabla th,
+.planilla-tabla .tabla td {
+  padding: 4px 6px;
+}
+
+/* Las filas alternas se tiñen apenas, para seguir una descripcion larga. */
+.planilla-tabla .tabla tbody tr:nth-child(even) {
+  background: rgb(15 23 42 / 3%);
+}
+
+.planilla-tabla .tabla tbody tr:hover {
+  background: rgb(15 23 42 / 7%);
+}
+
+.planilla-numero {
+  width: 38px;
+  color: var(--texto-suave);
+}
+
+/* La celda entera es el boton: se ve el texto exacto y se toca para elegirlo. */
+.planilla-celda {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  /* Las descripciones pueden traer varios renglones: se respetan. */
+  white-space: pre-wrap;
+  cursor: pointer;
+}
+
+.planilla-celda:hover:not(:disabled) {
+  border-color: var(--texto-suave);
+  background: rgb(15 23 42 / 5%);
+}
+
+.planilla-celda:disabled {
+  cursor: default;
+  opacity: 0.45;
+}

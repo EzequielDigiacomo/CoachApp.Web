@@ -1,0 +1,39 @@
+---
+description: No ejecutar la API por detras; levantarla siempre desde Visual Studio
+alwaysApply: true
+---
+
+# Ejecucion de la API
+
+El usuario maneja la API .NET desde Visual Studio. **Nunca** levantarla en segundo
+plano: ni `dotnet run`, ni `dotnet watch`, ni `Start-Process`, ni redirecciones
+que dejen el proceso vivo.
+
+## Por que
+
+Una instancia viva bloquea los `.dll` de `bin\Debug\net10.0` del backend y Visual
+Studio no puede recompilar:
+
+```
+error MSB3021: No se puede copiar "...\AccesoDatos.dll" en "bin\Debug\net10.0\AccesoDatos.dll".
+The process cannot access the file ... because it is being used by another process.
+El archivo se ha bloqueado por: "CoachApp (28544)"
+```
+
+Es un error que confunde: parece de compilacion pero es solo el archivo tomado
+por el proceso en ejecucion.
+
+## Reglas
+
+- Para probar la API (proxy `/api` de Vite -> `http://127.0.0.1:5203`), pedirle al
+  usuario que la inicie desde Visual Studio. No arrancarla por detras.
+- Si hace falta compilar para verificar codigo, usar una carpeta de salida temporal
+  para no tocar `bin`:
+
+  ```powershell
+  dotnet build CoachApp/CoachApp.csproj -o "$env:TEMP/coachapp-build-check"
+  ```
+
+- Antes de reportar un error de compilacion, descartar el lock: revisar procesos
+  `CoachApp` y el puerto 5203.
+- Si quedo un proceso propio colgado, avisar y detenerlo solo con el OK del usuario.
