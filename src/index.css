@@ -254,6 +254,7 @@ input:focus-visible {
   background: #fef3c7;
   color: #92400e;
   font-size: 11px;
+  white-space: nowrap;
 }
 
 .sutil {
@@ -316,6 +317,23 @@ input:focus-visible {
   border-color: var(--acento);
 }
 
+button.sesion {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.sesion-fecha {
+  margin: 0;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.sesion-ir {
+  margin: 14px 0 0;
+}
+
 .sesion p {
   margin: 0;
 }
@@ -361,6 +379,29 @@ input:focus-visible {
 
 .cabecera-sesion p {
   margin: 4px 0 0;
+}
+
+.acciones-cabecera {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+a.boton-fantasma {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.enlace-texto {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--acento);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .titulo-seccion {

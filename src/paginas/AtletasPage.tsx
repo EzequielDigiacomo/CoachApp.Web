@@ -150,7 +150,11 @@ export function AtletasPage() {
                 <tr key={atleta.id} className={atleta.activo ? undefined : 'inactivo'}>
                   <td>
                     {atleta.apellido}, {atleta.nombre}
-                    {atleta.esMenor && <span className="etiqueta">menor</span>}
+                    {(atleta.categorias ?? []).map((categoria) => (
+                      <span className="etiqueta" key={categoria}>
+                        {categoria}
+                      </span>
+                    ))}
                     {!atleta.activo && <span className="etiqueta baja">baja</span>}
                   </td>
                   <td className="mono">{atleta.dni}</td>

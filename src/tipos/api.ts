@@ -35,7 +35,8 @@ export interface AtletaDto {
   apellido: string
   fechaNacimiento: string
   edad: number
-  esMenor: boolean
+  /** Puede faltar si la API en ejecucion es anterior a las categorias. */
+  categorias?: string[]
   club: string | null
   email: string | null
   dni: string
@@ -64,11 +65,14 @@ export interface AtletaEnEntrenamientoDto {
   apellido: string
   dni: string
   edad: number
-  esMenor: boolean
+  /** Puede faltar si la API en ejecucion es anterior a las categorias. */
+  categorias?: string[]
   /** null cuando todavia no se marco la asistencia. */
   asistio: boolean | null
   /** Cantidad de trabajos o controles cargados en la sesion. */
   cantidadTrabajos: number
+  /** Actividad de Garmin del dia, si el nombre coincidio con un amigo. */
+  garmin: ActividadGarminDto | null
 }
 
 export interface EntrenamientoDto {
@@ -85,6 +89,32 @@ export interface EntrenamientoDto {
   cantidadSinMarcar: number
   /** Vacio en el listado; completo en el detalle. */
   atletas: AtletaEnEntrenamientoDto[]
+}
+
+/** Actividad de un amigo de Garmin, el dia de la sesion. */
+export interface ActividadGarminDto {
+  actividadId: number
+  nombre: string
+  tipo: string | null
+  /** Hora local de inicio, "08:12". */
+  inicio: string | null
+  distanciaMetros: number | null
+  duracionSegundos: number | null
+  fcPromedio: number | null
+  fcMaxima: number | null
+  cadencia: number | null
+  calorias: number | null
+  url: string
+}
+
+export interface EstadoGarminDto {
+  vinculada: boolean
+  nombre: string | null
+}
+
+export interface SincronizacionGarminDto {
+  entrenamiento: EntrenamientoDto
+  avisos: string[]
 }
 
 export interface CrearEntrenamientoRequest {

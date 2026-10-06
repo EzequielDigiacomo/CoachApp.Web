@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { anotacionesApi, contextoAnotacion, fechaNota } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
-import { atletasApi, etiquetaTurno, trabajosApi } from '../api/entrenamientos'
+import { atletasApi, etiquetaTipoTrabajo, etiquetaTurno, trabajosApi } from '../api/entrenamientos'
+import { Modal } from '../componentes/Modal'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalGraficoTrabajo } from '../componentes/ModalGraficoTrabajo'
 import { TarjetaTrabajo } from '../componentes/TarjetaTrabajo'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import type { AnotacionDto, AtletaDto, TrabajoDto, Turno } from '../tipos/api'
-import { fechaNumerica } from '../util/fechas'
+import { fechaLarga, fechaNumerica } from '../util/fechas'
 
 /** Una sesion con todos los trabajos que hizo el atleta ese dia. */
 interface GrupoSesion {
@@ -33,6 +34,8 @@ export function AtletaHistorialPage() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mostrarNotas, setMostrarNotas] = useState(false)
+  /** Sesion cuyas grillas se estan viendo. */
+  const [sesionAbierta, setSesionAbierta] = useState<GrupoSesion | null>(null)
   /** Trabajo cuyo grafico de ppm y distancia se esta viendo. */
   const [trabajoParaGrafico, setTrabajoParaGrafico] = useState<TrabajoDto | null>(null)
 
@@ -131,7 +134,14 @@ export function AtletaHistorialPage() {
 
       <div className="encabezado">
         <div>
-          <h2>{atleta ? `${atleta.apellido}, ${atleta.nombre}` : 'Historial'}</h2>
+          <h2>
+            {atleta ? `${atleta.apellido}, ${atleta.nombre}` : 'Historial'}
+            {(atleta?.categorias ?? []).map((categoria) => (
+              <span className="etiqueta" key={categoria}>
+                {categoria}
+              </span>
+            ))}
+          </h2>
           {atleta && (
             <p className="sutil">
               DNI {atleta.dni} · {atleta.edad} años
@@ -162,31 +172,26 @@ export function AtletaHistorialPage() {
             <Dato titulo="Agua" valor={resumen.agua} />
           </div>
 
-          <div className="agenda">
+          <div className="sesiones">
             {grupos.map((grupo) => (
-              <section key={grupo.entrenamientoId}>
-                <h3 className="titulo-dia">
-                  {grupo.fecha ? fechaNumerica(grupo.fecha) : 'Sesión'}
-                  {grupo.turno && ` · ${etiquetaTurno(grupo.turno)}`}
-                  {grupo.sesion !== null && ` · Sesión ${grupo.sesion}`}
-                  {' · '}
-                  <Link className="volver" to={`/entrenamientos/${grupo.entrenamientoId}`}>
-                    ver sesión
-                  </Link>
-                </h3>
-
-                <div className="trabajos">
-                  {grupo.trabajos.map((trabajo) => (
-                    <TarjetaTrabajo
-                      trabajo={trabajo}
-                      key={trabajo.id}
-                      onGrafico={() => setTrabajoParaGrafico(trabajo)}
-                    >
-                      <NotasDelTrabajo notas={notasPorTrabajo.get(trabajo.id) ?? []} />
-                    </TarjetaTrabajo>
-                  ))}
+              <button
+                type="button"
+                className="tarjeta sesion"
+                key={grupo.entrenamientoId}
+                onClick={() => setSesionAbierta(grupo)}
+              >
+                <div>
+                  <p className="sesion-fecha">
+                    {grupo.fecha ? fechaLarga(grupo.fecha) : 'Sesión'}
+                  </p>
+                  <p className="sutil">
+                    {grupo.fecha && fechaNumerica(grupo.fecha)}
+                    {grupo.turno && ` · ${etiquetaTurno(grupo.turno)}`}
+                    {grupo.sesion !== null && ` · Sesión ${grupo.sesion}`}
+                  </p>
                 </div>
-              </section>
+                <span className="sutil">{resumenTrabajos(grupo)}</span>
+              </button>
             ))}
           </div>
         </>
@@ -228,6 +233,40 @@ export function AtletaHistorialPage() {
         </section>
       )}
 
+      {sesionAbierta && (
+        <Modal
+          titulo={sesionAbierta.fecha ? fechaLarga(sesionAbierta.fecha) : 'Sesión'}
+          subtitulo={[
+            sesionAbierta.fecha ? fechaNumerica(sesionAbierta.fecha) : null,
+            sesionAbierta.turno ? etiquetaTurno(sesionAbierta.turno) : null,
+            sesionAbierta.sesion !== null ? `Sesión ${sesionAbierta.sesion}` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          ancho="grande"
+          pausado={trabajoParaGrafico !== null}
+          onCerrar={() => {
+            setSesionAbierta(null)
+            setTrabajoParaGrafico(null)
+          }}
+        >
+          <div className="trabajos">
+            {sesionAbierta.trabajos.map((trabajo) => (
+              <TarjetaTrabajo
+                trabajo={trabajo}
+                key={trabajo.id}
+                onGrafico={() => setTrabajoParaGrafico(trabajo)}
+              >
+                <NotasDelTrabajo notas={notasPorTrabajo.get(trabajo.id) ?? []} />
+              </TarjetaTrabajo>
+            ))}
+          </div>
+          <p className="sutil sesion-ir">
+            <Link to={`/entrenamientos/${sesionAbierta.entrenamientoId}`}>Abrir la sesión</Link>
+          </p>
+        </Modal>
+      )}
+
       {mostrarNotas && atleta && (
         <ModalAnotaciones
           titulo="Anotaciones del atleta"
@@ -241,11 +280,26 @@ export function AtletaHistorialPage() {
       {trabajoParaGrafico && (
         <ModalGraficoTrabajo
           trabajo={trabajoParaGrafico}
+          apilado={sesionAbierta !== null}
           onCerrar={() => setTrabajoParaGrafico(null)}
         />
       )}
     </div>
   )
+}
+
+function resumenTrabajos(grupo: GrupoSesion): string {
+  const cantidad = grupo.trabajos.length
+  const partes = [`${cantidad} ${cantidad === 1 ? 'trabajo' : 'trabajos'}`]
+
+  for (const tipo of ['Agua', 'Tierra', 'Gimnasio'] as const) {
+    const delTipo = grupo.trabajos.filter((trabajo) => trabajo.tipo === tipo).length
+    if (delTipo > 0) {
+      partes.push(`${delTipo} ${etiquetaTipoTrabajo(tipo).toLowerCase()}`)
+    }
+  }
+
+  return partes.join(' · ')
 }
 
 function Dato({ titulo, valor }: { titulo: string; valor: number }) {
