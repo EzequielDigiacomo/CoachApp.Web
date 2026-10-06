@@ -5,6 +5,7 @@ import type {
   EntrenamientoDto,
   FiltrosEntrenamiento,
   GuardarTrabajoRequest,
+  SesionHistorialDto,
   TipoTrabajo,
   TrabajoDto,
   Turno,
@@ -78,6 +79,11 @@ export const trabajosApi = {
 
   /** Todos los trabajos del atleta en todas sus sesiones, del mas nuevo al mas viejo. */
   historial: (atletaId: number) => api.get<TrabajoDto[]>(`/api/atletas/${atletaId}/trabajos`),
+}
+
+/** Sesiones en las que el atleta estuvo presente o ausente. */
+export const asistenciaApi = {
+  historial: (atletaId: number) => api.get<SesionHistorialDto[]>(`/api/atletas/${atletaId}/sesiones`),
 }
 
 function rutaTrabajos(entrenamientoId: number, atletaId: number): string {

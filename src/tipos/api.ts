@@ -135,6 +135,14 @@ export interface CalendarioGarminDto {
   dias: DiaCalendarioGarminDto[]
 }
 
+export interface SesionHistorialDto {
+  entrenamientoId: number
+  fecha: string
+  turno: Turno
+  sesion: number
+  asistio: boolean
+}
+
 export interface CrearEntrenamientoRequest {
   fecha: string
   turno: Turno

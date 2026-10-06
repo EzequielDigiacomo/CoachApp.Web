@@ -1147,9 +1147,19 @@ textarea:focus-visible {
   opacity: 0.6;
 }
 
-.etiqueta.baja {
+.etiqueta.baja,
+.etiqueta.ausente {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.etiqueta.presente {
+  background: #dcfce7;
+  color: #166534;
+}
+
+button.sesion.ausente {
+  background: #fef2f2;
 }
 
 /* ---------- GarCalendar ---------- */

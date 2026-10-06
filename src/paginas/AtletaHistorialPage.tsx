@@ -2,21 +2,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { anotacionesApi, contextoAnotacion, fechaNota } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
-import { atletasApi, etiquetaTipoTrabajo, etiquetaTurno, trabajosApi } from '../api/entrenamientos'
+import { asistenciaApi, atletasApi, etiquetaTipoTrabajo, etiquetaTurno, trabajosApi } from '../api/entrenamientos'
 import { Modal } from '../componentes/Modal'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalGraficoTrabajo } from '../componentes/ModalGraficoTrabajo'
 import { TarjetaTrabajo } from '../componentes/TarjetaTrabajo'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
-import type { AnotacionDto, AtletaDto, TrabajoDto, Turno } from '../tipos/api'
+import type { AnotacionDto, AtletaDto, SesionHistorialDto, TrabajoDto, Turno } from '../tipos/api'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
 
-/** Una sesion con todos los trabajos que hizo el atleta ese dia. */
+/** Una sesion del historial. Presente y ausente entran aunque no haya trabajos. */
 interface GrupoSesion {
   entrenamientoId: number
   fecha: string | null
   turno: Turno | null
   sesion: number | null
+  /** null si la asistencia no se marco y la sesion entro por sus trabajos. */
+  asistio: boolean | null
   trabajos: TrabajoDto[]
 }
 
@@ -30,6 +32,7 @@ export function AtletaHistorialPage() {
 
   const [atleta, setAtleta] = useState<AtletaDto | null>(null)
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
+  const [asistencias, setAsistencias] = useState<SesionHistorialDto[]>([])
   const [notas, setNotas] = useState<AnotacionDto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,14 +53,16 @@ export function AtletaHistorialPage() {
     setError(null)
 
     try {
-      const [datosAtleta, historial, anotaciones] = await Promise.all([
+      const [datosAtleta, historial, sesiones, anotaciones] = await Promise.all([
         atletasApi.obtener(atletaId),
         trabajosApi.historial(atletaId),
+        asistenciaApi.historial(atletaId).catch(() => [] as SesionHistorialDto[]),
         anotacionesApi.listar({ atletaId }),
       ])
 
       setAtleta(datosAtleta)
       setTrabajos(historial)
+      setAsistencias(sesiones)
       setNotas(anotaciones)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar el historial.')
@@ -70,29 +75,7 @@ export function AtletaHistorialPage() {
     void cargar()
   }, [cargar])
 
-  // El backend devuelve los trabajos del mas nuevo al mas viejo, asi que las
-  // sesiones quedan contiguas y en orden: se agrupan de una sola pasada.
-  const grupos = useMemo(() => {
-    const armados: GrupoSesion[] = []
-
-    for (const trabajo of trabajos) {
-      const ultimo = armados[armados.length - 1]
-
-      if (ultimo && ultimo.entrenamientoId === trabajo.entrenamientoId) {
-        ultimo.trabajos.push(trabajo)
-      } else {
-        armados.push({
-          entrenamientoId: trabajo.entrenamientoId,
-          fecha: trabajo.entrenamientoFecha,
-          turno: trabajo.entrenamientoTurno,
-          sesion: trabajo.entrenamientoSesion,
-          trabajos: [trabajo],
-        })
-      }
-    }
-
-    return armados
-  }, [trabajos])
+  const grupos = useMemo(() => armarGrupos(asistencias, trabajos), [asistencias, trabajos])
 
   /** Las notas que cuelgan de cada trabajo, para mostrarlas dentro de su tarjeta. */
   const notasPorTrabajo = useMemo(() => {
@@ -117,9 +100,13 @@ export function AtletaHistorialPage() {
   const resumen = useMemo(() => {
     const contar = (tipo: TrabajoDto['tipo']) => trabajos.filter((t) => t.tipo === tipo).length
 
+    const presentes = grupos.filter((grupo) => grupo.asistio === true).length
+    const marcadas = grupos.filter((grupo) => grupo.asistio !== null).length
+
     return {
       total: trabajos.length,
-      sesiones: grupos.length,
+      presentes,
+      marcadas,
       gimnasio: contar('Gimnasio'),
       tierra: contar('Tierra'),
       agua: contar('Agua'),
@@ -160,13 +147,13 @@ export function AtletaHistorialPage() {
 
       {cargando ? (
         <p className="sutil">Cargando…</p>
-      ) : trabajos.length === 0 ? (
-        <p className="sutil">Este atleta todavía no tiene trabajos cargados.</p>
+      ) : grupos.length === 0 ? (
+        <p className="sutil">Este atleta todavía no tiene sesiones en el historial.</p>
       ) : (
         <>
           <div className="resumen">
             <Dato titulo="Trabajos" valor={resumen.total} />
-            <Dato titulo="Sesiones" valor={resumen.sesiones} />
+            <Dato titulo="Sesiones" valor={`${resumen.presentes}/${resumen.marcadas}`} />
             <Dato titulo="Gimnasio" valor={resumen.gimnasio} />
             <Dato titulo="Tierra" valor={resumen.tierra} />
             <Dato titulo="Agua" valor={resumen.agua} />
@@ -176,13 +163,15 @@ export function AtletaHistorialPage() {
             {grupos.map((grupo) => (
               <button
                 type="button"
-                className="tarjeta sesion"
+                className={`tarjeta sesion${grupo.asistio === false ? ' ausente' : ''}`}
                 key={grupo.entrenamientoId}
                 onClick={() => setSesionAbierta(grupo)}
               >
                 <div>
                   <p className="sesion-fecha">
                     {grupo.fecha ? fechaLarga(grupo.fecha) : 'Sesión'}
+                    {grupo.asistio === true && <span className="etiqueta presente">Presente</span>}
+                    {grupo.asistio === false && <span className="etiqueta ausente">Ausente</span>}
                   </p>
                   <p className="sutil">
                     {grupo.fecha && fechaNumerica(grupo.fecha)}
@@ -251,6 +240,9 @@ export function AtletaHistorialPage() {
           }}
         >
           <div className="trabajos">
+            {sesionAbierta.trabajos.length === 0 && (
+              <p className="sutil">No hay trabajos cargados en esta sesión.</p>
+            )}
             {sesionAbierta.trabajos.map((trabajo) => (
               <TarjetaTrabajo
                 trabajo={trabajo}
@@ -288,8 +280,59 @@ export function AtletaHistorialPage() {
   )
 }
 
+function armarGrupos(asistencias: SesionHistorialDto[], trabajos: TrabajoDto[]): GrupoSesion[] {
+  const mapa = new Map<number, GrupoSesion>()
+
+  for (const asistencia of asistencias) {
+    mapa.set(asistencia.entrenamientoId, {
+      entrenamientoId: asistencia.entrenamientoId,
+      fecha: asistencia.fecha,
+      turno: asistencia.turno,
+      sesion: asistencia.sesion,
+      asistio: asistencia.asistio,
+      trabajos: [],
+    })
+  }
+
+  for (const trabajo of trabajos) {
+    const grupo = mapa.get(trabajo.entrenamientoId)
+    if (grupo) {
+      grupo.trabajos.push(trabajo)
+      continue
+    }
+
+    mapa.set(trabajo.entrenamientoId, {
+      entrenamientoId: trabajo.entrenamientoId,
+      fecha: trabajo.entrenamientoFecha,
+      turno: trabajo.entrenamientoTurno,
+      sesion: trabajo.entrenamientoSesion,
+      asistio: null,
+      trabajos: [trabajo],
+    })
+  }
+
+  return [...mapa.values()].sort(compararSesiones)
+}
+
+function compararSesiones(a: GrupoSesion, b: GrupoSesion): number {
+  const fecha = (b.fecha ?? '').localeCompare(a.fecha ?? '')
+  if (fecha !== 0) {
+    return fecha
+  }
+
+  const turno = Number(b.turno === 'Tarde') - Number(a.turno === 'Tarde')
+  if (turno !== 0) {
+    return turno
+  }
+
+  return (b.sesion ?? 0) - (a.sesion ?? 0)
+}
+
 function resumenTrabajos(grupo: GrupoSesion): string {
   const cantidad = grupo.trabajos.length
+  if (cantidad === 0) {
+    return grupo.asistio === false ? 'Ausente' : 'Sin trabajos'
+  }
   const partes = [`${cantidad} ${cantidad === 1 ? 'trabajo' : 'trabajos'}`]
 
   for (const tipo of ['Agua', 'Tierra', 'Gimnasio'] as const) {
@@ -302,7 +345,7 @@ function resumenTrabajos(grupo: GrupoSesion): string {
   return partes.join(' · ')
 }
 
-function Dato({ titulo, valor }: { titulo: string; valor: number }) {
+function Dato({ titulo, valor }: { titulo: string; valor: number | string }) {
   return (
     <div className="dato">
       <span className="dato-valor">{valor}</span>
