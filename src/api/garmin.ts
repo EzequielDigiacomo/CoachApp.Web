@@ -1,5 +1,5 @@
 import { api } from './cliente'
-import type { EstadoGarminDto, SincronizacionGarminDto } from '../tipos/api'
+import type { CalendarioGarminDto, EstadoGarminDto, SincronizacionGarminDto } from '../tipos/api'
 
 export const garminApi = {
   estado: () => api.get<EstadoGarminDto>('/api/garmin/estado'),
@@ -11,4 +11,7 @@ export const garminApi = {
 
   sincronizar: (entrenamientoId: number) =>
     api.post<SincronizacionGarminDto>(`/api/garmin/sesiones/${entrenamientoId}`, {}),
+
+  calendario: (desde: string, mes = false) =>
+    api.get<CalendarioGarminDto>(`/api/garmin/calendario?desde=${desde}${mes ? '&mes=true' : ''}`),
 }

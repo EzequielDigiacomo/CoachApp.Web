@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { garminApi } from '../api/garmin'
 import { useAuth } from '../auth/contextoAuth'
 import type { EstadoGarminDto } from '../tipos/api'
@@ -37,9 +37,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <span className="marca">CoachApp</span>
 
         <nav className="barra-nav">
-          <Link to="/entrenamientos">Entrenamientos</Link>
-          <Link to="/atletas">Atletas</Link>
-          <Link to="/anotaciones">Anotaciones</Link>
+          <NavLink to="/entrenamientos">Entrenamientos</NavLink>
+          <NavLink to="/atletas">Atletas</NavLink>
+          <NavLink to="/anotaciones">Anotaciones</NavLink>
+          <NavLink to="/garmin">GarCalendar</NavLink>
         </nav>
 
         <div className="barra-usuario">

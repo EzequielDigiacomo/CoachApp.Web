@@ -7,6 +7,7 @@ import { AtletaHistorialPage } from './paginas/AtletaHistorialPage'
 import { AtletasPage } from './paginas/AtletasPage'
 import { EntrenamientoDetallePage } from './paginas/EntrenamientoDetallePage'
 import { EntrenamientosPage } from './paginas/EntrenamientosPage'
+import { GarCalendarPage } from './paginas/GarCalendarPage'
 import { LoginPage } from './paginas/LoginPage'
 
 /** Envuelve una pagina con el marco y la proteccion de sesion. */
@@ -66,6 +67,15 @@ export default function App() {
             element={
               <Pagina>
                 <AnotacionesPage />
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/garmin"
+            element={
+              <Pagina>
+                <GarCalendarPage />
               </Pagina>
             }
           />

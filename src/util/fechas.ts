@@ -57,6 +57,41 @@ export function fechaNumerica(iso: string): string {
   return `${dia}/${mes}/${anio}`
 }
 
+/** Suma dias a una fecha "YYYY-MM-DD" sin pasar por UTC. */
+export function sumarDias(iso: string, dias: number): string {
+  const fecha = aDate(iso)
+  fecha.setDate(fecha.getDate() + dias)
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${fecha.getFullYear()}-${mes}-${dia}`
+}
+
+/** Primer dia del mes de la fecha, "YYYY-MM-01". */
+export function inicioDeMes(iso: string): string {
+  const { anio, mes } = partes(iso)
+  return `${anio}-${String(mes).padStart(2, '0')}-01`
+}
+
+/** Mueve la fecha la cantidad de meses indicada, al dia 1. */
+export function sumarMeses(iso: string, meses: number): string {
+  const { anio, mes } = partes(iso)
+  const fecha = new Date(anio, mes - 1 + meses, 1)
+  const mesNuevo = String(fecha.getMonth() + 1).padStart(2, '0')
+  return `${fecha.getFullYear()}-${mesNuevo}-01`
+}
+
+/** "octubre 2026" */
+export function tituloMes(iso: string): string {
+  const { anio, mes } = partes(iso)
+  return `${MESES[mes - 1]} ${anio}`
+}
+
+/** Lunes de la semana que contiene la fecha. */
+export function lunesDe(iso: string): string {
+  const corrimiento = aDate(iso).getDay() === 0 ? -6 : 1 - aDate(iso).getDay()
+  return sumarDias(iso, corrimiento)
+}
+
 /** Fecha de hoy en formato "YYYY-MM-DD", en hora local. */
 export function hoyISO(): string {
   const hoy = new Date()

@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import { atletasApi, entrenamientosApi, etiquetaTurno } from '../api/entrenamientos'
 import { garminApi } from '../api/garmin'
+import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
+import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import type {
   ActividadGarminDto,
+  AnotacionDto,
   AtletaDto,
   AtletaEnEntrenamientoDto,
   EntrenamientoDto,
@@ -33,6 +37,8 @@ export function EntrenamientoDetallePage() {
   const [vinculando, setVinculando] = useState(false)
   const [sincronizando, setSincronizando] = useState(false)
   const [avisosGarmin, setAvisosGarmin] = useState<string[]>([])
+  const [anotando, setAnotando] = useState(false)
+  const [notasSesion, setNotasSesion] = useState<AnotacionDto[]>([])
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -55,6 +61,23 @@ export function EntrenamientoDetallePage() {
   useEffect(() => {
     void cargar()
   }, [cargar])
+
+  const cargarNotas = useCallback(async () => {
+    if (!Number.isInteger(entrenamientoId) || entrenamientoId <= 0) {
+      return
+    }
+
+    try {
+      const notas = await anotacionesApi.listar({ entrenamientoId })
+      setNotasSesion(notas.filter((nota) => nota.trabajoId == null))
+    } catch {
+      setNotasSesion([])
+    }
+  }, [entrenamientoId])
+
+  useEffect(() => {
+    void cargarNotas()
+  }, [cargarNotas])
 
   useEffect(() => {
     void garminApi
@@ -229,6 +252,9 @@ export function EntrenamientoDetallePage() {
         </div>
 
         <div className="acciones-cabecera">
+          <button type="button" className="boton-fantasma" onClick={() => setAnotando(true)}>
+            Anotar
+          </button>
           {garmin?.vinculada ? (
             <button
               type="button"
@@ -249,11 +275,35 @@ export function EntrenamientoDetallePage() {
         </div>
       </div>
 
-      {entrenamiento.descripcion && (
-        <div className="tarjeta">
-          <p>{entrenamiento.descripcion}</p>
+      <div className="tarjeta descripcion-sesion">
+        <div>
+          {entrenamiento.descripcion ? (
+            <p>{entrenamiento.descripcion}</p>
+          ) : (
+            <p className="sutil">Sin descripción.</p>
+          )}
         </div>
-      )}
+        <div className="descripcion-sesion-notas">
+          {notasSesion.length === 0 ? (
+            <p className="sutil">Sin anotación.</p>
+          ) : (
+            notasSesion.map((nota) => (
+              <div key={nota.id}>
+                {nota.titulo && (
+                  <p>
+                    <strong>
+                      <TextoConEnlaces texto={nota.titulo} />
+                    </strong>
+                  </p>
+                )}
+                <p>
+                  <TextoConEnlaces texto={nota.texto} />
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
       {error && <p className="error">{error}</p>}
 
@@ -439,6 +489,16 @@ export function EntrenamientoDetallePage() {
           atleta={enTrabajos}
           onCerrar={() => setEnTrabajos(null)}
           onCambio={() => void refrescar()}
+        />
+      )}
+
+      {anotando && (
+        <ModalAnotaciones
+          titulo="Anotaciones de la sesión"
+          subtitulo={`${fechaLarga(entrenamiento.fecha)} · ${etiquetaTurno(entrenamiento.turno)} · Sesión ${entrenamiento.sesion}`}
+          contexto={{ entrenamientoId }}
+          onCerrar={() => setAnotando(false)}
+          onCambio={() => void cargarNotas()}
         />
       )}
 

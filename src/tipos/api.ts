@@ -117,6 +117,24 @@ export interface SincronizacionGarminDto {
   avisos: string[]
 }
 
+export interface AmigoCalendarioGarminDto {
+  nombre: string
+  /** Usuario de Garmin. Puede faltar si la API en ejecucion es anterior. */
+  clave?: string
+  cargo: boolean
+}
+
+export interface DiaCalendarioGarminDto {
+  fecha: string
+  amigos: AmigoCalendarioGarminDto[]
+}
+
+export interface CalendarioGarminDto {
+  desde: string
+  hasta: string
+  dias: DiaCalendarioGarminDto[]
+}
+
 export interface CrearEntrenamientoRequest {
   fecha: string
   turno: Turno
