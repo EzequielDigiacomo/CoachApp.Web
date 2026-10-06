@@ -188,7 +188,8 @@ export function GarCalendarPage() {
             return (
               <article key={dia.fecha} className="tarjeta dia-garmin">
                 <h3>
-                  {fechaCorta(dia.fecha)}
+                  <span className="dia-semana">{fechaCorta(dia.fecha)}</span>
+                  <span className="dia-mes">{Number(dia.fecha.slice(8))}</span>
                   <span className="sutil">
                     {' '}
                     · {cargaron}/{delDia.length}

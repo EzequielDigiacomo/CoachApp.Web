@@ -87,6 +87,10 @@ h2 {
   color: var(--acento);
 }
 
+.nav-corto {
+  display: none;
+}
+
 .barra-usuario {
   margin-left: auto;
   display: flex;
@@ -1195,6 +1199,10 @@ button.sesion.ausente {
   font-size: 14px;
 }
 
+.dia-mes {
+  display: none;
+}
+
 .mini-grilla {
   display: flex;
   flex-wrap: wrap;
@@ -1259,8 +1267,64 @@ button.sesion.ausente {
 /* ---------- Celular ---------- */
 
 @media (max-width: 640px) {
-  .barra {
+  body {
+    font-size: 14px;
+  }
+
+  .contenido {
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .pagina {
     gap: 10px;
+  }
+
+  h2 {
+    font-size: 17px;
+  }
+
+  .tarjeta {
+    padding: 12px;
+  }
+
+  .barra {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: max(8px, env(safe-area-inset-top)) 10px 8px;
+  }
+
+  .marca {
+    font-size: 15px;
+  }
+
+  .barra-nav {
+    order: 3;
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .barra-nav a {
+    padding: 6px 2px;
+    border-radius: 6px;
+    background: var(--fondo);
+    font-size: 11px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .barra-nav a.active {
+    background: #dbeafe;
+    font-weight: 600;
+  }
+
+  .barra-usuario {
+    gap: 6px;
   }
 
   .barra-usuario .rol,
@@ -1268,19 +1332,227 @@ button.sesion.ausente {
     display: none;
   }
 
+  .barra-usuario .boton,
+  .barra-usuario .boton-fantasma {
+    padding: 5px 8px;
+    font-size: 13px;
+  }
+
+  .nav-largo {
+    display: none;
+  }
+
+  .nav-corto {
+    display: inline;
+  }
+
+  .garmin-estado {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .encabezado {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .encabezado .boton {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
   .busqueda {
     max-width: none;
   }
 
+  .grilla {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .filtros {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 8px;
+  }
+
   .filtros label {
     min-width: 0;
-    flex: 1 1 130px;
+  }
+
+  .filtros .busqueda,
+  .filtros .boton-fantasma {
+    grid-column: 1 / -1;
+  }
+
+  .resumen {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .dato {
+    padding: 8px;
+  }
+
+  .dato-valor {
+    font-size: 16px;
   }
 
   .sesiones,
-  .semana-garmin,
   .descripcion-sesion {
     grid-template-columns: 1fr;
+  }
+
+  .semana-garmin {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .dia-garmin {
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .semana-garmin.mes {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  .semana-garmin.mes .dia-garmin {
+    padding: 3px 2px;
+    gap: 2px;
+  }
+
+  .semana-garmin.mes .dia-garmin h3 {
+    font-size: 11px;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .semana-garmin.mes .dia-semana {
+    display: none;
+  }
+
+  .semana-garmin.mes .dia-mes {
+    display: inline;
+  }
+
+  .semana-garmin.mes .dia-garmin h3 .sutil,
+  .semana-garmin.mes .dia-garmin > .sutil {
+    display: none;
+  }
+
+  .semana-garmin.mes .amigo-garmin {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 2px;
+    font-size: 8px;
+  }
+
+  .semana-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .semana-nav .boton,
+  .semana-nav .boton-fantasma {
+    padding: 6px 2px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .cabecera-sesion {
+    flex-direction: column;
+  }
+
+  .acciones-cabecera {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .acciones-cabecera .boton,
+  .acciones-cabecera .boton-fantasma {
+    flex: 1 1 auto;
+    padding: 6px 8px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .chip {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  /* Las tablas de atletas pasan a una tarjeta por fila. */
+  .tarjeta.sin-relleno {
+    overflow: visible;
+  }
+
+  .tarjeta.sin-relleno > .tabla thead {
+    display: none;
+  }
+
+  .tarjeta.sin-relleno > .tabla,
+  .tarjeta.sin-relleno > .tabla tbody,
+  .tarjeta.sin-relleno > .tabla tr,
+  .tarjeta.sin-relleno > .tabla td {
+    display: block;
+    width: 100%;
+  }
+
+  .tarjeta.sin-relleno > .tabla tr {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--borde);
+  }
+
+  .tarjeta.sin-relleno > .tabla td {
+    padding: 2px 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .tarjeta.sin-relleno > .tabla td[data-etiqueta]::before {
+    content: attr(data-etiqueta);
+    display: inline-block;
+    min-width: 72px;
+    margin-right: 6px;
+    color: var(--texto-suave);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .tarjeta.sin-relleno .acciones-fila {
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+
+  .tabla-parciales,
+  .tabla-series {
+    font-size: 12px;
+  }
+
+  .tabla-parciales th,
+  .tabla-parciales td,
+  .tabla-series th,
+  .tabla-series td {
+    padding: 6px 8px;
   }
 
   .descripcion-sesion-notas {

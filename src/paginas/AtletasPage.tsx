@@ -157,10 +157,10 @@ export function AtletasPage() {
                     ))}
                     {!atleta.activo && <span className="etiqueta baja">baja</span>}
                   </td>
-                  <td className="mono">{atleta.dni}</td>
-                  <td>{atleta.edad}</td>
-                  <td>{atleta.club ?? '—'}</td>
-                  <td>
+                  <td className="mono" data-etiqueta="DNI">{atleta.dni}</td>
+                  <td data-etiqueta="Edad">{atleta.edad}</td>
+                  <td data-etiqueta="Club">{atleta.club ?? '—'}</td>
+                  <td data-etiqueta="Contacto">
                     {atleta.telefono ?? '—'}
                     {atleta.email && <span className="sutil bloque">{atleta.email}</span>}
                   </td>

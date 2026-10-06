@@ -45,10 +45,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="barra-usuario">
           {garmin.vinculada ? (
-            <span className="sutil">Garmin{garmin.nombre ? `: ${garmin.nombre}` : ''}</span>
+            <span className="sutil garmin-estado">Garmin{garmin.nombre ? `: ${garmin.nombre}` : ''}</span>
           ) : (
             <button type="button" className="boton" onClick={() => setVinculando(true)}>
-              Vincular Garmin
+              <span className="nav-largo">Vincular Garmin</span>
+              <span className="nav-corto">Garmin</span>
             </button>
           )}
           <span className="usuario">
