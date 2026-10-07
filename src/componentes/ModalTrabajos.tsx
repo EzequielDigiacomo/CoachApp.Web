@@ -19,6 +19,7 @@ import type {
 } from '../tipos/api'
 import { horaActual } from '../util/fechas'
 import { esHoraValida, formatearTiempo, parsearTiempo } from '../util/tiempos'
+import { CampoTiempo } from './CampoTiempo'
 import { Modal } from './Modal'
 import { ModalAnotaciones } from './ModalAnotaciones'
 import { ModalGraficoTrabajo } from './ModalGraficoTrabajo'
@@ -793,12 +794,10 @@ function FormularioTrabajo({
                   value={fila.distancia}
                   onChange={(e) => onCambiarParcial(fila.clave, { distancia: e.target.value })}
                 />
-                <input
+                <CampoTiempo
                   className="parcial-tiempo"
-                  inputMode="decimal"
-                  placeholder="Tiempo (2:12)"
-                  value={fila.tiempo}
-                  onChange={(e) => onCambiarParcial(fila.clave, { tiempo: e.target.value })}
+                  valor={fila.tiempo}
+                  onChange={(tiempo) => onCambiarParcial(fila.clave, { tiempo })}
                 />
                 <span className="parcial-dif sutil" title="Diferencia con el parcial anterior">
                   {diferencia(form.parciales, indice)}
@@ -846,12 +845,10 @@ function FormularioTrabajo({
                     <span className="parcial-numero" title={`Palada ${indice + 1}`}>
                       {indice + 1}
                     </span>
-                    <input
+                    <CampoTiempo
                       className="palada-tiempo"
-                      inputMode="decimal"
-                      placeholder="Tiempo (1:40)"
-                      value={palada.tiempo}
-                      onChange={(e) => onCambiarPalada(palada.clave, { tiempo: e.target.value })}
+                      valor={palada.tiempo}
+                      onChange={(tiempo) => onCambiarPalada(palada.clave, { tiempo })}
                     />
                     <input
                       className="palada-ppm"
@@ -996,7 +993,7 @@ function armarRequest(form: FormTrabajo): { datos: GuardarTrabajoRequest } | { e
     }
 
     if (parsearTiempo(fila.tiempo) === null) {
-      return { error: `El tiempo del parcial ${indice + 1} no se entiende. Escribilo como 2:12.` }
+      return { error: `Completá el tiempo del parcial ${indice + 1}.` }
     }
 
     parciales.push({ distanciaMetros: distancia, tiempo: fila.tiempo.trim() })
@@ -1087,11 +1084,11 @@ function armarPaladas(form: FormTrabajo): { datos: GuardarPaladaRequest[] } | { 
     }
 
     if (tiempo === '') {
-      return { error: `Cargá el tiempo de la palada ${indice + 1}, como 1:40.` }
+      return { error: `Completá el tiempo de la palada ${indice + 1}.` }
     }
 
     if (parsearTiempo(tiempo) === null) {
-      return { error: `El tiempo de la palada ${indice + 1} no se entiende. Escribilo como 1:40.` }
+      return { error: `El tiempo de la palada ${indice + 1} no se entiende.` }
     }
 
     const ppm = Number(ppmTexto)

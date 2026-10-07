@@ -816,8 +816,39 @@ select {
   width: 110px;
 }
 
-.parcial-tiempo {
-  width: 110px;
+/* Tres casillas: minutos, segundos y centésimas. Los separadores no se escriben. */
+.tiempo-mask {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: auto;
+}
+
+.tiempo-parte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tiempo-digitos {
+  width: 2.8rem;
+  padding: 8px 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+}
+
+.tiempo-parte span {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--texto-suave);
+}
+
+.tiempo-sep {
+  padding-top: 8px;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
 }
 
 .parcial-dif {
@@ -846,7 +877,7 @@ select {
 }
 
 .palada-tiempo {
-  width: 110px;
+  width: auto;
 }
 
 .palada-ppm {
@@ -1585,19 +1616,29 @@ button.sesion.ausente {
     align-items: center;
   }
 
-  .parcial-distancia,
-  .parcial-tiempo {
+  .parcial-distancia {
+    grid-column: 2 / -1;
+    grid-row: 1;
     width: 100%;
   }
 
-  /* La diferencia y el boton bajan a un segundo renglon. */
+  /* El tiempo baja a su propia fila para que cada casilla se pueda tocar. */
+  .parciales-lista li .tiempo-mask {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    width: auto;
+    justify-self: start;
+  }
+
   .parcial-dif {
-    grid-column: 2 / span 1;
+    grid-column: 2;
+    grid-row: 3;
     min-width: 0;
   }
 
   .parciales-lista li .boton-fantasma {
-    grid-column: 3 / -1;
+    grid-column: 3;
+    grid-row: 3;
   }
 
   .paladas-lista li {
@@ -1607,19 +1648,28 @@ button.sesion.ausente {
     align-items: center;
   }
 
-  .palada-tiempo,
+  .paladas-lista li .tiempo-mask {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    width: auto;
+    justify-self: start;
+  }
+
   .palada-ppm {
+    grid-column: 2 / -1;
+    grid-row: 2;
     width: 100%;
   }
 
-  /* El destino y el boton bajan a un segundo renglon. */
   .palada-destino {
-    grid-column: 2 / span 2;
+    grid-column: 2 / -1;
+    grid-row: 3;
     min-width: 0;
   }
 
   .paladas-lista li .boton-fantasma {
     grid-column: 2 / -1;
+    grid-row: 4;
   }
 
   .agregar-palada {

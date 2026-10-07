@@ -57,6 +57,40 @@ export function formatearTiempo(centesimas: number): string {
     : `${minutos}:${segundosTexto}${sufijo}`
 }
 
+/** Partes de un tiempo para el campo m:ss,cc. Vacío se ve como 00:00,00. */
+export function partirTiempoCampo(texto: string): { m: string; s: string; c: string } {
+  const total = parsearTiempo(texto)
+  if (total === null) {
+    return { m: '00', s: '00', c: '00' }
+  }
+
+  const minutos = Math.floor(total / 6000)
+  const segundos = Math.floor((total % 6000) / 100)
+  const centesimas = total % 100
+
+  return {
+    m: String(minutos).padStart(2, '0'),
+    s: String(segundos).padStart(2, '0'),
+    c: String(centesimas).padStart(2, '0'),
+  }
+}
+
+/**
+ * Arma el texto que ya entiende el resto de la app. Si sigue en cero, queda
+ * vacío: la fila no se tocó.
+ */
+export function armarTiempoCampo(partes: { m: string; s: string; c: string }): string {
+  const minutos = Number(partes.m) || 0
+  const segundos = Math.min(59, Number(partes.s) || 0)
+  const centesimas = Math.min(99, Number(partes.c) || 0)
+
+  if (minutos === 0 && segundos === 0 && centesimas === 0) {
+    return ''
+  }
+
+  return `${minutos}:${String(segundos).padStart(2, '0')},${String(centesimas).padStart(2, '0')}`
+}
+
 /** true si el texto es una hora del dia valida ("09:30"). */
 export function esHoraValida(texto: string): boolean {
   return /^([01]?\d|2[0-3]):[0-5]\d$/.test(texto.trim())
