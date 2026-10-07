@@ -42,9 +42,9 @@ interface MarcaParcial {
   distancia: number
   /** Numero del parcial, de 1 en adelante. */
   numero: number
-  /** Tiempo acumulado desde el inicio del trabajo ("1:45"). */
+  /** Reloj acumulado al terminar este parcial ("3:53"). */
   tiempo: string
-  /** Diferencia con el parcial anterior; null en el primero. */
+  /** Cuanto duro este parcial ("2:00"). */
   parcial: string | null
 }
 
@@ -271,18 +271,32 @@ function armarPuntos(trabajo: TrabajoDto): PuntoGrafico[] {
     .sort((a, b) => a.t - b.t)
 }
 
-/** Los parciales con su tiempo, que son las marcas de metros de arriba. */
+/**
+ * Los parciales en el reloj corrido. Cada tiempo guardado es la duracion del
+ * tramo; la marca del grafico cae donde termina, sumando las anteriores.
+ */
 function armarMarcas(trabajo: TrabajoDto): MarcaParcial[] {
-  return trabajo.parciales
-    .map((parcial) => ({
-      t: aSegundos(parcial.tiempo),
+  const ordenados = [...trabajo.parciales].sort((a, b) => a.orden - b.orden)
+  let acumulado = 0
+  const marcas: MarcaParcial[] = []
+
+  for (const parcial of ordenados) {
+    const duracion = aSegundos(parcial.tiempo)
+    if (duracion === null) {
+      continue
+    }
+
+    acumulado += duracion
+    marcas.push({
+      t: acumulado,
       distancia: parcial.distanciaMetros,
       numero: parcial.orden,
-      tiempo: parcial.tiempo,
-      parcial: parcial.parcial,
-    }))
-    .filter((marca): marca is MarcaParcial => marca.t !== null)
-    .sort((a, b) => a.t - b.t)
+      tiempo: formatearTiempo(acumulado * 100),
+      parcial: parcial.tiempo,
+    })
+  }
+
+  return marcas
 }
 
 /** Un tiempo escrito ("1:40") a segundos, que es lo que entiende el eje numerico. */

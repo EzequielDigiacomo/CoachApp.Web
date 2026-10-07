@@ -770,7 +770,10 @@ function FormularioTrabajo({
           <div className="parciales-cabecera">
             <div>
               <h5>Parciales</h5>
-              <p className="sutil">El parcial 1 es la primera marca del cronómetro.</p>
+              <p className="sutil">
+                Cada tiempo es lo que duró ese parcial. El cronómetro de las paladas sigue de
+                corrido.
+              </p>
             </div>
             <button type="button" className="boton-fantasma" onClick={onAgregarParcial}>
               Agregar parcial
@@ -909,34 +912,36 @@ function diferencia(filas: FilaParcial[], indice: number): string {
 
 /**
  * A que parcial va a caer una muestra mientras se carga. Usa la misma regla que
- * el backend: el primero cuyo tiempo acumulado sea mayor que el de la muestra.
- * Con 0:50, 1:45 y 2:40, una muestra de 1:40 va al parcial 2.
+ * el backend: cada tiempo es la duracion de ese tramo, y se suman porque el
+ * cronometro de las paladas sigue de corrido. Con 1:53, 2:00 y 2:09, una
+ * muestra de 4:03 va al parcial 3 (1:53 + 2:00 = 3:53, y el total llega a ~6:03).
  */
 function parcialDePalada(
   filas: FilaParcial[],
   tiempo: number,
 ): { numero: number; pasado: boolean } | null {
-  const acumulados = filas.map((fila) => parsearTiempo(fila.tiempo))
+  if (filas.length === 0) {
+    return null
+  }
 
-  for (let i = 0; i < acumulados.length; i++) {
-    const acumulado = acumulados[i]
+  let acumulado = 0
+
+  for (let i = 0; i < filas.length; i++) {
+    const duracion = parsearTiempo(filas[i].tiempo)
 
     // Con un parcial sin tiempo todavia no hay con que decidir.
-    if (acumulado === null) {
+    if (duracion === null) {
       return null
     }
 
+    acumulado += duracion
     if (tiempo < acumulado) {
       return { numero: i + 1, pasado: false }
     }
   }
 
-  if (acumulados.length === 0) {
-    return null
-  }
-
-  // Se pasa de la ultima marca: el backend la deja en la ultima fila.
-  return { numero: acumulados.length, pasado: true }
+  // Se pasa del tiempo total: el backend la deja en la ultima fila.
+  return { numero: filas.length, pasado: true }
 }
 
 /** Texto con el destino de una muestra, para mostrarlo al lado de la fila. */
@@ -952,7 +957,7 @@ function destinoPalada(filas: FilaParcial[], fila: FilaPalada): { texto: string;
   }
 
   return parcial.pasado
-    ? { texto: `parcial ${parcial.numero} · pasa la última marca`, aviso: true }
+    ? { texto: `parcial ${parcial.numero} · pasa el tiempo total`, aviso: true }
     : { texto: `parcial ${parcial.numero}`, aviso: false }
 }
 
