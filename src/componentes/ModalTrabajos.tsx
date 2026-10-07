@@ -832,9 +832,6 @@ function FormularioTrabajo({
                 toca.
               </p>
             </div>
-            <button type="button" className="boton-fantasma" onClick={onAgregarPalada}>
-              Agregar palada
-            </button>
           </div>
 
           {form.paladas.length === 0 ? (
@@ -879,6 +876,10 @@ function FormularioTrabajo({
               })}
             </ul>
           )}
+
+          <button type="button" className="boton-fantasma agregar-palada" onClick={onAgregarPalada}>
+            Agregar palada
+          </button>
         </section>
       )}
 

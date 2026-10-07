@@ -54,7 +54,8 @@ export function EntrenamientosPage() {
       grupos.set(entrenamiento.fecha, lista)
     }
 
-    return [...grupos.entries()]
+    // El dia mas nuevo arriba: hoy primero, el 23 de septiembre al final.
+    return [...grupos.entries()].sort((a, b) => b[0].localeCompare(a[0]))
   }, [entrenamientos])
 
   function creado(nuevo: EntrenamientoDto) {

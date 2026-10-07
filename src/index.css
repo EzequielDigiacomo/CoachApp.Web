@@ -825,6 +825,11 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
+/* Debajo de la lista: en el celular queda al alcance del pulgar. */
+.agregar-palada {
+  justify-self: start;
+}
+
 /* Paladas por minuto: filas de tiempo + ppm con su destino calculado. */
 .paladas-lista {
   list-style: none;
@@ -1615,6 +1620,12 @@ button.sesion.ausente {
 
   .paladas-lista li .boton-fantasma {
     grid-column: 2 / -1;
+  }
+
+  .agregar-palada {
+    justify-self: stretch;
+    padding: 10px 12px;
+    text-align: center;
   }
 
   /* El modal de anotaciones no necesita ocupar toda la pantalla. */
