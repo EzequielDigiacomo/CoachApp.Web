@@ -5,6 +5,7 @@ import { ApiError } from '../api/cliente'
 import { atletasApi, entrenamientosApi, etiquetaTurno } from '../api/entrenamientos'
 import { garminApi } from '../api/garmin'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
+import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
@@ -19,6 +20,9 @@ import type {
 } from '../tipos/api'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
 
+/** Cuantos atletas entran como maximo en una carga multiple. */
+const MAXIMO_SELECCION = 5
+
 export function EntrenamientoDetallePage() {
   const { id } = useParams()
   const navegar = useNavigate()
@@ -31,6 +35,11 @@ export function EntrenamientoDetallePage() {
   const [ocupado, setOcupado] = useState(false)
   const [buscando, setBuscando] = useState('')
   const [panelAbierto, setPanelAbierto] = useState(false)
+
+  /** Seleccion de atletas para la carga multiple: casillas en la tabla. */
+  const [seleccionando, setSeleccionando] = useState(false)
+  const [seleccionados, setSeleccionados] = useState<number[]>([])
+  const [cargaMultiple, setCargaMultiple] = useState(false)
 
   /** Atleta cuyos trabajos se estan viendo en el modal. */
   const [enTrabajos, setEnTrabajos] = useState<AtletaEnEntrenamientoDto | null>(null)
@@ -162,6 +171,24 @@ export function EntrenamientoDetallePage() {
 
   function abrirTrabajos(atleta: AtletaEnEntrenamientoDto) {
     setEnTrabajos(atleta)
+  }
+
+  /** Suma o saca al atleta de la seleccion, sin pasar del maximo. */
+  function alternarSeleccion(atletaId: number) {
+    setSeleccionados((previos) => {
+      if (previos.includes(atletaId)) {
+        return previos.filter((id) => id !== atletaId)
+      }
+      if (previos.length >= MAXIMO_SELECCION) {
+        return previos
+      }
+      return [...previos, atletaId]
+    })
+  }
+
+  function cerrarSeleccion() {
+    setSeleccionando(false)
+    setSeleccionados([])
   }
 
   async function traerGarmin() {
@@ -329,9 +356,38 @@ export function EntrenamientoDetallePage() {
           </span>
         </h3>
 
-        <button type="button" className="boton" onClick={() => setPanelAbierto((v) => !v)}>
-          {panelAbierto ? 'Cerrar' : 'Agregar atletas'}
-        </button>
+        <div className="acciones-cabecera">
+          {seleccionando ? (
+            <>
+              <span className="sutil">
+                {seleccionados.length} de {MAXIMO_SELECCION}
+              </span>
+              <button
+                type="button"
+                className="boton"
+                disabled={seleccionados.length === 0}
+                onClick={() => setCargaMultiple(true)}
+              >
+                Cargar{seleccionados.length > 0 ? ` (${seleccionados.length})` : ''}
+              </button>
+              <button type="button" className="boton-fantasma" onClick={cerrarSeleccion}>
+                Cancelar
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="boton-fantasma"
+              onClick={() => setSeleccionando(true)}
+            >
+              Carga múltiple
+            </button>
+          )}
+
+          <button type="button" className="boton" onClick={() => setPanelAbierto((v) => !v)}>
+            {panelAbierto ? 'Cerrar' : 'Agregar atletas'}
+          </button>
+        </div>
       </div>
 
       {panelAbierto && (
@@ -376,110 +432,133 @@ export function EntrenamientoDetallePage() {
       {entrenamiento.atletas.length === 0 ? (
         <p className="sutil">Todavía no hay atletas asignados a esta sesión.</p>
       ) : (
-        <div className="tarjeta sin-relleno">
+        <div className="tarjeta sin-relleno tabla-con-scroll">
           <table className="tabla">
             <thead>
               <tr>
+                {seleccionando && <th className="col-elegir" />}
                 <th>Apellido y nombre</th>
                 <th>Asistencia</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {entrenamiento.atletas.map((atleta) => (
-                <tr
-                  key={atleta.atletaId}
-                  className="fila-clicable"
-                  title="Ver los trabajos del atleta"
-                  onClick={() => abrirTrabajos(atleta)}
-                >
-                  <td>
-                    {atleta.apellido}, {atleta.nombre}
-                    {(atleta.categorias ?? []).map((categoria) => (
-                      <span className="etiqueta" key={categoria}>
-                        {categoria}
-                      </span>
-                    ))}
-                    <span className="sutil bloque">
-                      {atleta.dni} · {atleta.edad} años
-                      {atleta.cantidadTrabajos > 0 &&
-                        ` · ${atleta.cantidadTrabajos} ${atleta.cantidadTrabajos === 1 ? 'trabajo' : 'trabajos'}`}
-                    </span>
-                    <ResumenTrabajos resumenes={atleta.resumenTrabajos ?? []} />
-                    {atleta.garmin && (
-                      <span className="sutil bloque">
-                        {textoActividadGarmin(atleta.garmin)}
-                      </span>
-                    )}
-                  </td>
+              {entrenamiento.atletas.map((atleta) => {
+                const elegido = seleccionados.includes(atleta.atletaId)
 
-                  <td>
-                    <div className="asistencia">
-                      <button
-                        type="button"
-                        className={atleta.asistio === true ? 'chip activo-presente' : 'chip'}
-                        disabled={ocupado}
-                        onClick={(evento) => {
-                          // La fila abre el modal: los botones de adentro no.
-                          evento.stopPropagation()
-                          marcar(atleta, true)
-                        }}
-                      >
-                        Presente
-                      </button>
-                      <button
-                        type="button"
-                        className={atleta.asistio === false ? 'chip activo-ausente' : 'chip'}
-                        disabled={ocupado}
-                        onClick={(evento) => {
-                          evento.stopPropagation()
-                          marcar(atleta, false)
-                        }}
-                      >
-                        Ausente
-                      </button>
-                      {atleta.asistio === null && <span className="sutil">sin marcar</span>}
-                    </div>
-                  </td>
-
-                  <td className="derecha">
-                    <div className="acciones-fila">
-                      {atleta.garmin && (
-                        <a
-                          className="boton-fantasma"
-                          href={atleta.garmin.url}
-                          target="_blank"
-                          rel="noreferrer"
+                return (
+                  <tr
+                    key={atleta.atletaId}
+                    className={`fila-clicable${elegido ? ' fila-elegida' : ''}`}
+                    title={
+                      seleccionando
+                        ? 'Sumar o quitar de la carga múltiple'
+                        : 'Ver los trabajos del atleta'
+                    }
+                    onClick={() =>
+                      seleccionando ? alternarSeleccion(atleta.atletaId) : abrirTrabajos(atleta)
+                    }
+                  >
+                    {seleccionando && (
+                      <td className="col-elegir">
+                        <input
+                          type="checkbox"
+                          checked={elegido}
+                          disabled={!elegido && seleccionados.length >= MAXIMO_SELECCION}
+                          aria-label={`Elegir a ${atleta.apellido}, ${atleta.nombre}`}
+                          onChange={() => alternarSeleccion(atleta.atletaId)}
                           onClick={(evento) => evento.stopPropagation()}
-                        >
-                          Garmin
-                        </a>
+                        />
+                      </td>
+                    )}
+                    <td>
+                      {atleta.apellido}, {atleta.nombre}
+                      {(atleta.categorias ?? []).map((categoria) => (
+                        <span className="etiqueta" key={categoria}>
+                          {categoria}
+                        </span>
+                      ))}
+                      <span className="sutil bloque">
+                        {atleta.dni} · {atleta.edad} años
+                        {atleta.cantidadTrabajos > 0 &&
+                          ` · ${atleta.cantidadTrabajos} ${atleta.cantidadTrabajos === 1 ? 'trabajo' : 'trabajos'}`}
+                      </span>
+                      <ResumenTrabajos resumenes={atleta.resumenTrabajos ?? []} />
+                      {atleta.garmin && (
+                        <span className="sutil bloque">
+                          {textoActividadGarmin(atleta.garmin)}
+                        </span>
                       )}
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        onClick={(evento) => {
-                          evento.stopPropagation()
-                          abrirTrabajos(atleta)
-                        }}
-                      >
-                        Trabajos
-                      </button>
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        disabled={ocupado}
-                        onClick={(evento) => {
-                          evento.stopPropagation()
-                          quitar(atleta)
-                        }}
-                      >
-                        Quitar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    <td>
+                      <div className="asistencia">
+                        <button
+                          type="button"
+                          className={atleta.asistio === true ? 'chip activo-presente' : 'chip'}
+                          disabled={ocupado}
+                          onClick={(evento) => {
+                            // La fila abre el modal: los botones de adentro no.
+                            evento.stopPropagation()
+                            marcar(atleta, true)
+                          }}
+                        >
+                          Presente
+                        </button>
+                        <button
+                          type="button"
+                          className={atleta.asistio === false ? 'chip activo-ausente' : 'chip'}
+                          disabled={ocupado}
+                          onClick={(evento) => {
+                            evento.stopPropagation()
+                            marcar(atleta, false)
+                          }}
+                        >
+                          Ausente
+                        </button>
+                        {atleta.asistio === null && <span className="sutil">sin marcar</span>}
+                      </div>
+                    </td>
+
+                    <td className="derecha">
+                      <div className="acciones-fila">
+                        {atleta.garmin && (
+                          <a
+                            className="boton-fantasma"
+                            href={atleta.garmin.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(evento) => evento.stopPropagation()}
+                          >
+                            Garmin
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          className="boton-fantasma"
+                          onClick={(evento) => {
+                            evento.stopPropagation()
+                            abrirTrabajos(atleta)
+                          }}
+                        >
+                          Trabajos
+                        </button>
+                        <button
+                          type="button"
+                          className="boton-fantasma"
+                          disabled={ocupado}
+                          onClick={(evento) => {
+                            evento.stopPropagation()
+                            quitar(atleta)
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -490,6 +569,18 @@ export function EntrenamientoDetallePage() {
           entrenamientoId={entrenamientoId}
           atleta={enTrabajos}
           onCerrar={() => setEnTrabajos(null)}
+          onCambio={() => void refrescar()}
+        />
+      )}
+
+      {cargaMultiple && (
+        <ModalCargaMultiple
+          entrenamientoId={entrenamientoId}
+          atletas={entrenamiento.atletas.filter((a) => seleccionados.includes(a.atletaId))}
+          onCerrar={() => {
+            setCargaMultiple(false)
+            cerrarSeleccion()
+          }}
           onCambio={() => void refrescar()}
         />
       )}

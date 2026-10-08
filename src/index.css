@@ -483,6 +483,26 @@ select {
   border-radius: 6px;
 }
 
+/* La tabla de atletas de una sesion puede quedar mas larga que la pantalla y
+   dejar las ultimas filas fuera de alcance. Se le pone un alto maximo con
+   scroll propio para poder bajar sin perder atletas. */
+.tabla-con-scroll {
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+/* Mientras se baja por la lista, los titulos de las columnas quedan a la vista. */
+.tabla-con-scroll .tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--superficie);
+  /* Con border-collapse el borde se iria con el scroll: se dibuja como sombra
+     interna para que quede pegado al encabezado. */
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--borde);
+}
+
 .asistencia {
   display: flex;
   align-items: center;
@@ -926,6 +946,27 @@ select {
   width: 100%;
 }
 
+/* Con zoom el puntero agarra el grafico para correr la ventana de tiempo. */
+.grafico.con-zoom {
+  cursor: grab;
+  user-select: none;
+}
+
+/* En el celular, un dedo sigue desplazando el modal y dos dedos dan el zoom:
+   sin esto, el navegador se queda con el gesto y hace su propio zoom. */
+.grafico .recharts-surface {
+  touch-action: pan-y;
+}
+
+.grafico.con-zoom.arrastrando {
+  cursor: grabbing;
+}
+
+/* Vuelve a la linea de tiempo completa. */
+.grafico-ver-todo {
+  margin-top: 10px;
+}
+
 /* Cartel que aparece al pararse sobre la linea de un parcial. */
 .parcial-cartel {
   position: absolute;
@@ -1317,6 +1358,61 @@ button.sesion.ausente {
   margin-top: 12px;
 }
 
+/* ---------- Carga multiple de trabajos ---------- */
+
+.carga-multiple {
+  display: grid;
+  gap: 14px;
+}
+
+.carga-multiple-comun p {
+  margin: 0 0 12px;
+}
+
+.carga-atleta {
+  padding: 12px 14px;
+}
+
+.carga-atleta-titulo {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+/* Guardar queda siempre a la vista, aunque la tanda de atletas sea larga. */
+.carga-multiple-acciones {
+  position: sticky;
+  bottom: -16px;
+  z-index: 2;
+  margin: 14px -16px -16px;
+  padding: 12px 16px;
+  background: var(--fondo);
+  border-top: 1px solid var(--borde);
+}
+
+/* Casilla para elegir atletas en la tabla de la sesion. */
+.col-elegir {
+  width: 34px;
+}
+
+.col-elegir input {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--acento);
+}
+
+.fila-clicable.fila-elegida {
+  background: #eff6ff;
+}
+
+.fila-clicable.fila-elegida:hover {
+  background: #dbeafe;
+}
+
 /* ---------- Celular ---------- */
 
 @media (max-width: 640px) {
@@ -1557,6 +1653,13 @@ button.sesion.ausente {
     overflow: visible;
   }
 
+  /* En el celular las filas se apilan: conviene que la pagina fluya y no que
+     la lista quede encerrada con su propio scroll. */
+  .tabla-con-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+
   .tarjeta.sin-relleno > .tabla thead {
     display: none;
   }
@@ -1594,6 +1697,16 @@ button.sesion.ausente {
   .tarjeta.sin-relleno .acciones-fila {
     justify-content: flex-start;
     margin-top: 6px;
+  }
+
+  /* La casilla de elegir queda en su propia linea, arriba del nombre. */
+  .tarjeta.sin-relleno > .tabla td.col-elegir {
+    width: auto;
+    padding-bottom: 4px;
+  }
+
+  .carga-atleta {
+    padding: 10px;
   }
 
   .tabla-parciales,
