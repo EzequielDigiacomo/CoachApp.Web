@@ -15,6 +15,7 @@ import type {
   AtletaEnEntrenamientoDto,
   EntrenamientoDto,
   EstadoGarminDto,
+  ResumenTrabajoDto,
 } from '../tipos/api'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
 
@@ -404,6 +405,7 @@ export function EntrenamientoDetallePage() {
                       {atleta.cantidadTrabajos > 0 &&
                         ` · ${atleta.cantidadTrabajos} ${atleta.cantidadTrabajos === 1 ? 'trabajo' : 'trabajos'}`}
                     </span>
+                    <ResumenTrabajos resumenes={atleta.resumenTrabajos ?? []} />
                     {atleta.garmin && (
                       <span className="sutil bloque">
                         {textoActividadGarmin(atleta.garmin)}
@@ -514,6 +516,57 @@ export function EntrenamientoDetallePage() {
       )}
     </div>
   )
+}
+
+/**
+ * Mini resumen de lo cargado en la sesion, para verlo sin abrir los trabajos.
+ * En gimnasio se muestran los kg y, cuando hay mas de un ejercicio, la inicial
+ * de cada uno delante de sus kilos. En tierra y agua, el mejor tiempo de los
+ * parciales. Puede haber mas de un trabajo por atleta.
+ */
+function ResumenTrabajos({ resumenes }: { resumenes: ResumenTrabajoDto[] }) {
+  const partes = resumenes.map(textoResumen).filter((texto) => texto !== '')
+
+  if (partes.length === 0) {
+    return null
+  }
+
+  return (
+    <span className="resumen-trabajos">
+      {partes.map((texto, indice) => (
+        <span className="resumen-trabajo" key={`${indice}-${texto}`}>
+          {texto}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** Texto de un trabajo para el resumen de la fila. */
+function textoResumen(resumen: ResumenTrabajoDto): string {
+  if (resumen.mejorTiempo) {
+    return resumen.mejorTiempo
+  }
+
+  const variosEjercicios = resumen.ejercicios.length > 1
+
+  return resumen.ejercicios
+    .map((ejercicio) => {
+      const kilos = ejercicio.kilos.map(textoKilos).join(', ')
+      if (!variosEjercicios) {
+        return kilos
+      }
+
+      const inicial = ejercicio.nombre.trim().charAt(0).toUpperCase()
+      return inicial ? `${inicial}: ${kilos}` : kilos
+    })
+    .filter((texto) => texto !== '')
+    .join(' · ')
+}
+
+/** Un peso en kilos, sin decimales de mas: 65 o 62,5. */
+function textoKilos(kilos: number): string {
+  return kilos.toLocaleString('es-AR', { maximumFractionDigits: 1 })
 }
 
 /** Resumen corto de la actividad para la fila del atleta. */

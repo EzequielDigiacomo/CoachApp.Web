@@ -40,7 +40,8 @@ export function CampoTiempo({
   const partes = partirTiempoCampo(valor)
 
   function mostrado(parte: Parte): string {
-    // Un borrador vacio se ve como 00, que es lo que quedo guardado.
+    // Mientras se escribe se ve el digito tal cual (sin el 0 de adelante); al
+    // salir de la casilla vuelve el valor armado, ya completo.
     if (edicion?.parte === parte && edicion.texto !== '') {
       return edicion.texto
     }
@@ -52,23 +53,23 @@ export function CampoTiempo({
     // si no 00, que es lo que muestra la casilla.
     const anterior =
       edicion?.parte === parte && edicion.texto !== '' ? edicion.texto : partes[parte]
-    const limpio = texto.replace(/\D/g, '')
-    let digitos = limpio
+    const maximo = MAXIMO[parte]
+    let digitos = texto.replace(/\D/g, '')
 
-    // El teclado del celular no siempre respeta la seleccion: si el digito
-    // nuevo quedo pegado al anterior, se descarta el anterior.
-    if (anterior && limpio.startsWith(anterior) && limpio.length > anterior.length) {
-      const extra = limpio.slice(anterior.length)
-      if (/^0+$/.test(anterior) && anterior.length >= MAXIMO[parte]) {
-        digitos = extra
-      } else if (anterior.length >= MAXIMO[parte]) {
-        digitos = anterior
+    // El teclado del celular no siempre respeta la seleccion: el digito nuevo
+    // puede quedar pegado delante o detras del que ya estaba. Se descarta el
+    // sobrante y se conserva lo ultimo que se escribio.
+    if (anterior && digitos.length > maximo) {
+      if (digitos.startsWith(anterior)) {
+        digitos = digitos.slice(anterior.length)
+      } else if (digitos.endsWith(anterior)) {
+        digitos = digitos.slice(0, digitos.length - anterior.length)
       } else {
-        digitos = anterior + extra
+        digitos = digitos.slice(-maximo)
       }
     }
 
-    digitos = digitos.slice(0, MAXIMO[parte])
+    digitos = digitos.slice(0, maximo)
 
     if (digitos !== '' && Number(digitos) > TOPE[parte]) {
       digitos = digitos.slice(0, -1)
@@ -76,10 +77,12 @@ export function CampoTiempo({
 
     // Con dos digitos, o con un 6 o mas en los segundos, la parte ya esta.
     const listo =
-      digitos.length === MAXIMO[parte] ||
+      digitos.length === maximo ||
       (parte === 's' && digitos.length === 1 && Number(digitos) >= 6)
 
-    setEdicion({ parte, texto: digitos === '' ? '' : digitos.padStart(2, '0') })
+    // Mientras se escribe se ve lo tipeado tal cual, sin rellenar con ceros: si
+    // no, el segundo digito se pierde contra el 0 que se agrega adelante.
+    setEdicion({ parte, texto: digitos })
 
     const siguientes = {
       ...partirTiempoCampo(valor),

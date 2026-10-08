@@ -277,6 +277,23 @@ input:focus-visible {
   font-size: 13px;
 }
 
+/* Mini resumen de lo cargado, debajo de los datos del atleta en la sesion. */
+.resumen-trabajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.resumen-trabajo {
+  padding: 1px 8px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--fondo);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- Agenda de entrenamientos ---------- */
 
 .filtros {

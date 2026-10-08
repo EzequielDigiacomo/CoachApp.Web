@@ -71,8 +71,28 @@ export interface AtletaEnEntrenamientoDto {
   asistio: boolean | null
   /** Cantidad de trabajos o controles cargados en la sesion. */
   cantidadTrabajos: number
+  /** Resumen de lo cargado, para adelantar en la fila. Vacio si no hay nada. */
+  resumenTrabajos?: ResumenTrabajoDto[]
   /** Actividad de Garmin del dia, si el nombre coincidio con un amigo. */
   garmin: ActividadGarminDto | null
+}
+
+/** Un ejercicio del resumen: su nombre y los kg de sus series, en orden. */
+export interface ResumenEjercicioDto {
+  nombre: string
+  /** Pesos cargados. No entran las series que quedaron sin kg. */
+  kilos: number[]
+}
+
+/**
+ * Resumen corto de un trabajo para la fila del atleta: los kg en gimnasio y
+ * la mejor marca en los trabajos con parciales (tierra y agua).
+ */
+export interface ResumenTrabajoDto {
+  tipo: TipoTrabajo
+  ejercicios: ResumenEjercicioDto[]
+  /** El mejor tiempo de los parciales; null en los trabajos de gimnasio. */
+  mejorTiempo: string | null
 }
 
 export interface EntrenamientoDto {
