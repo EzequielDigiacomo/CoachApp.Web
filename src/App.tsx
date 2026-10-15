@@ -1,8 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProveedorAuth } from './auth/ProveedorAuth'
-import { RutaProtegida } from './auth/RutaProtegida'
+import { RutaProtegida, RutaStaff } from './auth/RutaProtegida'
 import { Layout } from './componentes/Layout'
+import { AnotacionAtletaPage } from './paginas/AnotacionAtletaPage'
 import { AnotacionesPage } from './paginas/AnotacionesPage'
+import { CuentasPage } from './paginas/CuentasPage'
+import { SensacionesPage } from './paginas/SensacionesPage'
 import { AtletaHistorialPage } from './paginas/AtletaHistorialPage'
 import { AtletasPage } from './paginas/AtletasPage'
 import { EntrenamientoDetallePage } from './paginas/EntrenamientoDetallePage'
@@ -30,7 +33,9 @@ export default function App() {
             path="/atletas"
             element={
               <Pagina>
-                <AtletasPage />
+                <RutaStaff>
+                  <AtletasPage />
+                </RutaStaff>
               </Pagina>
             }
           />
@@ -39,7 +44,9 @@ export default function App() {
             path="/atletas/:id"
             element={
               <Pagina>
-                <AtletaHistorialPage />
+                <RutaStaff>
+                  <AtletaHistorialPage />
+                </RutaStaff>
               </Pagina>
             }
           />
@@ -66,7 +73,47 @@ export default function App() {
             path="/anotaciones"
             element={
               <Pagina>
-                <AnotacionesPage />
+                <RutaStaff>
+                  <AnotacionesPage />
+                </RutaStaff>
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/cuentas"
+            element={
+              <Pagina>
+                <RutaStaff>
+                  <CuentasPage />
+                </RutaStaff>
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/anotacion"
+            element={
+              <Pagina>
+                <AnotacionAtletaPage />
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/anotacion-atleta"
+            element={
+              <Pagina>
+                <AnotacionAtletaPage />
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/sensaciones"
+            element={
+              <Pagina>
+                <SensacionesPage />
               </Pagina>
             }
           />

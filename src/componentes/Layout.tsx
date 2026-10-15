@@ -2,17 +2,22 @@ import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { garminApi } from '../api/garmin'
 import { useAuth } from '../auth/contextoAuth'
-import type { EstadoGarminDto } from '../tipos/api'
+import { esStaff, type EstadoGarminDto } from '../tipos/api'
 import { ModalVincularGarmin } from './ModalVincularGarmin'
 
 /** Marco de la app con la barra superior. */
 export function Layout({ children }: { children: React.ReactNode }) {
   const { sesion, cerrarSesion } = useAuth()
+  const staff = esStaff(sesion?.usuario.rol)
   const navegar = useNavigate()
   const [garmin, setGarmin] = useState<EstadoGarminDto>({ vinculada: false, nombre: null })
   const [vinculando, setVinculando] = useState(false)
 
   useEffect(() => {
+    if (!staff) {
+      return
+    }
+
     void garminApi.estado().then(setGarmin).catch(() => setGarmin({ vinculada: false, nombre: null }))
 
     function alVincular(evento: Event) {
@@ -24,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     window.addEventListener('coachapp:garmin', alVincular)
     return () => window.removeEventListener('coachapp:garmin', alVincular)
-  }, [])
+  }, [staff])
 
   function salir() {
     cerrarSesion()
@@ -38,20 +43,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <nav className="barra-nav">
           <NavLink to="/entrenamientos">Entrenamientos</NavLink>
-          <NavLink to="/atletas">Atletas</NavLink>
-          <NavLink to="/anotaciones">Anotaciones</NavLink>
+          {staff && <NavLink to="/atletas">Atletas</NavLink>}
+          {staff && <NavLink to="/anotaciones">Anotaciones</NavLink>}
+          {staff && <NavLink to="/cuentas">Cuentas</NavLink>}
+          <NavLink to={staff ? '/anotacion-atleta' : '/anotacion'}>
+            {staff ? 'Anotación atleta' : 'Anotación'}
+          </NavLink>
+          <NavLink to="/sensaciones">Sensaciones</NavLink>
           <NavLink to="/garmin">GarCalendar</NavLink>
         </nav>
 
         <div className="barra-usuario">
-          {garmin.vinculada ? (
+          {staff && garmin.vinculada ? (
             <span className="sutil garmin-estado">Garmin{garmin.nombre ? `: ${garmin.nombre}` : ''}</span>
-          ) : (
+          ) : staff ? (
             <button type="button" className="boton" onClick={() => setVinculando(true)}>
               <span className="nav-largo">Vincular Garmin</span>
               <span className="nav-corto">Garmin</span>
             </button>
-          )}
+          ) : null}
           <span className="usuario">
             {sesion?.usuario.nombre} {sesion?.usuario.apellido}
             <span className="rol">{sesion?.usuario.rol}</span>

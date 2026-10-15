@@ -3,13 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/cliente'
 import { entrenamientosApi, etiquetaTurno } from '../api/entrenamientos'
 import { ModalImportarPlanilla } from '../componentes/ModalImportarPlanilla'
-import type { CrearEntrenamientoRequest, EntrenamientoDto, Turno } from '../tipos/api'
+import { useAuth } from '../auth/contextoAuth'
+import { esStaff, type CrearEntrenamientoRequest, type EntrenamientoDto, type Turno } from '../tipos/api'
 import { esPasado, fechaCorta, fechaLarga, hoyISO } from '../util/fechas'
 
 const SESIONES = [1, 2, 3, 4, 5]
 
 export function EntrenamientosPage() {
   const navegar = useNavigate()
+  const { sesion } = useAuth()
+  const staff = esStaff(sesion?.usuario.rol)
 
   const [entrenamientos, setEntrenamientos] = useState<EntrenamientoDto[]>([])
   // La vista arranca sin filtro de fecha a proposito: mostrar todo lo cargado
@@ -67,9 +70,11 @@ export function EntrenamientosPage() {
     <div className="pagina">
       <div className="encabezado">
         <h2>Entrenamientos</h2>
-        <button type="button" className="boton" onClick={() => setMostrarForm((v) => !v)}>
-          {mostrarForm ? 'Cancelar' : 'Nueva sesión'}
-        </button>
+        {staff && (
+          <button type="button" className="boton" onClick={() => setMostrarForm((v) => !v)}>
+            {mostrarForm ? 'Cancelar' : 'Nueva sesión'}
+          </button>
+        )}
       </div>
 
       {mostrarForm && <FormularioEntrenamiento onCreado={creado} />}
@@ -125,11 +130,13 @@ export function EntrenamientosPage() {
                     {sesion.descripcion && <p className="sutil">{sesion.descripcion}</p>}
 
                     <div className="sesion-pie">
-                      <span className="sutil">
-                        {sesion.cantidadAtletas === 0
-                          ? 'Sin atletas'
-                          : `${sesion.cantidadPresentes}/${sesion.cantidadAtletas} presentes`}
-                      </span>
+                      {staff && (
+                        <span className="sutil">
+                          {sesion.cantidadAtletas === 0
+                            ? 'Sin atletas'
+                            : `${sesion.cantidadPresentes}/${sesion.cantidadAtletas} presentes`}
+                        </span>
+                      )}
                       {sesion.club && <span className="sutil">{sesion.club}</span>}
                     </div>
                   </Link>

@@ -3,7 +3,11 @@
  * Si cambia un DTO en Entidades/DTOs, este archivo es el que hay que actualizar.
  */
 
-export type RolUsuario = 'SuperAdmin' | 'Entrenador'
+export type RolUsuario = 'SuperAdmin' | 'Entrenador' | 'Atleta'
+
+export function esStaff(rol: RolUsuario | undefined): boolean {
+  return rol === 'SuperAdmin' || rol === 'Entrenador'
+}
 
 export interface UsuarioDto {
   id: number
@@ -12,6 +16,7 @@ export interface UsuarioDto {
   nombre: string
   apellido: string
   rol: RolUsuario
+  atletaId?: number | null
   activo: boolean
   fechaCreacion: string
   ultimoAcceso: string | null
@@ -360,4 +365,24 @@ export interface LeerHojaRequest {
   pestana?: string | null
   /** Celdas a leer, del estilo "B4:E49". Sin esto, la pestaña entera. */
   rango?: string | null
+}
+
+export interface CuentaAtletaDto {
+  atletaId: number
+  nombre: string
+  apellido: string
+  emailAtleta: string | null
+  usuarioId: number | null
+  nombreUsuario: string | null
+  email: string | null
+  activo: boolean | null
+}
+
+export interface NotaAtletaDto {
+  id: number
+  atletaId: number
+  nombre: string
+  apellido: string
+  texto: string
+  fechaCreacion: string
 }

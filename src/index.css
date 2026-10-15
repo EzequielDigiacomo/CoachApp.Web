@@ -74,6 +74,7 @@ h2 {
 
 .barra-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
@@ -1488,7 +1489,7 @@ button.sesion.ausente {
     order: 3;
     flex: 1 1 100%;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     gap: 4px;
   }
 

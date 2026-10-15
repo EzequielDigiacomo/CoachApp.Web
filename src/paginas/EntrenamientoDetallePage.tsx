@@ -9,6 +9,8 @@ import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
+import { useAuth } from '../auth/contextoAuth'
+import { esStaff } from '../tipos/api'
 import type {
   ActividadGarminDto,
   AnotacionDto,
@@ -26,6 +28,8 @@ const MAXIMO_SELECCION = 5
 export function EntrenamientoDetallePage() {
   const { id } = useParams()
   const navegar = useNavigate()
+  const { sesion } = useAuth()
+  const staff = esStaff(sesion?.usuario.rol)
   const entrenamientoId = Number(id)
 
   const [entrenamiento, setEntrenamiento] = useState<EntrenamientoDto | null>(null)
@@ -62,25 +66,24 @@ export function EntrenamientoDetallePage() {
     setError(null)
 
     try {
-      const [sesion, atletas] = await Promise.all([
-        entrenamientosApi.obtener(entrenamientoId),
-        atletasApi.listar(),
-      ])
-      setEntrenamiento(sesion)
-      setCatalogo(atletas)
+      const sesionCargada = await entrenamientosApi.obtener(entrenamientoId)
+      setEntrenamiento(sesionCargada)
+      if (staff) {
+        setCatalogo(await atletasApi.listar())
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar la sesión.')
     } finally {
       setCargando(false)
     }
-  }, [entrenamientoId])
+  }, [entrenamientoId, staff])
 
   useEffect(() => {
     void cargar()
   }, [cargar])
 
   const cargarNotas = useCallback(async () => {
-    if (!Number.isInteger(entrenamientoId) || entrenamientoId <= 0) {
+    if (!staff || !Number.isInteger(entrenamientoId) || entrenamientoId <= 0) {
       return
     }
 
@@ -90,13 +93,17 @@ export function EntrenamientoDetallePage() {
     } catch {
       setNotasSesion([])
     }
-  }, [entrenamientoId])
+  }, [entrenamientoId, staff])
 
   useEffect(() => {
     void cargarNotas()
   }, [cargarNotas])
 
   useEffect(() => {
+    if (!staff) {
+      return
+    }
+
     void garminApi
       .estado()
       .then(setGarmin)
@@ -111,7 +118,7 @@ export function EntrenamientoDetallePage() {
 
     window.addEventListener('coachapp:garmin', alVincular)
     return () => window.removeEventListener('coachapp:garmin', alVincular)
-  }, [])
+  }, [staff])
 
   /**
    * Refresca la sesion sin pasar por el estado de carga: se usa cuando el modal
@@ -308,7 +315,7 @@ export function EntrenamientoDetallePage() {
             Sesión {entrenamiento.sesion}
             {entrenamiento.club && ` · ${entrenamiento.club}`}
           </p>
-          {garmin?.vinculada && (
+          {staff && garmin?.vinculada && (
             <p className="sutil">
               Garmin vinculado{garmin.nombre ? `: ${garmin.nombre}` : ''}
               {' · '}
@@ -319,6 +326,7 @@ export function EntrenamientoDetallePage() {
           )}
         </div>
 
+        {staff && (
         <div className="acciones-cabecera">
           <button type="button" className="boton-fantasma" onClick={() => setAnotando(true)}>
             Anotar
@@ -341,6 +349,7 @@ export function EntrenamientoDetallePage() {
             Eliminar
           </button>
         </div>
+        )}
       </div>
 
       <div className="tarjeta descripcion-sesion">
@@ -351,6 +360,7 @@ export function EntrenamientoDetallePage() {
             <p className="sutil">Sin descripción.</p>
           )}
         </div>
+        {staff && (
         <div className="descripcion-sesion-notas">
           {notasSesion.length === 0 ? (
             <p className="sutil">Sin anotación.</p>
@@ -371,6 +381,7 @@ export function EntrenamientoDetallePage() {
             ))
           )}
         </div>
+        )}
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -388,14 +399,17 @@ export function EntrenamientoDetallePage() {
       <div className="encabezado">
         <h3 className="titulo-seccion">
           Atletas
-          <span className="sutil">
-            {' '}
-            · {entrenamiento.cantidadAtletas} asignados · {presentes} presentes
-            {ausentes > 0 && ` · ${ausentes} ${ausentes === 1 ? 'ausente' : 'ausentes'}`}
-            {sinMarcar > 0 && ` · ${sinMarcar} sin marcar`}
-          </span>
+          {staff && (
+            <span className="sutil">
+              {' '}
+              · {entrenamiento.cantidadAtletas} asignados · {presentes} presentes
+              {ausentes > 0 && ` · ${ausentes} ${ausentes === 1 ? 'ausente' : 'ausentes'}`}
+              {sinMarcar > 0 && ` · ${sinMarcar} sin marcar`}
+            </span>
+          )}
         </h3>
 
+        {staff && (
         <div className="acciones-cabecera">
           {seleccionando ? (
             <>
@@ -428,6 +442,7 @@ export function EntrenamientoDetallePage() {
             {panelAbierto ? 'Cerrar' : 'Agregar atletas'}
           </button>
         </div>
+        )}
       </div>
 
       {panelAbierto && (
@@ -478,7 +493,7 @@ export function EntrenamientoDetallePage() {
               <tr>
                 {seleccionando && <th className="col-elegir" />}
                 <th>Apellido y nombre</th>
-                <th>Asistencia</th>
+                {staff && <th>Asistencia</th>}
                 <th />
               </tr>
             </thead>
@@ -531,6 +546,7 @@ export function EntrenamientoDetallePage() {
                       )}
                     </td>
 
+                    {staff && (
                     <td>
                       <div className="asistencia">
                         <button
@@ -559,6 +575,7 @@ export function EntrenamientoDetallePage() {
                         {atleta.asistio === null && <span className="sutil">sin marcar</span>}
                       </div>
                     </td>
+                    )}
 
                     <td className="derecha">
                       <div className="acciones-fila">
@@ -583,6 +600,7 @@ export function EntrenamientoDetallePage() {
                         >
                           Trabajos
                         </button>
+                        {staff && (
                         <button
                           type="button"
                           className="boton-fantasma"
@@ -594,6 +612,7 @@ export function EntrenamientoDetallePage() {
                         >
                           Quitar
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
