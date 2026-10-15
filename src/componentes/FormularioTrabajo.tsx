@@ -9,7 +9,8 @@ import type {
   TrabajoDto,
 } from '../tipos/api'
 import { horaActual } from '../util/fechas'
-import { esHoraValida, formatearTiempo, parsearTiempo } from '../util/tiempos'
+import { textoRmDeTexto } from '../util/rm'
+import { esHoraValida, formatearTiempo, parsearTiempo, sumarTiempos, velocidadKmh } from '../util/tiempos'
 import { CampoTiempo } from './CampoTiempo'
 
 /** Los tres lugares donde se puede hacer un trabajo. */
@@ -178,7 +179,7 @@ interface Props {
 
 /**
  * La grilla de un trabajo: en gimnasio se cargan ejercicios con sus series
- * (reps, %, kg) y en tierra y agua, parciales de distancia y tiempo, con las
+ * (reps, kg, %) y en tierra y agua, parciales de distancia y tiempo, con las
  * muestras de ppm cuando el trabajo es de agua.
  *
  * Es un componente controlado: recibe el formulario y avisa cada cambio con el
@@ -346,7 +347,9 @@ export function FormularioTrabajo({
           <div className="parciales-cabecera">
             <div>
               <h5>Ejercicios</h5>
-              <p className="sutil">Cada ejercicio lleva sus series: reps, % y kg.</p>
+              <p className="sutil">
+                Cada ejercicio lleva sus series: reps, kg y %. El RM aproximado se calcula solo.
+              </p>
             </div>
             <button type="button" className="boton-fantasma" onClick={agregarEjercicio}>
               Agregar ejercicio
@@ -391,6 +394,7 @@ export function FormularioTrabajo({
                       className="serie-campo"
                       inputMode="numeric"
                       placeholder="Reps"
+                      aria-label="Repeticiones"
                       value={serie.repeticiones}
                       onChange={(e) =>
                         cambiarSerie(bloque.clave, serie.clave, { repeticiones: e.target.value })
@@ -398,22 +402,30 @@ export function FormularioTrabajo({
                     />
                     <input
                       className="serie-campo"
-                      inputMode="numeric"
-                      placeholder="%"
-                      value={serie.porcentaje}
-                      onChange={(e) =>
-                        cambiarSerie(bloque.clave, serie.clave, { porcentaje: e.target.value })
-                      }
-                    />
-                    <input
-                      className="serie-campo"
                       inputMode="decimal"
                       placeholder="Kg"
+                      aria-label="Kilos"
                       value={serie.peso}
                       onChange={(e) =>
                         cambiarSerie(bloque.clave, serie.clave, { peso: e.target.value })
                       }
                     />
+                    <input
+                      className="serie-campo"
+                      inputMode="numeric"
+                      placeholder="%"
+                      aria-label="Porcentaje"
+                      value={serie.porcentaje}
+                      onChange={(e) =>
+                        cambiarSerie(bloque.clave, serie.clave, { porcentaje: e.target.value })
+                      }
+                    />
+                    <span
+                      className="serie-rm"
+                      title="1RM aproximado: los kg son ese % de una repetición al 100%"
+                    >
+                      RM {textoRmDeTexto(serie.porcentaje, serie.peso)}
+                    </span>
                     <button
                       type="button"
                       className="boton-fantasma peligro"
@@ -474,6 +486,9 @@ export function FormularioTrabajo({
                   valor={fila.tiempo}
                   onChange={(tiempo) => cambiarParcial(fila.clave, { tiempo })}
                 />
+                <span className="parcial-vel" title="Velocidad promedio en kilómetros por hora">
+                  {textoVelocidad(fila.distancia, fila.tiempo)}
+                </span>
                 <span className="parcial-dif sutil" title="Diferencia con el parcial anterior">
                   {diferencia(form.parciales, indice)}
                 </span>
@@ -493,6 +508,7 @@ export function FormularioTrabajo({
               </li>
             ))}
           </ul>
+          <TotalParciales filas={form.parciales} />
         </section>
       )}
 
@@ -567,6 +583,40 @@ export function FormularioTrabajo({
       )}
     </form>
   )
+}
+
+/** Suma de las distancias y los tiempos ya escritos, para verla mientras se carga. */
+function TotalParciales({ filas }: { filas: FilaParcial[] }) {
+  const distancia = filas.reduce((suma, fila) => {
+    const metros = Number(fila.distancia.trim())
+    return Number.isInteger(metros) && metros > 0 ? suma + metros : suma
+  }, 0)
+  const tiempo = sumarTiempos(filas.map((fila) => fila.tiempo))
+  const velocidad = tiempo ? velocidadKmh(distancia, tiempo) : null
+
+  if (distancia === 0 && tiempo === null) {
+    return null
+  }
+
+  return (
+    <p className="parciales-total">
+      Total {distancia > 0 ? `${distancia.toLocaleString('es-AR')} m` : '—'}
+      {' · '}
+      {tiempo ?? '—'}
+      {velocidad && ` · ${velocidad} km/h`}
+    </p>
+  )
+}
+
+/** km/h de una fila que se esta escribiendo. */
+function textoVelocidad(distancia: string, tiempo: string): string {
+  const metros = Number(distancia.trim())
+  if (!Number.isInteger(metros) || metros <= 0) {
+    return '—'
+  }
+
+  const velocidad = velocidadKmh(metros, tiempo)
+  return velocidad ? `${velocidad} km/h` : '—'
 }
 
 /** Diferencia con la fila anterior, mientras se esta cargando. */

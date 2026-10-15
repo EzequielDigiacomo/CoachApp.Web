@@ -40,6 +40,51 @@ export function parsearTiempo(texto: string): number | null {
   return Math.round((minutosTotales * 60 + ultima) * 100)
 }
 
+/**
+ * Suma tiempos escritos, cada uno la duracion de su parcial. "2:16" + "2:14" +
+ * "0:30" da "5:00". null si ninguno se entiende.
+ */
+export function sumarTiempos(textos: string[]): string | null {
+  let total = 0
+  let alguno = false
+
+  for (const texto of textos) {
+    const centesimas = parsearTiempo(texto)
+    if (centesimas === null) {
+      continue
+    }
+
+    total += centesimas
+    alguno = true
+  }
+
+  return alguno ? formatearTiempo(total) : null
+}
+
+/**
+ * Velocidad en km/h. 500 m en 136 segundos (2:16) dan 13,24.
+ * null si falta la distancia o el tiempo.
+ */
+export function kilometrosPorHora(metros: number, tiempo: string): number | null {
+  const centesimas = parsearTiempo(tiempo)
+  if (centesimas === null || centesimas <= 0 || !(metros > 0)) {
+    return null
+  }
+
+  return (metros * 360) / centesimas
+}
+
+/** La misma velocidad, lista para mostrar: "13,2". */
+export function velocidadKmh(metros: number, tiempo: string): string | null {
+  const kmh = kilometrosPorHora(metros, tiempo)
+  return kmh === null ? null : textoKmh(kmh)
+}
+
+/** Un número de km/h con un decimal, como se escribe en la tabla. */
+export function textoKmh(kmh: number): string {
+  return kmh.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
 /** Pasa centesimas a texto: "4:30" o "1:02:03.5". */
 export function formatearTiempo(centesimas: number): string {
   const total = Math.round(centesimas)

@@ -41,6 +41,8 @@ export function AtletaHistorialPage() {
   const [sesionAbierta, setSesionAbierta] = useState<GrupoSesion | null>(null)
   /** Trabajo cuyo grafico de ppm y distancia se esta viendo. */
   const [trabajoParaGrafico, setTrabajoParaGrafico] = useState<TrabajoDto | null>(null)
+  /** Trabajo cuyo grafico de velocidad se esta viendo. */
+  const [trabajoParaVelocidad, setTrabajoParaVelocidad] = useState<TrabajoDto | null>(null)
 
   const cargar = useCallback(async () => {
     if (!Number.isInteger(atletaId) || atletaId <= 0) {
@@ -233,10 +235,11 @@ export function AtletaHistorialPage() {
             .filter(Boolean)
             .join(' · ')}
           ancho="grande"
-          pausado={trabajoParaGrafico !== null}
+          pausado={trabajoParaGrafico !== null || trabajoParaVelocidad !== null}
           onCerrar={() => {
             setSesionAbierta(null)
             setTrabajoParaGrafico(null)
+            setTrabajoParaVelocidad(null)
           }}
         >
           <div className="trabajos">
@@ -247,6 +250,7 @@ export function AtletaHistorialPage() {
               <TarjetaTrabajo
                 trabajo={trabajo}
                 key={trabajo.id}
+                onVelocidad={() => setTrabajoParaVelocidad(trabajo)}
                 onGrafico={() => setTrabajoParaGrafico(trabajo)}
               >
                 <NotasDelTrabajo notas={notasPorTrabajo.get(trabajo.id) ?? []} />
@@ -266,6 +270,15 @@ export function AtletaHistorialPage() {
           contexto={{ atletaId }}
           onCerrar={() => setMostrarNotas(false)}
           onCambio={() => void cargar()}
+        />
+      )}
+
+      {trabajoParaVelocidad && (
+        <ModalGraficoTrabajo
+          trabajo={trabajoParaVelocidad}
+          modo="velocidad"
+          apilado={sesionAbierta !== null}
+          onCerrar={() => setTrabajoParaVelocidad(null)}
         />
       )}
 

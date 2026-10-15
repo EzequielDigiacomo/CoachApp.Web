@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
@@ -49,6 +49,13 @@ export function EntrenamientoDetallePage() {
   const [avisosGarmin, setAvisosGarmin] = useState<string[]>([])
   const [anotando, setAnotando] = useState(false)
   const [notasSesion, setNotasSesion] = useState<AnotacionDto[]>([])
+  /**
+   * Cada toque de asistencia lleva un numero. Si la respuesta de uno viejo
+   * llega despues, se descarta: la pantalla ya muestra el toque mas nuevo.
+   */
+  const marcaPendiente = useRef(new Map<number, number>())
+  /** Atletas cuya marca se pinto y todavia no volvio de la API. */
+  const marcasEnVuelo = useRef(new Set<number>())
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -155,7 +162,40 @@ export function EntrenamientoDetallePage() {
   function marcar(atleta: AtletaEnEntrenamientoDto, asistio: boolean | null) {
     // Tocar el estado ya activo lo revierte a "sin marcar".
     const nuevo = atleta.asistio === asistio ? null : asistio
-    void ejecutar(() => entrenamientosApi.marcarAsistencia(entrenamientoId, atleta.atletaId, nuevo))
+    const anterior = atleta.asistio
+    const ticket = (marcaPendiente.current.get(atleta.atletaId) ?? 0) + 1
+    marcaPendiente.current.set(atleta.atletaId, ticket)
+
+    // La marca se pinta al toque. Neon tarda, y el boton no tiene por que esperarla.
+    marcasEnVuelo.current.add(atleta.atletaId)
+    setError(null)
+    setEntrenamiento((actual) =>
+      actual ? conAsistencia(actual, atleta.atletaId, nuevo) : actual,
+    )
+
+    void entrenamientosApi
+      .marcarAsistencia(entrenamientoId, atleta.atletaId, nuevo)
+      .then((sesion) => {
+        setEntrenamiento((actual) => {
+          if (marcaPendiente.current.get(atleta.atletaId) !== ticket) {
+            return actual
+          }
+
+          marcasEnVuelo.current.delete(atleta.atletaId)
+          return aplicarSesion(actual, sesion, marcasEnVuelo.current)
+        })
+      })
+      .catch((e) => {
+        if (marcaPendiente.current.get(atleta.atletaId) !== ticket) {
+          return
+        }
+
+        marcasEnVuelo.current.delete(atleta.atletaId)
+        setEntrenamiento((actual) =>
+          actual ? conAsistencia(actual, atleta.atletaId, anterior) : actual,
+        )
+        setError(e instanceof ApiError ? e.message : 'No se pudo marcar la asistencia.')
+      })
   }
 
   function agregar(atletaId: number) {
@@ -658,6 +698,56 @@ function textoResumen(resumen: ResumenTrabajoDto): string {
 /** Un peso en kilos, sin decimales de mas: 65 o 62,5. */
 function textoKilos(kilos: number): string {
   return kilos.toLocaleString('es-AR', { maximumFractionDigits: 1 })
+}
+
+/**
+ * Aplica la sesion que volvio de la API, pero deja quieta la asistencia de
+ * los atletas que se marcaron despues y todavia no confirmaron.
+ */
+function aplicarSesion(
+  local: EntrenamientoDto | null,
+  servidor: EntrenamientoDto,
+  enVuelo: Set<number>,
+): EntrenamientoDto {
+  if (!local || enVuelo.size === 0) {
+    return servidor
+  }
+
+  const atletas = servidor.atletas.map((atleta) => {
+    if (!enVuelo.has(atleta.atletaId)) {
+      return atleta
+    }
+
+    const pintado = local.atletas.find((otro) => otro.atletaId === atleta.atletaId)
+    return pintado ? { ...atleta, asistio: pintado.asistio } : atleta
+  })
+
+  return {
+    ...servidor,
+    atletas,
+    cantidadPresentes: atletas.filter((atleta) => atleta.asistio === true).length,
+    cantidadAusentes: atletas.filter((atleta) => atleta.asistio === false).length,
+    cantidadSinMarcar: atletas.filter((atleta) => atleta.asistio === null).length,
+  }
+}
+
+/** Pinta la asistencia de un atleta y recalcula los conteos de la cabecera. */
+function conAsistencia(
+  sesion: EntrenamientoDto,
+  atletaId: number,
+  asistio: boolean | null,
+): EntrenamientoDto {
+  const atletas = sesion.atletas.map((atleta) =>
+    atleta.atletaId === atletaId ? { ...atleta, asistio } : atleta,
+  )
+
+  return {
+    ...sesion,
+    atletas,
+    cantidadPresentes: atletas.filter((atleta) => atleta.asistio === true).length,
+    cantidadAusentes: atletas.filter((atleta) => atleta.asistio === false).length,
+    cantidadSinMarcar: atletas.filter((atleta) => atleta.asistio === null).length,
+  }
 }
 
 /** Resumen corto de la actividad para la fila del atleta. */

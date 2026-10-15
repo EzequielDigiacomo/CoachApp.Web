@@ -1,5 +1,7 @@
 import { esTrabajoDeAgua, esTrabajoDeGimnasio, etiquetaTipoTrabajo } from '../api/entrenamientos'
 import type { PaladaDto, TrabajoDto } from '../tipos/api'
+import { textoRmAproximado } from '../util/rm'
+import { sumarTiempos, velocidadKmh } from '../util/tiempos'
 
 interface Props {
   trabajo: TrabajoDto
@@ -10,6 +12,11 @@ interface Props {
    * Los padres lo manejan asi cada uno decide donde vive su modal.
    */
   onGrafico?: () => void
+  /**
+   * Si viene, se muestra el grafico de velocidad de los parciales. No depende
+   * de las paladas: alcanza con distancia y tiempo.
+   */
+  onVelocidad?: () => void
   /** Contenido extra al pie de la tarjeta, como las notas del historial. */
   children?: React.ReactNode
 }
@@ -19,7 +26,7 @@ interface Props {
  * ejercicios con sus series para gimnasio. La usan el modal de trabajos y el
  * historial del atleta, asi el detalle se ve igual en los dos lados.
  */
-export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props) {
+export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, children }: Props) {
   const gimnasio = esTrabajoDeGimnasio(trabajo.tipo)
 
   // Las paladas son propias del agua: en tierra la tabla se queda con sus
@@ -29,9 +36,14 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props
   // El grafico es de ppm, y las ppm son propias del agua: sin muestras no hay
   // nada que dibujar, asi que el boton solo aparece cuando hay al menos una.
   const puedeGraficar = onGrafico !== undefined && agua && trabajo.paladas.length > 0
+  const puedeVelocidad =
+    onVelocidad !== undefined &&
+    trabajo.parciales.some((parcial) => velocidadKmh(parcial.distanciaMetros, parcial.tiempo) !== null)
 
   const totalSeries = trabajo.ejercicios.reduce((suma, e) => suma + e.series.length, 0)
   const ultimo = trabajo.parciales[trabajo.parciales.length - 1]
+  const distanciaTotal = trabajo.parciales.reduce((suma, parcial) => suma + parcial.distanciaMetros, 0)
+  const tiempoTotal = sumarTiempos(trabajo.parciales.map((parcial) => parcial.tiempo))
 
   return (
     <article className="trabajo">
@@ -60,8 +72,18 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props
           </>
         )}
 
-        {(acciones || puedeGraficar) && (
+        {(acciones || puedeGraficar || puedeVelocidad) && (
           <div className="trabajo-acciones">
+            {puedeVelocidad && (
+              <button
+                type="button"
+                className="boton-fantasma"
+                onClick={onVelocidad}
+                title="Ver la velocidad de cada parcial, con su distancia y su tiempo"
+              >
+                Velocidad
+              </button>
+            )}
             {puedeGraficar && (
               <button
                 type="button"
@@ -93,8 +115,11 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props
                     <tr>
                       <th title="Orden de la serie">#</th>
                       <th>Reps</th>
-                      <th>%</th>
                       <th>Kg</th>
+                      <th>%</th>
+                      <th title="1RM aproximado: los kg son ese % de una repetición al 100%">
+                        RM Apx
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -102,8 +127,11 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props
                       <tr key={serie.id}>
                         <td className="mono sutil">{serie.orden}</td>
                         <td className="mono">{serie.repeticiones}</td>
-                        <td className="mono">{serie.porcentaje ?? '—'}</td>
                         <td className="mono">{serie.pesoKg ?? '—'}</td>
+                        <td className="mono">{serie.porcentaje ?? '—'}</td>
+                        <td className="mono">
+                          {textoRmAproximado(serie.porcentaje, serie.pesoKg)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -121,6 +149,7 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props
                 <th>Distancia</th>
                 {agua && <th title="Paladas por minuto tomadas en ese tramo">Ppm</th>}
                 <th>Tiempo</th>
+                <th title="Velocidad promedio en kilómetros por hora">km/h</th>
                 <th title="Diferencia con el parcial anterior">Dif.</th>
               </tr>
             </thead>
@@ -135,10 +164,27 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, children }: Props
                     </td>
                   )}
                   <td className="mono">{parcial.tiempo}</td>
+                  <td className="mono">
+                    {velocidadKmh(parcial.distanciaMetros, parcial.tiempo) ?? '—'}
+                  </td>
                   <td className="mono sutil">{parcial.parcial ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
+            {trabajo.parciales.length > 0 && (
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td>{distanciaTotal.toLocaleString('es-AR')} m</td>
+                  {agua && <td />}
+                  <td className="mono">{tiempoTotal ?? '—'}</td>
+                  <td className="mono">
+                    {tiempoTotal ? (velocidadKmh(distanciaTotal, tiempoTotal) ?? '—') : '—'}
+                  </td>
+                  <td />
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       )}

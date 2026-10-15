@@ -110,7 +110,7 @@ h2 {
 }
 
 .contenido {
-  padding: 16px;
+  padding: 16px 16px 40px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -483,12 +483,9 @@ select {
   border-radius: 6px;
 }
 
-/* La tabla de atletas de una sesion puede quedar mas larga que la pantalla y
-   dejar las ultimas filas fuera de alcance. Se le pone un alto maximo con
-   scroll propio para poder bajar sin perder atletas. */
+/* La lista no scrollea sola: baja la pagina. */
 .tabla-con-scroll {
-  max-height: 65vh;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* Mientras se baja por la lista, los titulos de las columnas quedan a la vista. */
@@ -691,6 +688,18 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
+.tabla-parciales tfoot td {
+  font-weight: 600;
+  border-top: 1px solid var(--borde);
+  background: var(--fondo);
+}
+
+.parciales-total {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .tabla-parciales th:first-child,
 .tabla-parciales th:nth-child(2),
 .tabla-parciales th:nth-child(3) {
@@ -715,8 +724,9 @@ select {
   width: 88px;
 }
 
-.tabla-parciales.con-paladas th:nth-child(5) {
-  width: 64px;
+.tabla-parciales.con-paladas th:nth-child(5),
+.tabla-parciales.con-paladas th:nth-child(6) {
+  width: 72px;
 }
 
 /* Las muestras de un tramo, apiladas: puede haber mas de una en el mismo parcial. */
@@ -788,6 +798,15 @@ select {
 
 .serie-campo {
   width: 84px;
+}
+
+/* 1RM calculado al lado de la serie, mientras se carga. */
+.serie-rm {
+  min-width: 72px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-suave);
+  white-space: nowrap;
 }
 
 .tabla-series th:first-child,
@@ -891,6 +910,14 @@ select {
 .parcial-dif {
   min-width: 52px;
   font-variant-numeric: tabular-nums;
+}
+
+.parcial-vel {
+  min-width: 72px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-suave);
+  white-space: nowrap;
 }
 
 /* Debajo de la lista: en el celular queda al alcance del pulgar. */
@@ -1042,6 +1069,7 @@ select {
   border-top-color: #2563eb;
 }
 
+
 .swatch-muestra {
   border-top-style: dotted;
   border-top-color: #2563eb;
@@ -1051,6 +1079,12 @@ select {
 .swatch-parcial {
   border-top-style: dashed;
   border-top-color: #94a3b8;
+}
+
+.swatch-promedio {
+  border-top-style: solid;
+  border-top-width: 3px;
+  border-top-color: #ea580c;
 }
 
 .grafico-pie {
@@ -1653,13 +1687,6 @@ button.sesion.ausente {
     overflow: visible;
   }
 
-  /* En el celular las filas se apilan: conviene que la pagina fluya y no que
-     la lista quede encerrada con su propio scroll. */
-  .tabla-con-scroll {
-    max-height: none;
-    overflow: visible;
-  }
-
   .tarjeta.sin-relleno > .tabla thead {
     display: none;
   }
@@ -1760,15 +1787,21 @@ button.sesion.ausente {
     justify-self: start;
   }
 
-  .parcial-dif {
+  .parcial-vel {
     grid-column: 2;
     grid-row: 3;
     min-width: 0;
   }
 
-  .parciales-lista li .boton-fantasma {
+  .parcial-dif {
     grid-column: 3;
     grid-row: 3;
+    min-width: 0;
+  }
+
+  .parciales-lista li .boton-fantasma {
+    grid-column: 2 / -1;
+    grid-row: 4;
   }
 
   .paladas-lista li {
@@ -1833,8 +1866,14 @@ button.sesion.ausente {
     width: 100%;
   }
 
+  .serie-rm {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
   .series-lista li .boton-fantasma {
-    grid-column: 2 / -1;
+    grid-column: 3 / -1;
+    grid-row: 2;
   }
 }
 

@@ -28,7 +28,7 @@ interface Props {
 /**
  * Muestra los trabajos que hizo el atleta en la sesion y permite cargarlos.
  * La grilla cambia segun el tipo: en gimnasio se cargan ejercicios con sus
- * series (reps, %, kg) y en tierra y agua, parciales de distancia y tiempo.
+ * series (reps, kg, %) y en tierra y agua, parciales de distancia y tiempo.
  */
 export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: Props) {
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
@@ -42,6 +42,8 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
   const [trabajoParaNotas, setTrabajoParaNotas] = useState<TrabajoDto | null>(null)
   /** Trabajo cuyo grafico se esta viendo en el modal encima de este. */
   const [trabajoParaGrafico, setTrabajoParaGrafico] = useState<TrabajoDto | null>(null)
+  /** Trabajo cuyo grafico de velocidad se esta viendo. No hace falta que tenga ppm. */
+  const [trabajoParaVelocidad, setTrabajoParaVelocidad] = useState<TrabajoDto | null>(null)
 
   /** Las notas cuelgan del atleta en la sesion, asi que se traen todas juntas. */
   const cargarNotas = useCallback(async () => {
@@ -149,7 +151,7 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
     <Modal
       titulo="Trabajos"
       subtitulo={`${atleta.apellido}, ${atleta.nombre} · ${atleta.dni}`}
-      pausado={trabajoParaNotas !== null || trabajoParaGrafico !== null}
+      pausado={trabajoParaNotas !== null || trabajoParaGrafico !== null || trabajoParaVelocidad !== null}
       onCerrar={onCerrar}
     >
       {error && <p className="error">{error}</p>}
@@ -204,6 +206,10 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
                 <TarjetaTrabajo
                   trabajo={trabajo}
                   key={trabajo.id}
+                  onVelocidad={() => {
+                    setError(null)
+                    setTrabajoParaVelocidad(trabajo)
+                  }}
                   onGrafico={() => {
                     setError(null)
                     setTrabajoParaGrafico(trabajo)
@@ -254,6 +260,15 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
           contexto={{ trabajoId: trabajoParaNotas.id }}
           onCerrar={() => setTrabajoParaNotas(null)}
           onCambio={() => void cargarNotas()}
+        />
+      )}
+
+      {trabajoParaVelocidad && (
+        <ModalGraficoTrabajo
+          trabajo={trabajoParaVelocidad}
+          modo="velocidad"
+          apilado
+          onCerrar={() => setTrabajoParaVelocidad(null)}
         />
       )}
 
