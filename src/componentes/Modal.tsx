@@ -17,6 +17,27 @@ interface Props {
   children: React.ReactNode
 }
 
+/**
+ * Cuantos modales tienen el fondo trabado. Si cada uno guardara y
+ * restaurara el overflow, al apilar trabajos + grafico el body quedaba
+ * en "hidden" para siempre y la pagina no scrolleaba hasta refrescar.
+ */
+let bloqueosScroll = 0
+
+function bloquearScrollFondo() {
+  if (bloqueosScroll === 0) {
+    document.body.style.overflow = 'hidden'
+  }
+  bloqueosScroll += 1
+}
+
+function liberarScrollFondo() {
+  bloqueosScroll = Math.max(0, bloqueosScroll - 1)
+  if (bloqueosScroll === 0) {
+    document.body.style.overflow = ''
+  }
+}
+
 /** Marco de modal: fondo oscuro, cabecera con titulo y cierre. */
 export function Modal({
   titulo,
@@ -27,7 +48,12 @@ export function Modal({
   onCerrar,
   children,
 }: Props) {
-  // Escape cierra el modal y, mientras esta abierto, no se mueve el fondo.
+  // Solo al montar / desmontar: no se vuelve a correr si cambia onCerrar.
+  useEffect(() => {
+    bloquearScrollFondo()
+    return () => liberarScrollFondo()
+  }, [])
+
   useEffect(() => {
     function alTeclear(evento: KeyboardEvent) {
       if (evento.key === 'Escape' && !pausado) {
@@ -35,14 +61,8 @@ export function Modal({
       }
     }
 
-    const overflowAnterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', alTeclear)
-
-    return () => {
-      document.body.style.overflow = overflowAnterior
-      window.removeEventListener('keydown', alTeclear)
-    }
+    return () => window.removeEventListener('keydown', alTeclear)
   }, [onCerrar, pausado])
 
   return (

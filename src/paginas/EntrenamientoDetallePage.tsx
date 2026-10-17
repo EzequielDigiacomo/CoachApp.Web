@@ -8,6 +8,7 @@ import { equiposApi } from '../api/equipos'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalCargaEquipo } from '../componentes/ModalCargaEquipo'
 import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
+import { ModalEditarSesion } from '../componentes/ModalEditarSesion'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalTrabajosEquipo } from '../componentes/ModalTrabajosEquipo'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
@@ -49,6 +50,7 @@ export function EntrenamientoDetallePage() {
   const [seleccionados, setSeleccionados] = useState<number[]>([])
   const [cargaMultiple, setCargaMultiple] = useState(false)
   const [cargaEquipo, setCargaEquipo] = useState(false)
+  const [editandoSesion, setEditandoSesion] = useState(false)
 
   /** Atleta cuyos trabajos se estan viendo en el modal. */
   const [enTrabajos, setEnTrabajos] = useState<AtletaEnEntrenamientoDto | null>(null)
@@ -360,6 +362,9 @@ export function EntrenamientoDetallePage() {
               Vincular Garmin
             </button>
           )}
+          <button type="button" className="boton-fantasma" onClick={() => setEditandoSesion(true)}>
+            Editar
+          </button>
           <button type="button" className="boton-fantasma peligro" onClick={() => void eliminarSesion()}>
             Eliminar
           </button>
@@ -736,6 +741,14 @@ export function EntrenamientoDetallePage() {
           atletas={entrenamiento.atletas}
           onCerrar={() => setCargaEquipo(false)}
           onCargado={() => void refrescar()}
+        />
+      )}
+
+      {editandoSesion && (
+        <ModalEditarSesion
+          entrenamiento={entrenamiento}
+          onCerrar={() => setEditandoSesion(false)}
+          onGuardado={(actualizado) => setEntrenamiento(actualizado)}
         />
       )}
 
