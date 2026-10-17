@@ -202,52 +202,63 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
             </p>
           ) : (
             <div className="trabajos">
-              {trabajos.map((trabajo) => (
-                <TarjetaTrabajo
-                  trabajo={trabajo}
-                  key={trabajo.id}
-                  onVelocidad={() => {
-                    setError(null)
-                    setTrabajoParaVelocidad(trabajo)
-                  }}
-                  onGrafico={() => {
-                    setError(null)
-                    setTrabajoParaGrafico(trabajo)
-                  }}
-                  acciones={
-                    <>
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        onClick={() => setTrabajoParaNotas(trabajo)}
-                      >
-                        Anotaciones
-                        {(notasPorTrabajo[trabajo.id] ?? 0) > 0 &&
-                          ` · ${notasPorTrabajo[trabajo.id]}`}
-                      </button>
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        disabled={ocupado}
-                        onClick={() => {
-                          setError(null)
-                          setForm(formularioDesde(trabajo))
-                        }}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="boton-fantasma peligro"
-                        disabled={ocupado}
-                        onClick={() => void eliminar(trabajo)}
-                      >
-                        Eliminar
-                      </button>
-                    </>
-                  }
-                />
-              ))}
+              {trabajos.map((trabajo) => {
+                const deEquipo = trabajo.entrenamientoEquipoId != null
+
+                return (
+                  <TarjetaTrabajo
+                    trabajo={trabajo}
+                    key={trabajo.id}
+                    onVelocidad={() => {
+                      setError(null)
+                      setTrabajoParaVelocidad(trabajo)
+                    }}
+                    onGrafico={() => {
+                      setError(null)
+                      setTrabajoParaGrafico(trabajo)
+                    }}
+                    acciones={
+                      <>
+                        {deEquipo && <span className="etiqueta">Equipo</span>}
+                        {!deEquipo && (
+                          <button
+                            type="button"
+                            className="boton-fantasma"
+                            onClick={() => setTrabajoParaNotas(trabajo)}
+                          >
+                            Anotaciones
+                            {(notasPorTrabajo[trabajo.id] ?? 0) > 0 &&
+                              ` · ${notasPorTrabajo[trabajo.id]}`}
+                          </button>
+                        )}
+                        {!deEquipo && (
+                          <button
+                            type="button"
+                            className="boton-fantasma"
+                            disabled={ocupado}
+                            onClick={() => {
+                              setError(null)
+                              setForm(formularioDesde(trabajo))
+                            }}
+                          >
+                            Editar
+                          </button>
+                        )}
+                        {!deEquipo && (
+                          <button
+                            type="button"
+                            className="boton-fantasma peligro"
+                            disabled={ocupado}
+                            onClick={() => void eliminar(trabajo)}
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </>
+                    }
+                  />
+                )
+              })}
             </div>
           )}
         </>

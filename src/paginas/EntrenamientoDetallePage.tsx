@@ -660,57 +660,66 @@ export function EntrenamientoDetallePage() {
                 </tr>
               </thead>
               <tbody>
-                {(entrenamiento.equipos ?? []).map((equipo) => (
-                  <tr
-                    key={equipo.id}
-                    className={staff ? 'fila-clicable' : undefined}
-                    title={staff ? 'Ver los trabajos del bote' : undefined}
-                    onClick={() => {
-                      if (staff) {
-                        setEnTrabajosEquipo(equipo)
-                      }
-                    }}
-                  >
-                    <td>
-                      <strong>{equipo.etiqueta}</strong>
-                      <span className="sutil bloque">
-                        {equipo.miembros
-                          .map((m) => `${m.apellido}, ${m.nombre}`)
-                          .join(' · ')}
-                        {equipo.cantidadTrabajos > 0 &&
-                          ` · ${equipo.cantidadTrabajos} ${equipo.cantidadTrabajos === 1 ? 'trabajo' : 'trabajos'}`}
-                      </span>
-                      <ResumenTrabajos resumenes={equipo.resumenTrabajos ?? []} />
-                    </td>
-                    <td className="derecha">
-                      {staff && (
+                {(entrenamiento.equipos ?? []).map((equipo) => {
+                  const propio =
+                    staff ||
+                    (sesion?.usuario.atletaId != null &&
+                      equipo.miembros.some((m) => m.atletaId === sesion.usuario.atletaId))
+
+                  return (
+                    <tr
+                      key={equipo.id}
+                      className={propio ? 'fila-clicable' : undefined}
+                      title={propio ? 'Ver los trabajos del bote' : undefined}
+                      onClick={() => {
+                        if (propio) {
+                          setEnTrabajosEquipo(equipo)
+                        }
+                      }}
+                    >
+                      <td>
+                        <strong>{equipo.etiqueta}</strong>
+                        <span className="sutil bloque">
+                          {equipo.miembros
+                            .map((m) => `${m.apellido}, ${m.nombre}`)
+                            .join(' · ')}
+                          {equipo.cantidadTrabajos > 0 &&
+                            ` · ${equipo.cantidadTrabajos} ${equipo.cantidadTrabajos === 1 ? 'trabajo' : 'trabajos'}`}
+                        </span>
+                        <ResumenTrabajos resumenes={equipo.resumenTrabajos ?? []} />
+                      </td>
+                      <td className="derecha">
                         <div className="acciones-fila">
-                          <button
-                            type="button"
-                            className="boton-fantasma"
-                            onClick={(evento) => {
-                              evento.stopPropagation()
-                              setEnTrabajosEquipo(equipo)
-                            }}
-                          >
-                            Trabajos
-                          </button>
-                          <button
-                            type="button"
-                            className="boton-fantasma"
-                            disabled={ocupado}
-                            onClick={(evento) => {
-                              evento.stopPropagation()
-                              void quitarEquipo(equipo)
-                            }}
-                          >
-                            Quitar
-                          </button>
+                          {propio && (
+                            <button
+                              type="button"
+                              className="boton-fantasma"
+                              onClick={(evento) => {
+                                evento.stopPropagation()
+                                setEnTrabajosEquipo(equipo)
+                              }}
+                            >
+                              Trabajos
+                            </button>
+                          )}
+                          {staff && (
+                            <button
+                              type="button"
+                              className="boton-fantasma"
+                              disabled={ocupado}
+                              onClick={(evento) => {
+                                evento.stopPropagation()
+                                void quitarEquipo(equipo)
+                              }}
+                            >
+                              Quitar
+                            </button>
+                          )}
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

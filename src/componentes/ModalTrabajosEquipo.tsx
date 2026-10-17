@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../api/cliente'
 import { trabajosEquipoApi } from '../api/equipos'
-import type { EquipoEnEntrenamientoDto, TrabajoDto } from '../tipos/api'
+import { useAuth } from '../auth/contextoAuth'
+import { esStaff, type EquipoEnEntrenamientoDto, type TrabajoDto } from '../tipos/api'
 import {
   FormularioTrabajo,
   armarRequest,
@@ -20,8 +21,10 @@ interface Props {
   onCambio: () => void
 }
 
-/** Trabajos de agua del bote. Siempre agua. */
+/** Trabajos de agua del bote. El atleta puede ver detalle y gráficos. */
 export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambio }: Props) {
+  const { sesion } = useAuth()
+  const staff = esStaff(sesion?.usuario.rol)
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -111,7 +114,7 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
     >
       {error && <p className="error">{error}</p>}
 
-      {form ? (
+      {form && staff ? (
         <FormularioTrabajo
           form={form}
           ocupado={ocupado}
@@ -130,22 +133,28 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
                 ? 'Sin trabajos cargados'
                 : `${trabajos.length} ${trabajos.length === 1 ? 'trabajo' : 'trabajos'}`}
             </h4>
-            <button
-              type="button"
-              className="boton"
-              onClick={() => {
-                setError(null)
-                setForm(nuevoFormulario('Agua'))
-              }}
-            >
-              Agregar trabajo agua
-            </button>
+            {staff && (
+              <button
+                type="button"
+                className="boton"
+                onClick={() => {
+                  setError(null)
+                  setForm(nuevoFormulario('Agua'))
+                }}
+              >
+                Agregar trabajo agua
+              </button>
+            )}
           </div>
 
           {cargando ? (
             <p className="sutil">Cargando…</p>
           ) : trabajos.length === 0 ? (
-            <p className="sutil">Cargá el trabajo de agua del bote: parciales, distancia y tiempo.</p>
+            <p className="sutil">
+              {staff
+                ? 'Cargá el trabajo de agua del bote: parciales, distancia y tiempo.'
+                : 'Todavía no hay trabajos cargados en este bote.'}
+            </p>
           ) : (
             <div className="trabajos">
               {trabajos.map((trabajo) => (
@@ -161,26 +170,28 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
                     setTrabajoParaGrafico(trabajo)
                   }}
                   acciones={
-                    <>
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        onClick={() => {
-                          setError(null)
-                          setForm(formularioDesde(trabajo))
-                        }}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="boton-fantasma peligro"
-                        disabled={ocupado}
-                        onClick={() => void eliminar(trabajo)}
-                      >
-                        Eliminar
-                      </button>
-                    </>
+                    staff ? (
+                      <>
+                        <button
+                          type="button"
+                          className="boton-fantasma"
+                          onClick={() => {
+                            setError(null)
+                            setForm(formularioDesde(trabajo))
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="boton-fantasma peligro"
+                          disabled={ocupado}
+                          onClick={() => void eliminar(trabajo)}
+                        >
+                          Eliminar
+                        </button>
+                      </>
+                    ) : undefined
                   }
                 />
               ))}
