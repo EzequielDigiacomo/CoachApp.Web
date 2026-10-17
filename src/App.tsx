@@ -5,6 +5,7 @@ import { Layout } from './componentes/Layout'
 import { AnotacionAtletaPage } from './paginas/AnotacionAtletaPage'
 import { AnotacionesPage } from './paginas/AnotacionesPage'
 import { CuentasPage } from './paginas/CuentasPage'
+import { EquiposPage } from './paginas/EquiposPage'
 import { SensacionesPage } from './paginas/SensacionesPage'
 import { AtletaHistorialPage } from './paginas/AtletaHistorialPage'
 import { AtletasPage } from './paginas/AtletasPage'
@@ -86,6 +87,17 @@ export default function App() {
               <Pagina>
                 <RutaStaff>
                   <CuentasPage />
+                </RutaStaff>
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/equipos"
+            element={
+              <Pagina>
+                <RutaStaff>
+                  <EquiposPage />
                 </RutaStaff>
               </Pagina>
             }

@@ -114,6 +114,36 @@ export interface EntrenamientoDto {
   cantidadSinMarcar: number
   /** Vacio en el listado; completo en el detalle. */
   atletas: AtletaEnEntrenamientoDto[]
+  /** Botes de equipo de la sesion. Vacio en el listado. */
+  equipos?: EquipoEnEntrenamientoDto[]
+}
+
+export type TipoBote = 'K2' | 'K4'
+
+export interface EquipoMiembroDto {
+  atletaId: number
+  nombre: string
+  apellido: string
+  orden: number
+}
+
+export interface EquipoDto {
+  id: number
+  tipo: TipoBote
+  etiqueta: string
+  activo: boolean
+  fechaCreacion: string
+  miembros: EquipoMiembroDto[]
+}
+
+export interface EquipoEnEntrenamientoDto {
+  id: number
+  tipo: TipoBote
+  etiqueta: string
+  equipoId: number | null
+  miembros: EquipoMiembroDto[]
+  cantidadTrabajos: number
+  resumenTrabajos: ResumenTrabajoDto[]
 }
 
 /** Actividad de un amigo de Garmin, el dia de la sesion. */
@@ -233,7 +263,8 @@ export interface EjercicioDto {
 export interface TrabajoDto {
   id: number
   entrenamientoId: number
-  atletaId: number
+  atletaId: number | null
+  entrenamientoEquipoId?: number | null
   tipo: TipoTrabajo
   /** Hora del dia en que se hizo el trabajo, "09:30". */
   horaInicio: string | null

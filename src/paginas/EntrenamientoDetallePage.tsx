@@ -4,9 +4,12 @@ import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import { atletasApi, entrenamientosApi, etiquetaTurno } from '../api/entrenamientos'
 import { garminApi } from '../api/garmin'
+import { equiposApi } from '../api/equipos'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
+import { ModalCargaEquipo } from '../componentes/ModalCargaEquipo'
 import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
+import { ModalTrabajosEquipo } from '../componentes/ModalTrabajosEquipo'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import { useAuth } from '../auth/contextoAuth'
@@ -17,6 +20,7 @@ import type {
   AtletaDto,
   AtletaEnEntrenamientoDto,
   EntrenamientoDto,
+  EquipoEnEntrenamientoDto,
   EstadoGarminDto,
   ResumenTrabajoDto,
 } from '../tipos/api'
@@ -44,9 +48,11 @@ export function EntrenamientoDetallePage() {
   const [seleccionando, setSeleccionando] = useState(false)
   const [seleccionados, setSeleccionados] = useState<number[]>([])
   const [cargaMultiple, setCargaMultiple] = useState(false)
+  const [cargaEquipo, setCargaEquipo] = useState(false)
 
   /** Atleta cuyos trabajos se estan viendo en el modal. */
   const [enTrabajos, setEnTrabajos] = useState<AtletaEnEntrenamientoDto | null>(null)
+  const [enTrabajosEquipo, setEnTrabajosEquipo] = useState<EquipoEnEntrenamientoDto | null>(null)
   const [garmin, setGarmin] = useState<EstadoGarminDto | null>(null)
   const [vinculando, setVinculando] = useState(false)
   const [sincronizando, setSincronizando] = useState(false)
@@ -214,6 +220,15 @@ export function EntrenamientoDetallePage() {
 
     // Si se estaba viendo sus trabajos, el modal ya no tiene sentido.
     setEnTrabajos((actual) => (actual?.atletaId === atleta.atletaId ? null : actual))
+  }
+
+  function quitarEquipo(equipo: EquipoEnEntrenamientoDto) {
+    if (!window.confirm(`¿Quitar ${equipo.etiqueta} de la sesión?`)) {
+      return
+    }
+
+    void ejecutar(() => equiposApi.quitarDeSesion(entrenamientoId, equipo.id))
+    setEnTrabajosEquipo((actual) => (actual?.id === equipo.id ? null : actual))
   }
 
   function abrirTrabajos(atleta: AtletaEnEntrenamientoDto) {
@@ -438,6 +453,9 @@ export function EntrenamientoDetallePage() {
             </button>
           )}
 
+          <button type="button" className="boton-fantasma" onClick={() => setCargaEquipo(true)}>
+            Carga equipo
+          </button>
           <button type="button" className="boton" onClick={() => setPanelAbierto((v) => !v)}>
             {panelAbierto ? 'Cerrar' : 'Agregar atletas'}
           </button>
@@ -623,12 +641,101 @@ export function EntrenamientoDetallePage() {
         </div>
       )}
 
+      {(entrenamiento.equipos ?? []).length > 0 && (
+        <>
+          <div className="encabezado">
+            <h3 className="titulo-seccion">Equipos</h3>
+          </div>
+          <div className="tarjeta sin-relleno tabla-con-scroll">
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>Bote</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {(entrenamiento.equipos ?? []).map((equipo) => (
+                  <tr
+                    key={equipo.id}
+                    className={staff ? 'fila-clicable' : undefined}
+                    title={staff ? 'Ver los trabajos del bote' : undefined}
+                    onClick={() => {
+                      if (staff) {
+                        setEnTrabajosEquipo(equipo)
+                      }
+                    }}
+                  >
+                    <td>
+                      <strong>{equipo.etiqueta}</strong>
+                      <span className="sutil bloque">
+                        {equipo.miembros
+                          .map((m) => `${m.apellido}, ${m.nombre}`)
+                          .join(' · ')}
+                        {equipo.cantidadTrabajos > 0 &&
+                          ` · ${equipo.cantidadTrabajos} ${equipo.cantidadTrabajos === 1 ? 'trabajo' : 'trabajos'}`}
+                      </span>
+                      <ResumenTrabajos resumenes={equipo.resumenTrabajos ?? []} />
+                    </td>
+                    <td className="derecha">
+                      {staff && (
+                        <div className="acciones-fila">
+                          <button
+                            type="button"
+                            className="boton-fantasma"
+                            onClick={(evento) => {
+                              evento.stopPropagation()
+                              setEnTrabajosEquipo(equipo)
+                            }}
+                          >
+                            Trabajos
+                          </button>
+                          <button
+                            type="button"
+                            className="boton-fantasma"
+                            disabled={ocupado}
+                            onClick={(evento) => {
+                              evento.stopPropagation()
+                              void quitarEquipo(equipo)
+                            }}
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
       {enTrabajos && (
         <ModalTrabajos
           entrenamientoId={entrenamientoId}
           atleta={enTrabajos}
           onCerrar={() => setEnTrabajos(null)}
           onCambio={() => void refrescar()}
+        />
+      )}
+
+      {enTrabajosEquipo && (
+        <ModalTrabajosEquipo
+          entrenamientoId={entrenamientoId}
+          equipo={enTrabajosEquipo}
+          onCerrar={() => setEnTrabajosEquipo(null)}
+          onCambio={() => void refrescar()}
+        />
+      )}
+
+      {cargaEquipo && (
+        <ModalCargaEquipo
+          entrenamientoId={entrenamientoId}
+          atletas={entrenamiento.atletas}
+          onCerrar={() => setCargaEquipo(false)}
+          onCargado={() => void refrescar()}
         />
       )}
 
