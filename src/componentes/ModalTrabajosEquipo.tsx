@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../api/cliente'
+import { trabajosApi } from '../api/entrenamientos'
 import { trabajosEquipoApi } from '../api/equipos'
 import { useAuth } from '../auth/contextoAuth'
 import { esStaff, type EquipoEnEntrenamientoDto, type TrabajoDto } from '../tipos/api'
@@ -37,13 +38,25 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
     setCargando(true)
     setError(null)
     try {
-      setTrabajos(await trabajosEquipoApi.listar(entrenamientoId, equipo.id))
+      if (staff) {
+        setTrabajos(await trabajosEquipoApi.listar(entrenamientoId, equipo.id))
+      } else {
+        // El atleta lee por su ruta de trabajos (ya incluye los del bote).
+        // La ruta /equipos/.../trabajos le devolvía 403.
+        const atletaId = sesion?.usuario.atletaId
+        if (atletaId == null) {
+          setTrabajos([])
+          return
+        }
+        const todos = await trabajosApi.listar(entrenamientoId, atletaId)
+        setTrabajos(todos.filter((t) => t.entrenamientoEquipoId === equipo.id))
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudieron cargar los trabajos.')
     } finally {
       setCargando(false)
     }
-  }, [entrenamientoId, equipo.id])
+  }, [entrenamientoId, equipo.id, staff, sesion?.usuario.atletaId])
 
   useEffect(() => {
     void cargar()
@@ -129,9 +142,11 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
         <>
           <div className="encabezado">
             <h4 className="titulo-seccion">
-              {trabajos.length === 0
-                ? 'Sin trabajos cargados'
-                : `${trabajos.length} ${trabajos.length === 1 ? 'trabajo' : 'trabajos'}`}
+              {error
+                ? 'Trabajos del bote'
+                : trabajos.length === 0
+                  ? 'Sin trabajos cargados'
+                  : `${trabajos.length} ${trabajos.length === 1 ? 'trabajo' : 'trabajos'}`}
             </h4>
             {staff && (
               <button
@@ -149,7 +164,7 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
 
           {cargando ? (
             <p className="sutil">Cargando…</p>
-          ) : trabajos.length === 0 ? (
+          ) : error ? null : trabajos.length === 0 ? (
             <p className="sutil">
               {staff
                 ? 'Cargá el trabajo de agua del bote: parciales, distancia y tiempo.'
