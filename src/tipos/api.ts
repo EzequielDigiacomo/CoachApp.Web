@@ -96,7 +96,7 @@ export interface ResumenEjercicioDto {
 export interface ResumenTrabajoDto {
   tipo: TipoTrabajo
   ejercicios: ResumenEjercicioDto[]
-  /** El mejor tiempo de los parciales; null en los trabajos de gimnasio. */
+  /** Tiempo total (suma de parciales); null en los trabajos de gimnasio. */
   mejorTiempo: string | null
 }
 

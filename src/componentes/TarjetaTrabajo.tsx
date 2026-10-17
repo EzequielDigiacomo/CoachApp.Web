@@ -41,7 +41,6 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, chil
     trabajo.parciales.some((parcial) => velocidadKmh(parcial.distanciaMetros, parcial.tiempo) !== null)
 
   const totalSeries = trabajo.ejercicios.reduce((suma, e) => suma + e.series.length, 0)
-  const ultimo = trabajo.parciales[trabajo.parciales.length - 1]
   const distanciaTotal = trabajo.parciales.reduce((suma, parcial) => suma + parcial.distanciaMetros, 0)
   const tiempoTotal = sumarTiempos(trabajo.parciales.map((parcial) => parcial.tiempo))
 
@@ -64,9 +63,9 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, chil
             <span className="sutil">
               {trabajo.parciales.length} {trabajo.parciales.length === 1 ? 'parcial' : 'parciales'}
             </span>
-            {ultimo && (
+            {tiempoTotal && (
               <span className="sutil">
-                · última marca {ultimo.distanciaMetros} m en {ultimo.tiempo}
+                · {distanciaTotal.toLocaleString('es-AR')} m en {tiempoTotal}
               </span>
             )}
           </>
