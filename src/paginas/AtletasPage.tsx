@@ -97,9 +97,14 @@ export function AtletasPage() {
     <div className="pagina">
       <div className="encabezado">
         <h2>Atletas</h2>
-        <button type="button" className="boton" onClick={() => setMostrarForm((v) => !v)}>
-          {mostrarForm ? 'Cancelar' : 'Nuevo atleta'}
-        </button>
+        <div className="acciones-fila">
+          <Link className="boton-fantasma enlace" to="/colores">
+            Colores
+          </Link>
+          <button type="button" className="boton" onClick={() => setMostrarForm((v) => !v)}>
+            {mostrarForm ? 'Cancelar' : 'Nuevo atleta'}
+          </button>
+        </div>
       </div>
 
       {mostrarForm && (

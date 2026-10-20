@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { anotacionesApi, fechaNota } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import type { AnotacionDto, GuardarAnotacionRequest } from '../tipos/api'
@@ -8,7 +8,7 @@ import { TextoConEnlaces } from './TextoConEnlaces'
 
 interface Props {
   titulo: string
-  subtitulo?: string
+  subtitulo?: ReactNode
   /**
    * A que queda atada la anotacion. Si viene el trabajo, manda el trabajo:
    * el backend saca de ahi el atleta y la sesion.
