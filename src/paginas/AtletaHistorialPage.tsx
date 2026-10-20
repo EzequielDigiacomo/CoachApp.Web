@@ -2,13 +2,22 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { anotacionesApi, contextoAnotacion, fechaNota } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
+import { controlesApi } from '../api/controles'
 import { asistenciaApi, atletasApi, etiquetaTipoTrabajo, etiquetaTurno, trabajosApi } from '../api/entrenamientos'
 import { Modal } from '../componentes/Modal'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalGraficoTrabajo } from '../componentes/ModalGraficoTrabajo'
 import { TarjetaTrabajo } from '../componentes/TarjetaTrabajo'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
-import type { AnotacionDto, AtletaDto, SesionHistorialDto, TrabajoDto, Turno } from '../tipos/api'
+import { VistaControlGim } from '../componentes/VistaControlGim'
+import type {
+  AnotacionDto,
+  AtletaDto,
+  ControlDto,
+  SesionHistorialDto,
+  TrabajoDto,
+  Turno,
+} from '../tipos/api'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
 
 /** Una sesion del historial. Presente y ausente entran aunque no haya trabajos. */
@@ -32,6 +41,7 @@ export function AtletaHistorialPage() {
 
   const [atleta, setAtleta] = useState<AtletaDto | null>(null)
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
+  const [controlesGim, setControlesGim] = useState<ControlDto[]>([])
   const [asistencias, setAsistencias] = useState<SesionHistorialDto[]>([])
   const [notas, setNotas] = useState<AnotacionDto[]>([])
   const [cargando, setCargando] = useState(true)
@@ -55,17 +65,19 @@ export function AtletaHistorialPage() {
     setError(null)
 
     try {
-      const [datosAtleta, historial, sesiones, anotaciones] = await Promise.all([
+      const [datosAtleta, historial, sesiones, anotaciones, controles] = await Promise.all([
         atletasApi.obtener(atletaId),
         trabajosApi.historial(atletaId),
         asistenciaApi.historial(atletaId).catch(() => [] as SesionHistorialDto[]),
         anotacionesApi.listar({ atletaId }),
+        controlesApi.listar({ atletaId, tipo: 'Gimnasio' }).catch(() => [] as ControlDto[]),
       ])
 
       setAtleta(datosAtleta)
       setTrabajos(historial)
       setAsistencias(sesiones)
       setNotas(anotaciones)
+      setControlesGim(controles)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar el historial.')
     } finally {
@@ -146,6 +158,16 @@ export function AtletaHistorialPage() {
       </div>
 
       {error && <p className="error">{error}</p>}
+
+      {!cargando && (
+        <section className="seccion-controles-gim">
+          <h3 className="titulo-dia">Controles de gim</h3>
+          <VistaControlGim
+            controles={controlesGim}
+            vacio="Todavía no hay controles de gimnasio cargados para este atleta."
+          />
+        </section>
+      )}
 
       {cargando ? (
         <p className="sutil">Cargando…</p>

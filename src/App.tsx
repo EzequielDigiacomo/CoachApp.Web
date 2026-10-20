@@ -9,6 +9,7 @@ import { EquiposPage } from './paginas/EquiposPage'
 import { SensacionesPage } from './paginas/SensacionesPage'
 import { AtletaHistorialPage } from './paginas/AtletaHistorialPage'
 import { AtletasPage } from './paginas/AtletasPage'
+import { ControlesPage } from './paginas/ControlesPage'
 import { EntrenamientoDetallePage } from './paginas/EntrenamientoDetallePage'
 import { EntrenamientosPage } from './paginas/EntrenamientosPage'
 import { GarCalendarPage } from './paginas/GarCalendarPage'
@@ -48,6 +49,24 @@ export default function App() {
                 <RutaStaff>
                   <AtletaHistorialPage />
                 </RutaStaff>
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/controles"
+            element={
+              <Pagina>
+                <Navigate to="/controles/gimnasio" replace />
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/controles/:tipo"
+            element={
+              <Pagina>
+                <ControlesPage />
               </Pagina>
             }
           />

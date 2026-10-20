@@ -28,3 +28,30 @@ export function textoRmDeTexto(porcentaje: string, kilos: string): string {
 
   return textoRmAproximado(pct, kg)
 }
+
+export interface FilaPorcentajeRm {
+  porcentaje: number
+  kilos: number
+}
+
+/**
+ * Grilla de porcentajes del 30 % al 100 % en pasos de 5, a partir del 1RM.
+ * Los kilos se redondean al 0,5 kg mas cercano.
+ */
+export function grillaPorcentajes(unoRmKg: number): FilaPorcentajeRm[] {
+  if (!Number.isFinite(unoRmKg) || unoRmKg <= 0) {
+    return []
+  }
+
+  const filas: FilaPorcentajeRm[] = []
+  for (let porcentaje = 30; porcentaje <= 100; porcentaje += 5) {
+    const crudo = (unoRmKg * porcentaje) / 100
+    filas.push({ porcentaje, kilos: Math.round(crudo * 2) / 2 })
+  }
+  return filas
+}
+
+/** Formatea kilos para mostrar en la grilla (es-AR). */
+export function textoKilos(kilos: number): string {
+  return kilos.toLocaleString('es-AR', { maximumFractionDigits: 1 })
+}

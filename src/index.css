@@ -2032,3 +2032,220 @@ button.sesion.ausente {
   cursor: default;
   opacity: 0.45;
 }
+
+/* ---------- Controles (modulo independiente) ---------- */
+
+.controles-layout {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.controles-menu {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 8px;
+}
+
+.controles-menu nav {
+  display: grid;
+  gap: 4px;
+}
+
+.controles-menu a {
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--texto-suave);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.controles-menu a:hover,
+.controles-menu a.activo,
+.controles-menu a.active {
+  background: rgb(37 99 235 / 12%);
+  color: var(--acento);
+  font-weight: 600;
+}
+
+.controles-panel {
+  min-width: 0;
+}
+
+.controles-gim {
+  display: grid;
+  gap: 16px;
+}
+
+.controles-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+
+.controles-acciones label {
+  min-width: 200px;
+}
+
+.acciones-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.encabezado-compacto {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.encabezado-compacto .crece {
+  flex: 1;
+}
+
+.control-bloque {
+  display: grid;
+  gap: 10px;
+}
+
+.tabla-series {
+  display: grid;
+  gap: 6px;
+}
+
+.tabla-series-cabecera,
+.tabla-series-fila {
+  display: grid;
+  grid-template-columns: 1fr 80px 72px 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.tabla-series-cabecera {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.switch-rm {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--texto);
+}
+
+.switch-rm input {
+  width: auto;
+  margin: 0;
+}
+
+.controles-lista {
+  display: grid;
+  gap: 14px;
+}
+
+.control-tarjeta {
+  display: grid;
+  gap: 12px;
+}
+
+.control-cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.control-ejercicios {
+  display: grid;
+  gap: 14px;
+}
+
+.control-ejercicio h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.control-series {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.control-series li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.grilla-rm {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+.grilla-rm-celda {
+  display: grid;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  text-align: center;
+  background: var(--fondo, transparent);
+}
+
+.grilla-rm-pct {
+  font-size: 11px;
+  color: var(--texto-suave);
+}
+
+.grilla-rm-kg {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.controles-admin-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.controles-admin-lista li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--borde);
+}
+
+.seccion-controles-gim {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 720px) {
+  .controles-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .controles-menu nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tabla-series-cabecera,
+  .tabla-series-fila {
+    grid-template-columns: 1fr 70px 64px 32px;
+  }
+}

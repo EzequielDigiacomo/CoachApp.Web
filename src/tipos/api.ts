@@ -318,6 +318,54 @@ export interface GuardarTrabajoRequest {
   paladas?: GuardarPaladaRequest[]
 }
 
+/* ---------- Controles independientes de sesion ---------- */
+
+export interface ControlSerieDto {
+  id: number
+  repeticiones: number
+  pesoKg: number
+  esUnoRm: boolean
+  orden: number
+}
+
+export interface ControlEjercicioDto {
+  id: number
+  nombre: string
+  orden: number
+  series: ControlSerieDto[]
+}
+
+export interface ControlDto {
+  id: number
+  atletaId: number
+  atletaNombre: string | null
+  tipo: TipoTrabajo
+  /** DateOnly: "YYYY-MM-DD". */
+  fecha: string
+  observaciones: string | null
+  fechaCreacion: string
+  ejercicios: ControlEjercicioDto[]
+}
+
+export interface GuardarControlSerieRequest {
+  repeticiones: number
+  pesoKg: number
+  esUnoRm: boolean
+}
+
+export interface GuardarControlEjercicioRequest {
+  nombre: string
+  series: GuardarControlSerieRequest[]
+}
+
+export interface GuardarControlRequest {
+  atletaId: number
+  tipo: TipoTrabajo
+  fecha: string
+  observaciones?: string | null
+  ejercicios: GuardarControlEjercicioRequest[]
+}
+
 /* ---------- Anotaciones ---------- */
 
 export type OrigenAnotacion = 'Manual' | 'Audio'

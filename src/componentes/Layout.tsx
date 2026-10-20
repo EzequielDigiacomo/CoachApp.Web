@@ -43,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <nav className="barra-nav">
           <NavLink to="/entrenamientos">Entrenamientos</NavLink>
+          <NavLink to="/controles">Controles</NavLink>
           {staff && <NavLink to="/atletas">Atletas</NavLink>}
           {staff && <NavLink to="/equipos">K2 / K4</NavLink>}
           {staff && <NavLink to="/anotaciones">Anotaciones</NavLink>}
