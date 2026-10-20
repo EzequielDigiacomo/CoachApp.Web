@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
+import { BotonTema } from '../componentes/BotonTema'
 import type { LoginResponse } from '../tipos/api'
 
 export function LoginPage() {
@@ -39,7 +40,10 @@ export function LoginPage() {
   return (
     <div className="login">
       <form className="tarjeta login-tarjeta" onSubmit={enviar}>
-        <h1>CoachApp</h1>
+        <div className="login-cabecera">
+          <h1>CoachApp</h1>
+          <BotonTema />
+        </div>
         <p className="sutil">Entrá con la cuenta que te dio el administrador.</p>
 
         <label>

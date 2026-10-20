@@ -1,13 +1,36 @@
-:root {
+:root,
+[data-tema='claro'] {
   --fondo: #f6f7f9;
   --superficie: #ffffff;
   --borde: #d9dde3;
   --texto: #1c1f24;
   --texto-suave: #6b7280;
   --acento: #2563eb;
+  --acento-hover: #1d4ed8;
+  --acento-suave: #dbeafe;
   --error: #b42318;
+  --exito: #059669;
   --radio: 8px;
+  --sombra: rgb(15 23 42 / 30%);
+  --overlay: rgb(15 23 42 / 55%);
   color-scheme: light;
+}
+
+[data-tema='oscuro'] {
+  --fondo: #0f1419;
+  --superficie: #1a222c;
+  --borde: #2d3744;
+  --texto: #e8eef4;
+  --texto-suave: #9aa5b5;
+  --acento: #3b82f6;
+  --acento-hover: #60a5fa;
+  --acento-suave: #1e3a5f;
+  --error: #f87171;
+  --exito: #34d399;
+  --radio: 8px;
+  --sombra: rgb(0 0 0 / 55%);
+  --overlay: rgb(0 0 0 / 65%);
+  color-scheme: dark;
 }
 
 * {
@@ -191,7 +214,7 @@ input:focus-visible {
 }
 
 .boton:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--acento-hover);
 }
 
 .boton:disabled {
@@ -571,7 +594,7 @@ select {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgb(15 23 42 / 55%);
+  background: var(--overlay);
 }
 
 .modal {
@@ -581,8 +604,9 @@ select {
   max-width: 720px;
   max-height: 90vh;
   background: var(--fondo);
+  border: 1px solid var(--borde);
   border-radius: 10px;
-  box-shadow: 0 18px 45px rgb(15 23 42 / 30%);
+  box-shadow: 0 18px 45px var(--sombra);
 }
 
 .modal-cabecera {
@@ -1441,11 +1465,16 @@ button.sesion.ausente {
 }
 
 .fila-clicable.fila-elegida {
-  background: #eff6ff;
+  background: var(--acento-suave);
 }
 
 .fila-clicable.fila-elegida:hover {
-  background: #dbeafe;
+  background: var(--acento-suave);
+  filter: brightness(0.96);
+}
+
+[data-tema='oscuro'] .fila-clicable.fila-elegida:hover {
+  filter: brightness(1.15);
 }
 
 /* ---------- Celular ---------- */
@@ -1503,7 +1532,7 @@ button.sesion.ausente {
   }
 
   .barra-nav a.active {
-    background: #dbeafe;
+    background: var(--acento-suave);
     font-weight: 600;
   }
 
@@ -2257,8 +2286,33 @@ button.sesion.ausente {
 }
 
 .exito {
-  color: #059669;
+  color: var(--exito);
   margin: 0;
+}
+
+.login-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.boton-tema {
+  white-space: nowrap;
+}
+
+[data-tema='oscuro'] .barra-nav a {
+  background: transparent;
+}
+
+[data-tema='oscuro'] .controles-menu a:hover,
+[data-tema='oscuro'] .controles-menu a.activo,
+[data-tema='oscuro'] .controles-menu a.active {
+  background: var(--acento-suave);
+}
+
+[data-tema='oscuro'] .error {
+  color: var(--error);
 }
 
 .colores-atletas-lista {

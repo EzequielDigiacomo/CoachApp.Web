@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { garminApi } from '../api/garmin'
 import { useAuth } from '../auth/contextoAuth'
 import { esStaff, type EstadoGarminDto } from '../tipos/api'
+import { BotonTema } from './BotonTema'
 import { ModalVincularGarmin } from './ModalVincularGarmin'
 
 /** Marco de la app con la barra superior. */
@@ -65,6 +66,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <span className="nav-corto">Garmin</span>
             </button>
           ) : null}
+          <BotonTema />
           <span className="usuario">
             {sesion?.usuario.nombre} {sesion?.usuario.apellido}
             <span className="rol">{sesion?.usuario.rol}</span>
