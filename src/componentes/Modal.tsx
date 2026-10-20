@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
 interface Props {
   titulo: string
-  subtitulo?: string
+  subtitulo?: ReactNode
   /** chico: para modales angostos, como el de anotaciones. */
   /** grande: para contenido ancho, como la tabla de una planilla. */
   ancho?: 'normal' | 'chico' | 'grande'

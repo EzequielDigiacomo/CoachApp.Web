@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../api/cliente'
 import { atletasApi } from '../api/entrenamientos'
 import { equiposApi } from '../api/equipos'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import type { AtletaDto, EquipoDto, TipoBote } from '../tipos/api'
 
 const CUPOS: Record<TipoBote, number> = { K2: 2, K4: 4 }
@@ -161,7 +162,10 @@ export function EquiposPage() {
                     disabled={!marcado && elegidos.length >= cupo}
                     onChange={() => alternar(atleta.id)}
                   />
-                  {atleta.apellido}, {atleta.nombre}
+                  <NombreAtleta
+                    nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                    color={atleta.color}
+                  />
                   <span className="sutil"> · {atleta.dni}</span>
                 </label>
               </li>
@@ -208,9 +212,15 @@ export function EquiposPage() {
                   <td>
                     <strong>{equipo.etiqueta}</strong>
                     <span className="sutil bloque">
-                      {equipo.miembros
-                        .map((m) => `${m.apellido}, ${m.nombre}`)
-                        .join(' · ')}
+                      {equipo.miembros.map((m, i) => (
+                        <span key={m.atletaId}>
+                          {i > 0 && ' · '}
+                          <NombreAtleta
+                            nombre={textoAtleta(m.apellido, m.nombre)}
+                            color={m.color}
+                          />
+                        </span>
+                      ))}
                     </span>
                   </td>
                   <td>{equipo.activo ? 'Activo' : 'Pausado'}</td>

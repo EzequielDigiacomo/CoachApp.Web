@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../api/cliente'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import type { CuentaAtletaDto } from '../tipos/api'
 
 interface Borrador {
@@ -119,7 +120,10 @@ export function CuentasPage() {
               {cuentas.map((cuenta) => (
                 <tr key={cuenta.atletaId}>
                   <td>
-                    {cuenta.apellido}, {cuenta.nombre}
+                    <NombreAtleta
+                      nombre={textoAtleta(cuenta.apellido, cuenta.nombre)}
+                      color={cuenta.color}
+                    />
                     {abierta === cuenta.atletaId && (
                       <form
                         className="formulario"

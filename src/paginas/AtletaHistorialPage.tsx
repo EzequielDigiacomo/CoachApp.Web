@@ -9,6 +9,7 @@ import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalGraficoTrabajo } from '../componentes/ModalGraficoTrabajo'
 import { TarjetaTrabajo } from '../componentes/TarjetaTrabajo'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { VistaControlGim } from '../componentes/VistaControlGim'
 import type {
   AnotacionDto,
@@ -136,7 +137,14 @@ export function AtletaHistorialPage() {
       <div className="encabezado">
         <div>
           <h2>
-            {atleta ? `${atleta.apellido}, ${atleta.nombre}` : 'Historial'}
+            {atleta ? (
+              <NombreAtleta
+                nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                color={atleta.color}
+              />
+            ) : (
+              'Historial'
+            )}
             {(atleta?.categorias ?? []).map((categoria) => (
               <span className="etiqueta" key={categoria}>
                 {categoria}
@@ -288,7 +296,12 @@ export function AtletaHistorialPage() {
       {mostrarNotas && atleta && (
         <ModalAnotaciones
           titulo="Anotaciones del atleta"
-          subtitulo={`${atleta.apellido}, ${atleta.nombre}`}
+          subtitulo={
+            <NombreAtleta
+              nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+              color={atleta.color}
+            />
+          }
           contexto={{ atletaId }}
           onCerrar={() => setMostrarNotas(false)}
           onCambio={() => void cargar()}

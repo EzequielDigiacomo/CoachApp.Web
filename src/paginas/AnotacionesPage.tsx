@@ -8,6 +8,7 @@ import {
   FormularioAnotacion,
   type DatosAnotacion,
 } from '../componentes/FormularioAnotacion'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import type { AnotacionDto, AtletaDto, GuardarAnotacionRequest } from '../tipos/api'
 
@@ -226,13 +227,22 @@ export function AnotacionesPage() {
                 </div>
               </div>
 
-              {contextoAnotacion(nota).length > 0 && (
+              {(nota.atletaApellido || contextoAnotacion(nota).length > 0) && (
                 <p className="contexto">
-                  {contextoAnotacion(nota).map((parte) => (
-                    <span className="etiqueta-contexto" key={parte}>
-                      {parte}
-                    </span>
-                  ))}
+                  {nota.atletaApellido && (
+                    <NombreAtleta
+                      className="etiqueta-contexto"
+                      nombre={textoAtleta(nota.atletaApellido, nota.atletaNombre ?? '')}
+                      color={nota.atletaColor}
+                    />
+                  )}
+                  {contextoAnotacion(nota)
+                    .filter((parte) => parte !== textoAtleta(nota.atletaApellido ?? '', nota.atletaNombre ?? ''))
+                    .map((parte) => (
+                      <span className="etiqueta-contexto" key={parte}>
+                        {parte}
+                      </span>
+                    ))}
                 </p>
               )}
 

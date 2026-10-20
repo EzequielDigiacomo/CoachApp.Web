@@ -7,6 +7,7 @@ import type {
   TipoBote,
 } from '../tipos/api'
 import { Modal } from './Modal'
+import { NombreAtleta, textoAtleta } from './NombreAtleta'
 
 const CUPOS: Record<TipoBote, number> = { K2: 2, K4: 4 }
 
@@ -159,7 +160,10 @@ export function ModalCargaEquipo({ entrenamientoId, atletas, onCerrar, onCargado
                       disabled={!marcado && elegidos.length >= cupo}
                       onChange={() => alternar(atleta.atletaId)}
                     />
-                    {atleta.apellido}, {atleta.nombre}
+                    <NombreAtleta
+                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                      color={atleta.color}
+                    />
                   </label>
                 </li>
               )

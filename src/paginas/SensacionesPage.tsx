@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { esStaff, type NotaAtletaDto } from '../tipos/api'
 
 const MAXIMO = 1000
@@ -128,9 +129,10 @@ export function SensacionesPage() {
           <article key={nota.id} className="tarjeta">
             {staff && (
               <p>
-                <strong>
-                  {nota.apellido}, {nota.nombre}
-                </strong>
+                <NombreAtleta
+                  nombre={textoAtleta(nota.apellido, nota.nombre)}
+                  color={nota.color}
+                />
               </p>
             )}
             <p style={{ whiteSpace: 'pre-wrap' }}>{nota.texto}</p>

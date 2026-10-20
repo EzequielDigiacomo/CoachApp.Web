@@ -1,6 +1,7 @@
 import type { ControlDto, ControlEjercicioDto } from '../tipos/api'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
 import { grillaPorcentajes, textoKilos } from '../util/rm'
+import { NombreAtleta } from './NombreAtleta'
 
 /** Lectura de controles de gim: series cargadas y grilla % del 1RM. */
 export function VistaControlGim({
@@ -23,7 +24,9 @@ export function VistaControlGim({
               <strong>{fechaLarga(control.fecha)}</strong>
               <p className="sutil">{fechaNumerica(control.fecha)}</p>
             </div>
-            {control.atletaNombre && <span className="sutil">{control.atletaNombre}</span>}
+            {control.atletaNombre && (
+              <NombreAtleta className="sutil" nombre={control.atletaNombre} color={control.atletaColor} />
+            )}
           </header>
 
           {control.observaciones && <p className="sutil">{control.observaciones}</p>}

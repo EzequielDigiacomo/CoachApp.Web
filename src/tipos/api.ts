@@ -46,6 +46,8 @@ export interface AtletaDto {
   email: string | null
   dni: string
   telefono: string | null
+  /** Color de identificación (#RRGGBB). Puede faltar en APIs viejas. */
+  color?: string | null
   activo: boolean
   fechaAlta: string
 }
@@ -70,6 +72,8 @@ export interface AtletaEnEntrenamientoDto {
   apellido: string
   dni: string
   edad: number
+  /** Color de identificación (#RRGGBB). */
+  color?: string | null
   /** Puede faltar si la API en ejecucion es anterior a las categorias. */
   categorias?: string[]
   /** null cuando todavia no se marco la asistencia. */
@@ -124,6 +128,7 @@ export interface EquipoMiembroDto {
   atletaId: number
   nombre: string
   apellido: string
+  color?: string | null
   orden: number
 }
 
@@ -339,6 +344,7 @@ export interface ControlDto {
   id: number
   atletaId: number
   atletaNombre: string | null
+  atletaColor?: string | null
   tipo: TipoTrabajo
   /** DateOnly: "YYYY-MM-DD". */
   fecha: string
@@ -386,6 +392,7 @@ export interface AnotacionDto {
   atletaId: number | null
   atletaNombre: string | null
   atletaApellido: string | null
+  atletaColor?: string | null
 
   entrenamientoId: number | null
   /** DateOnly viaja como texto "YYYY-MM-DD". */
@@ -450,6 +457,7 @@ export interface CuentaAtletaDto {
   atletaId: number
   nombre: string
   apellido: string
+  color?: string | null
   emailAtleta: string | null
   usuarioId: number | null
   nombreUsuario: string | null
@@ -462,6 +470,16 @@ export interface NotaAtletaDto {
   atletaId: number
   nombre: string
   apellido: string
+  color?: string | null
   texto: string
   fechaCreacion: string
+}
+
+export interface ColorAtletaItem {
+  atletaId: number
+  color: string | null
+}
+
+export interface GuardarColoresAtletasRequest {
+  colores: ColorAtletaItem[]
 }

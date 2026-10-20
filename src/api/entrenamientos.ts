@@ -57,6 +57,9 @@ export const atletasApi = {
     ),
 
   obtener: (id: number) => api.get<AtletaDto>(`/api/atletas/${id}`),
+
+  guardarColores: (colores: { atletaId: number; color: string | null }[]) =>
+    api.put<AtletaDto[]>('/api/atletas/colores', { colores }),
 }
 
 /** Los trabajos cuelgan del atleta dentro de la sesion. */

@@ -15,6 +15,7 @@ import {
   nuevoFormulario,
   type FormTrabajo,
 } from './FormularioTrabajo'
+import { NombreAtleta, textoAtleta } from './NombreAtleta'
 import { TarjetaTrabajo } from './TarjetaTrabajo'
 
 interface Props {
@@ -150,7 +151,15 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
   return (
     <Modal
       titulo="Trabajos"
-      subtitulo={`${atleta.apellido}, ${atleta.nombre} · ${atleta.dni}`}
+      subtitulo={
+        <span>
+          <NombreAtleta
+            nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+            color={atleta.color}
+          />
+          {` · ${atleta.dni}`}
+        </span>
+      }
       pausado={trabajoParaNotas !== null || trabajoParaGrafico !== null || trabajoParaVelocidad !== null}
       onCerrar={onCerrar}
     >

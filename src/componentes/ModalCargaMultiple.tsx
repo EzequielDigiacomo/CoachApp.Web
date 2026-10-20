@@ -12,6 +12,7 @@ import {
   nuevoFormulario,
   type FormTrabajo,
 } from './FormularioTrabajo'
+import { NombreAtleta, textoAtleta } from './NombreAtleta'
 
 interface Props {
   entrenamientoId: number
@@ -186,7 +187,10 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
         {cargas.map((carga, indice) => (
           <section className="tarjeta carga-atleta" key={carga.atleta.atletaId}>
             <h4 className="carga-atleta-titulo">
-              {carga.atleta.apellido}, {carga.atleta.nombre}
+              <NombreAtleta
+                nombre={textoAtleta(carga.atleta.apellido, carga.atleta.nombre)}
+                color={carga.atleta.color}
+              />
               <span className="sutil">
                 {' '}
                 · {carga.atleta.dni} · {carga.atleta.edad} años

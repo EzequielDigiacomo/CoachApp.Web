@@ -9,6 +9,7 @@ import { EquiposPage } from './paginas/EquiposPage'
 import { SensacionesPage } from './paginas/SensacionesPage'
 import { AtletaHistorialPage } from './paginas/AtletaHistorialPage'
 import { AtletasPage } from './paginas/AtletasPage'
+import { ColoresAtletasPage } from './paginas/ColoresAtletasPage'
 import { ControlesPage } from './paginas/ControlesPage'
 import { EntrenamientoDetallePage } from './paginas/EntrenamientoDetallePage'
 import { EntrenamientosPage } from './paginas/EntrenamientosPage'
@@ -37,6 +38,17 @@ export default function App() {
               <Pagina>
                 <RutaStaff>
                   <AtletasPage />
+                </RutaStaff>
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/colores"
+            element={
+              <Pagina>
+                <RutaStaff>
+                  <ColoresAtletasPage />
                 </RutaStaff>
               </Pagina>
             }

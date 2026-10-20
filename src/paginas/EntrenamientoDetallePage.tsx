@@ -12,6 +12,7 @@ import { ModalEditarSesion } from '../componentes/ModalEditarSesion'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalTrabajosEquipo } from '../componentes/ModalTrabajosEquipo'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import { useAuth } from '../auth/contextoAuth'
 import { esStaff } from '../tipos/api'
@@ -489,7 +490,10 @@ export function EntrenamientoDetallePage() {
               {disponibles.map((atleta) => (
                 <li key={atleta.id}>
                   <span>
-                    {atleta.apellido}, {atleta.nombre}
+                    <NombreAtleta
+                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                      color={atleta.color}
+                    />
                     <span className="sutil"> · {atleta.dni} · {atleta.edad} años</span>
                   </span>
                   <button
@@ -550,7 +554,10 @@ export function EntrenamientoDetallePage() {
                       </td>
                     )}
                     <td>
-                      {atleta.apellido}, {atleta.nombre}
+                      <NombreAtleta
+                        nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                        color={atleta.color}
+                      />
                       {(atleta.categorias ?? []).map((categoria) => (
                         <span className="etiqueta" key={categoria}>
                           {categoria}

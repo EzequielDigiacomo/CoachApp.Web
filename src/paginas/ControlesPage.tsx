@@ -11,6 +11,7 @@ import {
   formularioDesdeControl,
   type FormControlGim,
 } from '../componentes/FormularioControlGim'
+import { NombreAtleta } from '../componentes/NombreAtleta'
 import { VistaControlGim } from '../componentes/VistaControlGim'
 import { esStaff, type AtletaDto, type ControlDto, type TipoTrabajo } from '../tipos/api'
 import { hoyISO } from '../util/fechas'
@@ -268,7 +269,12 @@ function PanelGimnasio({ staff }: { staff: boolean }) {
               {controles.map((c) => (
                 <li key={c.id}>
                   <span className="sutil">
-                    #{c.id} · {c.atletaNombre ?? `Atleta ${c.atletaId}`} · {c.fecha}
+                    #{c.id} ·{' '}
+                    <NombreAtleta
+                      nombre={c.atletaNombre ?? `Atleta ${c.atletaId}`}
+                      color={c.atletaColor}
+                    />{' '}
+                    · {c.fecha}
                   </span>
                   <span className="acciones-fila">
                     <button type="button" className="boton-fantasma" onClick={() => abrirEditar(c)}>

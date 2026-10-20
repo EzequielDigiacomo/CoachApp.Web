@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '../api/cliente'
 import { Modal } from '../componentes/Modal'
+import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import type { AtletaDto, CrearAtletaRequest } from '../tipos/api'
 
 const ATLETA_VACIO: CrearAtletaRequest = {
@@ -149,7 +150,10 @@ export function AtletasPage() {
               {atletas.map((atleta) => (
                 <tr key={atleta.id} className={atleta.activo ? undefined : 'inactivo'}>
                   <td>
-                    {atleta.apellido}, {atleta.nombre}
+                    <NombreAtleta
+                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                      color={atleta.color}
+                    />
                     {(atleta.categorias ?? []).map((categoria) => (
                       <span className="etiqueta" key={categoria}>
                         {categoria}
@@ -197,7 +201,12 @@ export function AtletasPage() {
       {enEdicion && (
         <Modal
           titulo="Editar atleta"
-          subtitulo={`${enEdicion.apellido}, ${enEdicion.nombre}`}
+          subtitulo={
+            <NombreAtleta
+              nombre={textoAtleta(enEdicion.apellido, enEdicion.nombre)}
+              color={enEdicion.color}
+            />
+          }
           onCerrar={() => setEnEdicion(null)}
         >
           <FormularioAtleta
