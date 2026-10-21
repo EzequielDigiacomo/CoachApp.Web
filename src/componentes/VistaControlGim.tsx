@@ -22,7 +22,10 @@ export function VistaControlGim({
           <header className="control-cabecera">
             <div>
               <strong>{fechaLarga(control.fecha)}</strong>
-              <p className="sutil">{fechaNumerica(control.fecha)}</p>
+              <p className="sutil">
+                {fechaNumerica(control.fecha)}
+                {control.esAutoCarga ? ' · Auto carga' : ''}
+              </p>
             </div>
             {control.atletaNombre && (
               <NombreAtleta className="sutil" nombre={control.atletaNombre} color={control.atletaColor} />
@@ -33,7 +36,11 @@ export function VistaControlGim({
 
           <div className="control-ejercicios">
             {control.ejercicios.map((ejercicio) => (
-              <EjercicioVista key={ejercicio.id} ejercicio={ejercicio} />
+              <EjercicioVista
+                key={ejercicio.id}
+                ejercicio={ejercicio}
+                autoCarga={Boolean(control.esAutoCarga)}
+              />
             ))}
           </div>
         </article>
@@ -42,8 +49,14 @@ export function VistaControlGim({
   )
 }
 
-function EjercicioVista({ ejercicio }: { ejercicio: ControlEjercicioDto }) {
-  const unoRm = ejercicio.series.find((s) => s.esUnoRm)?.pesoKg
+function EjercicioVista({
+  ejercicio,
+  autoCarga,
+}: {
+  ejercicio: ControlEjercicioDto
+  autoCarga: boolean
+}) {
+  const unoRm = !autoCarga ? ejercicio.series.find((s) => s.esUnoRm)?.pesoKg : null
   const grilla = unoRm != null ? grillaPorcentajes(unoRm) : []
 
   return (
@@ -54,7 +67,9 @@ function EjercicioVista({ ejercicio }: { ejercicio: ControlEjercicioDto }) {
         {ejercicio.series.map((serie) => (
           <li key={serie.id}>
             <span>
-              {textoKilos(serie.pesoKg)} kg × {serie.repeticiones}
+              {autoCarga || serie.pesoKg == null
+                ? `${serie.repeticiones} reps`
+                : `${textoKilos(serie.pesoKg)} kg × ${serie.repeticiones}`}
             </span>
             {serie.esUnoRm && <span className="etiqueta">1RM</span>}
           </li>

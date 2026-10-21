@@ -2153,6 +2153,20 @@ button.sesion.ausente {
   align-items: center;
 }
 
+.tabla-series-cabecera.solo-reps,
+.tabla-series-fila.solo-reps {
+  grid-template-columns: 1fr 36px;
+}
+
+.casilla-auto-carga {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--texto);
+}
+
 .tabla-series-cabecera {
   font-size: 12px;
   color: var(--texto-suave);
@@ -2276,6 +2290,11 @@ button.sesion.ausente {
   .tabla-series-cabecera,
   .tabla-series-fila {
     grid-template-columns: 1fr 70px 64px 32px;
+  }
+
+  .tabla-series-cabecera.solo-reps,
+  .tabla-series-fila.solo-reps {
+    grid-template-columns: 1fr 32px;
   }
 }
 

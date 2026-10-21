@@ -17,6 +17,7 @@ export interface FormControlGim {
   id: number | null
   atletaId: string
   fecha: string
+  esAutoCarga: boolean
   observaciones: string
   ejercicios: BloqueEjercicioControl[]
 }
@@ -40,6 +41,7 @@ export function formularioControlVacio(fecha: string, atletaId = ''): FormContro
     id: null,
     atletaId,
     fecha,
+    esAutoCarga: false,
     observaciones: '',
     ejercicios: [nuevoBloque()],
   }
@@ -50,6 +52,7 @@ export function formularioDesdeControl(control: ControlDto): FormControlGim {
     id: control.id,
     atletaId: String(control.atletaId),
     fecha: control.fecha,
+    esAutoCarga: Boolean(control.esAutoCarga),
     observaciones: control.observaciones ?? '',
     ejercicios:
       control.ejercicios.length > 0
@@ -59,7 +62,7 @@ export function formularioDesdeControl(control: ControlDto): FormControlGim {
             series: e.series.map((s) => ({
               clave: clave(),
               repeticiones: String(s.repeticiones),
-              peso: String(s.pesoKg),
+              peso: s.pesoKg == null ? '' : String(s.pesoKg),
               esUnoRm: s.esUnoRm,
             })),
           }))
@@ -79,7 +82,9 @@ export function armarGuardarControl(
     return { error: 'Indicá la fecha del control.' }
   }
 
+  const auto = form.esAutoCarga
   const ejercicios = []
+
   for (let i = 0; i < form.ejercicios.length; i++) {
     const bloque = form.ejercicios[i]
     const nombre = bloque.nombre.trim()
@@ -92,11 +97,21 @@ export function armarGuardarControl(
     for (let j = 0; j < bloque.series.length; j++) {
       const fila = bloque.series[j]
       const repeticiones = Number(fila.repeticiones)
-      const pesoKg = Number(fila.peso.replace(',', '.'))
 
       if (!Number.isFinite(repeticiones) || repeticiones <= 0) {
         return { error: `La serie ${j + 1} de ${nombre} necesita repeticiones.` }
       }
+
+      if (auto) {
+        series.push({
+          repeticiones,
+          pesoKg: null,
+          esUnoRm: false,
+        })
+        continue
+      }
+
+      const pesoKg = Number(fila.peso.replace(',', '.'))
       if (!Number.isFinite(pesoKg) || pesoKg < 0) {
         return { error: `La serie ${j + 1} de ${nombre} tiene un peso inválido.` }
       }
@@ -117,7 +132,7 @@ export function armarGuardarControl(
     if (series.length === 0) {
       return { error: `${nombre} necesita al menos una serie.` }
     }
-    if (marcadas > 1) {
+    if (!auto && marcadas > 1) {
       return { error: `${nombre} solo puede tener una serie marcada como 1RM.` }
     }
 
@@ -133,6 +148,7 @@ export function armarGuardarControl(
       atletaId,
       tipo: 'Gimnasio',
       fecha: form.fecha,
+      esAutoCarga: auto,
       observaciones: form.observaciones.trim() || null,
       ejercicios,
     },
@@ -150,6 +166,22 @@ interface Props {
 export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Props) {
   function setForm(parcial: Partial<FormControlGim>) {
     onChange({ ...form, ...parcial })
+  }
+
+  function activarAutoCarga(activo: boolean) {
+    if (!activo) {
+      setForm({ esAutoCarga: false })
+      return
+    }
+
+    // Al pasar a auto carga se limpian kilos y 1RM.
+    setForm({
+      esAutoCarga: true,
+      ejercicios: form.ejercicios.map((e) => ({
+        ...e,
+        series: e.series.map((s) => ({ ...s, peso: '', esUnoRm: false })),
+      })),
+    })
   }
 
   function actualizarEjercicio(claveEj: number, parcial: Partial<BloqueEjercicioControl>) {
@@ -171,7 +203,6 @@ export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Pr
 
         let series = e.series.map((s) => (s.clave === claveSerie ? { ...s, ...parcial } : s))
 
-        // Un solo 1RM por ejercicio: al marcar uno, se apagan los demas.
         if (parcial.esUnoRm === true) {
           series = series.map((s) => ({
             ...s,
@@ -183,6 +214,8 @@ export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Pr
       }),
     })
   }
+
+  const auto = form.esAutoCarga
 
   return (
     <div className="formulario">
@@ -213,6 +246,15 @@ export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Pr
         </label>
       </div>
 
+      <label className="switch-rm casilla-auto-carga">
+        <input
+          type="checkbox"
+          checked={auto}
+          onChange={(e) => activarAutoCarga(e.target.checked)}
+        />
+        <span>Auto carga (solo ejercicio y repeticiones, sin kg ni 1RM)</span>
+      </label>
+
       <label>
         Observaciones
         <input
@@ -231,7 +273,7 @@ export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Pr
               <input
                 value={ejercicio.nombre}
                 onChange={(e) => actualizarEjercicio(ejercicio.clave, { nombre: e.target.value })}
-                placeholder="Ej. Sentadilla"
+                placeholder={auto ? 'Ej. Dominadas' : 'Ej. Sentadilla'}
               />
             </label>
             {form.ejercicios.length > 1 && (
@@ -250,22 +292,24 @@ export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Pr
           </div>
 
           <div className="tabla-series">
-            <div className="tabla-series-cabecera">
-              <span>Peso (kg)</span>
+            <div className={`tabla-series-cabecera${auto ? ' solo-reps' : ''}`}>
+              {!auto && <span>Peso (kg)</span>}
               <span>Reps</span>
-              <span>1RM</span>
+              {!auto && <span>1RM</span>}
               <span />
             </div>
             {ejercicio.series.map((serie) => (
-              <div className="tabla-series-fila" key={serie.clave}>
-                <input
-                  inputMode="decimal"
-                  value={serie.peso}
-                  onChange={(e) =>
-                    actualizarSerie(ejercicio.clave, serie.clave, { peso: e.target.value })
-                  }
-                  placeholder="kg"
-                />
+              <div className={`tabla-series-fila${auto ? ' solo-reps' : ''}`} key={serie.clave}>
+                {!auto && (
+                  <input
+                    inputMode="decimal"
+                    value={serie.peso}
+                    onChange={(e) =>
+                      actualizarSerie(ejercicio.clave, serie.clave, { peso: e.target.value })
+                    }
+                    placeholder="kg"
+                  />
+                )}
                 <input
                   inputMode="numeric"
                   value={serie.repeticiones}
@@ -275,18 +319,20 @@ export function FormularioControlGim({ form, onChange, atletas, atletaFijo }: Pr
                     })
                   }
                 />
-                <label className="switch-rm">
-                  <input
-                    type="checkbox"
-                    checked={serie.esUnoRm}
-                    onChange={(e) =>
-                      actualizarSerie(ejercicio.clave, serie.clave, {
-                        esUnoRm: e.target.checked,
-                      })
-                    }
-                  />
-                  <span>1RM</span>
-                </label>
+                {!auto && (
+                  <label className="switch-rm">
+                    <input
+                      type="checkbox"
+                      checked={serie.esUnoRm}
+                      onChange={(e) =>
+                        actualizarSerie(ejercicio.clave, serie.clave, {
+                          esUnoRm: e.target.checked,
+                        })
+                      }
+                    />
+                    <span>1RM</span>
+                  </label>
+                )}
                 {ejercicio.series.length > 1 ? (
                   <button
                     type="button"

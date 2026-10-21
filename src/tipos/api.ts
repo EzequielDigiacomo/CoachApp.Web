@@ -328,7 +328,7 @@ export interface GuardarTrabajoRequest {
 export interface ControlSerieDto {
   id: number
   repeticiones: number
-  pesoKg: number
+  pesoKg: number | null
   esUnoRm: boolean
   orden: number
 }
@@ -348,6 +348,8 @@ export interface ControlDto {
   tipo: TipoTrabajo
   /** DateOnly: "YYYY-MM-DD". */
   fecha: string
+  /** Sin kilos ni 1RM: solo ejercicio y repeticiones. */
+  esAutoCarga?: boolean
   observaciones: string | null
   fechaCreacion: string
   ejercicios: ControlEjercicioDto[]
@@ -355,7 +357,7 @@ export interface ControlDto {
 
 export interface GuardarControlSerieRequest {
   repeticiones: number
-  pesoKg: number
+  pesoKg?: number | null
   esUnoRm: boolean
 }
 
@@ -368,6 +370,7 @@ export interface GuardarControlRequest {
   atletaId: number
   tipo: TipoTrabajo
   fecha: string
+  esAutoCarga?: boolean
   observaciones?: string | null
   ejercicios: GuardarControlEjercicioRequest[]
 }
