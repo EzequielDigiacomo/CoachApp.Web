@@ -6,6 +6,7 @@ import { atletasApi } from '../api/entrenamientos'
 import { useAuth } from '../auth/contextoAuth'
 import {
   armarGuardarControlAgua,
+  armarGuardarControlesAgua,
   FormularioControlAgua,
   formularioAguaVacio,
   formularioDesdeControlAgua,
@@ -355,24 +356,34 @@ function PanelAgua({ staff }: { staff: boolean }) {
   }
 
   async function guardar() {
-    const armado = armarGuardarControlAgua(form)
-    if ('error' in armado) {
-      setError(armado.error)
-      return
-    }
-
     setOcupado(true)
     setError(null)
 
     try {
       if (form.id) {
+        const armado = armarGuardarControlAgua(form)
+        if ('error' in armado) {
+          setError(armado.error)
+          return
+        }
         await controlesApi.actualizar(form.id, armado.datos)
+        if (staff && String(armado.datos.atletaId) !== atletaId) {
+          setAtletaId(String(armado.datos.atletaId))
+        }
       } else {
-        await controlesApi.crear(armado.datos)
-      }
+        const armado = armarGuardarControlesAgua(form)
+        if ('error' in armado) {
+          setError(armado.error)
+          return
+        }
 
-      if (staff && String(armado.datos.atletaId) !== atletaId) {
-        setAtletaId(String(armado.datos.atletaId))
+        for (const pedido of armado.pedidos) {
+          await controlesApi.crear(pedido)
+        }
+
+        if (staff && String(armado.pedidos[0].atletaId) !== atletaId) {
+          setAtletaId(String(armado.pedidos[0].atletaId))
+        }
       }
 
       cerrarForm()
@@ -440,7 +451,13 @@ function PanelAgua({ staff }: { staff: boolean }) {
           />
           <div className="acciones-form">
             <button type="button" className="boton" disabled={ocupado} onClick={() => void guardar()}>
-              {ocupado ? 'Guardando…' : 'Guardar'}
+              {ocupado
+                ? 'Guardando…'
+                : form.id
+                  ? 'Guardar'
+                  : form.distancias.length > 1
+                    ? `Guardar ${form.distancias.length} controles`
+                    : 'Guardar'}
             </button>
             <button type="button" className="boton-fantasma" disabled={ocupado} onClick={cerrarForm}>
               Cancelar

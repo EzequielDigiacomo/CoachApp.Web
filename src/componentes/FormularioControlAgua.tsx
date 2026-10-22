@@ -2,15 +2,37 @@ import type { ControlDto, GuardarControlRequest } from '../tipos/api'
 import { kilometrosPorHora, parsearTiempo, textoKmh } from '../util/tiempos'
 import { CampoTiempo } from './CampoTiempo'
 
-export interface FormControlAgua {
-  id: number | null
-  atletaId: string
-  fecha: string
+export interface BloqueDistanciaAgua {
+  clave: number
   distanciaMetros: string
   tiempo: string
   tiempoTestigo: string
   anioTestigo: string
+}
+
+export interface FormControlAgua {
+  /** Solo en edición de un control ya guardado. */
+  id: number | null
+  atletaId: string
+  fecha: string
   observaciones: string
+  distancias: BloqueDistanciaAgua[]
+}
+
+let proximaClave = 1
+
+function clave(): number {
+  return proximaClave++
+}
+
+function nuevoBloque(distancia = '1000'): BloqueDistanciaAgua {
+  return {
+    clave: clave(),
+    distanciaMetros: distancia,
+    tiempo: '',
+    tiempoTestigo: '',
+    anioTestigo: String(new Date().getFullYear()),
+  }
 }
 
 export function formularioAguaVacio(fecha: string, atletaId = ''): FormControlAgua {
@@ -18,11 +40,8 @@ export function formularioAguaVacio(fecha: string, atletaId = ''): FormControlAg
     id: null,
     atletaId,
     fecha,
-    distanciaMetros: '1000',
-    tiempo: '',
-    tiempoTestigo: '',
-    anioTestigo: String(new Date().getFullYear()),
     observaciones: '',
+    distancias: [nuevoBloque('1000')],
   }
 }
 
@@ -31,17 +50,61 @@ export function formularioDesdeControlAgua(control: ControlDto): FormControlAgua
     id: control.id,
     atletaId: String(control.atletaId),
     fecha: control.fecha,
-    distanciaMetros: control.distanciaMetros != null ? String(control.distanciaMetros) : '',
-    tiempo: control.tiempo ?? '',
-    tiempoTestigo: control.tiempoTestigo ?? '',
-    anioTestigo: control.anioTestigo != null ? String(control.anioTestigo) : String(new Date().getFullYear()),
     observaciones: control.observaciones ?? '',
+    distancias: [
+      {
+        clave: clave(),
+        distanciaMetros: control.distanciaMetros != null ? String(control.distanciaMetros) : '',
+        tiempo: control.tiempo ?? '',
+        tiempoTestigo: control.tiempoTestigo ?? '',
+        anioTestigo:
+          control.anioTestigo != null ? String(control.anioTestigo) : String(new Date().getFullYear()),
+      },
+    ],
   }
 }
 
-export function armarGuardarControlAgua(
+function armarBloque(
+  bloque: BloqueDistanciaAgua,
+  indice: number,
+): { datos: Omit<GuardarControlRequest, 'atletaId' | 'tipo' | 'fecha' | 'observaciones' | 'ejercicios'> } | { error: string } {
+  const etiqueta = `Distancia ${indice + 1}`
+  const distanciaMetros = Number(bloque.distanciaMetros)
+  if (!Number.isFinite(distanciaMetros) || distanciaMetros <= 0) {
+    return { error: `${etiqueta}: indicá la distancia en metros.` }
+  }
+
+  if (!bloque.tiempo.trim() || parsearTiempo(bloque.tiempo) === null) {
+    return { error: `${etiqueta}: el tiempo no es válido. Usá el formato m:ss,cc.` }
+  }
+
+  const tieneTestigo = bloque.tiempoTestigo.trim().length > 0
+  if (tieneTestigo && parsearTiempo(bloque.tiempoTestigo) === null) {
+    return { error: `${etiqueta}: el tiempo testigo no es válido.` }
+  }
+
+  let anioTestigo: number | null = null
+  if (tieneTestigo) {
+    anioTestigo = Number(bloque.anioTestigo)
+    if (!Number.isInteger(anioTestigo) || anioTestigo < 1990 || anioTestigo > 2100) {
+      return { error: `${etiqueta}: indicá el año del tiempo testigo.` }
+    }
+  }
+
+  return {
+    datos: {
+      distanciaMetros,
+      tiempo: bloque.tiempo.trim(),
+      tiempoTestigo: tieneTestigo ? bloque.tiempoTestigo.trim() : null,
+      anioTestigo,
+    },
+  }
+}
+
+/** Arma uno o varios requests: un control de agua por cada distancia. */
+export function armarGuardarControlesAgua(
   form: FormControlAgua,
-): { datos: GuardarControlRequest } | { error: string } {
+): { pedidos: GuardarControlRequest[] } | { error: string } {
   const atletaId = Number(form.atletaId)
   if (!Number.isInteger(atletaId) || atletaId <= 0) {
     return { error: 'Elegí un atleta.' }
@@ -51,41 +114,39 @@ export function armarGuardarControlAgua(
     return { error: 'Indicá la fecha del control.' }
   }
 
-  const distanciaMetros = Number(form.distanciaMetros)
-  if (!Number.isFinite(distanciaMetros) || distanciaMetros <= 0) {
-    return { error: 'Indicá la distancia en metros.' }
+  if (form.distancias.length === 0) {
+    return { error: 'Agregá al menos una distancia.' }
   }
 
-  if (!form.tiempo.trim() || parsearTiempo(form.tiempo) === null) {
-    return { error: 'El tiempo no es válido. Usá el formato m:ss,cc.' }
-  }
-
-  const tieneTestigo = form.tiempoTestigo.trim().length > 0
-  if (tieneTestigo && parsearTiempo(form.tiempoTestigo) === null) {
-    return { error: 'El tiempo testigo no es válido.' }
-  }
-
-  let anioTestigo: number | null = null
-  if (tieneTestigo) {
-    anioTestigo = Number(form.anioTestigo)
-    if (!Number.isInteger(anioTestigo) || anioTestigo < 1990 || anioTestigo > 2100) {
-      return { error: 'Indicá el año del tiempo testigo.' }
+  const pedidos: GuardarControlRequest[] = []
+  for (let i = 0; i < form.distancias.length; i++) {
+    const armado = armarBloque(form.distancias[i], i)
+    if ('error' in armado) {
+      return armado
     }
-  }
 
-  return {
-    datos: {
+    pedidos.push({
       atletaId,
       tipo: 'Agua',
       fecha: form.fecha,
-      distanciaMetros,
-      tiempo: form.tiempo.trim(),
-      tiempoTestigo: tieneTestigo ? form.tiempoTestigo.trim() : null,
-      anioTestigo,
       observaciones: form.observaciones.trim() || null,
       ejercicios: [],
-    },
+      ...armado.datos,
+    })
   }
+
+  return { pedidos }
+}
+
+/** Compat: un solo request (edición). */
+export function armarGuardarControlAgua(
+  form: FormControlAgua,
+): { datos: GuardarControlRequest } | { error: string } {
+  const armado = armarGuardarControlesAgua(form)
+  if ('error' in armado) {
+    return armado
+  }
+  return { datos: armado.pedidos[0] }
 }
 
 interface Props {
@@ -100,32 +161,15 @@ export function FormularioControlAgua({ form, onChange, atletas, atletaFijo }: P
     onChange({ ...form, ...parcial })
   }
 
-  const metros = Number(form.distanciaMetros)
-  const kmh =
-    Number.isFinite(metros) && metros > 0 && form.tiempo.trim()
-      ? kilometrosPorHora(metros, form.tiempo)
-      : null
+  function actualizarBloque(claveBloque: number, parcial: Partial<BloqueDistanciaAgua>) {
+    setForm({
+      distancias: form.distancias.map((b) => (b.clave === claveBloque ? { ...b, ...parcial } : b)),
+    })
+  }
 
   const atleta = atletas.find((a) => String(a.id) === form.atletaId)
   const categoria = atleta?.categorias?.[0] ?? null
-
-  let diferencia: string | null = null
-  if (form.tiempo.trim() && form.tiempoTestigo.trim()) {
-    const logrado = parsearTiempo(form.tiempo)
-    const testigo = parsearTiempo(form.tiempoTestigo)
-    if (logrado !== null && testigo !== null) {
-      const delta = logrado - testigo
-      const abs = Math.abs(delta)
-      const min = Math.floor(abs / 6000)
-      const seg = Math.floor((abs % 6000) / 100)
-      const cen = abs % 100
-      const cuerpo =
-        cen > 0
-          ? `${min}:${String(seg).padStart(2, '0')},${String(cen).padStart(2, '0')}`.replace(/0+$/, '')
-          : `${min}:${String(seg).padStart(2, '0')}`
-      diferencia = `${delta < 0 ? '-' : '+'}${cuerpo}`
-    }
-  }
+  const editando = form.id != null
 
   return (
     <div className="formulario">
@@ -156,20 +200,109 @@ export function FormularioControlAgua({ form, onChange, atletas, atletaFijo }: P
         </label>
       </div>
 
+      {form.distancias.map((bloque, indice) => (
+        <BloqueDistancia
+          key={bloque.clave}
+          indice={indice}
+          bloque={bloque}
+          categoria={categoria}
+          sePuedeQuitar={!editando && form.distancias.length > 1}
+          onChange={(parcial) => actualizarBloque(bloque.clave, parcial)}
+          onQuitar={() =>
+            setForm({
+              distancias: form.distancias.filter((b) => b.clave !== bloque.clave),
+            })
+          }
+        />
+      ))}
+
+      {!editando && (
+        <button
+          type="button"
+          className="boton-fantasma"
+          onClick={() => setForm({ distancias: [...form.distancias, nuevoBloque('500')] })}
+        >
+          + Agregar distancia
+        </button>
+      )}
+
+      <label>
+        Observaciones
+        <input
+          value={form.observaciones}
+          maxLength={300}
+          onChange={(e) => setForm({ observaciones: e.target.value })}
+          placeholder="Opcional"
+        />
+      </label>
+    </div>
+  )
+}
+
+function BloqueDistancia({
+  indice,
+  bloque,
+  categoria,
+  sePuedeQuitar,
+  onChange,
+  onQuitar,
+}: {
+  indice: number
+  bloque: BloqueDistanciaAgua
+  categoria: string | null
+  sePuedeQuitar: boolean
+  onChange: (parcial: Partial<BloqueDistanciaAgua>) => void
+  onQuitar: () => void
+}) {
+  const metros = Number(bloque.distanciaMetros)
+  const kmh =
+    Number.isFinite(metros) && metros > 0 && bloque.tiempo.trim()
+      ? kilometrosPorHora(metros, bloque.tiempo)
+      : null
+
+  let diferencia: string | null = null
+  if (bloque.tiempo.trim() && bloque.tiempoTestigo.trim()) {
+    const logrado = parsearTiempo(bloque.tiempo)
+    const testigo = parsearTiempo(bloque.tiempoTestigo)
+    if (logrado !== null && testigo !== null) {
+      const delta = logrado - testigo
+      const abs = Math.abs(delta)
+      const min = Math.floor(abs / 6000)
+      const seg = Math.floor((abs % 6000) / 100)
+      const cen = abs % 100
+      const cuerpo =
+        cen > 0
+          ? `${min}:${String(seg).padStart(2, '0')},${String(cen).padStart(2, '0')}`.replace(/0+$/, '')
+          : `${min}:${String(seg).padStart(2, '0')}`
+      diferencia = `${delta < 0 ? '-' : '+'}${cuerpo}`
+    }
+  }
+
+  return (
+    <div className="tarjeta control-bloque">
+      <div className="encabezado-compacto">
+        <strong>Distancia {indice + 1}</strong>
+        {sePuedeQuitar && (
+          <button type="button" className="boton-fantasma" onClick={onQuitar}>
+            Quitar
+          </button>
+        )}
+      </div>
+
       <div className="grilla">
         <label>
           Distancia (m)
           <input
             inputMode="numeric"
-            value={form.distanciaMetros}
-            onChange={(e) => setForm({ distanciaMetros: e.target.value })}
+            value={bloque.distanciaMetros}
+            onChange={(e) => onChange({ distanciaMetros: e.target.value })}
             placeholder="1000"
           />
         </label>
 
         <label>
           Tiempo
-          <CampoTiempo valor={form.tiempo} onChange={(tiempo) => setForm({ tiempo })} />
+          <CampoTiempo valor={bloque.tiempo} onChange={(tiempo) => onChange({ tiempo })} />
         </label>
       </div>
 
@@ -177,8 +310,8 @@ export function FormularioControlAgua({ form, onChange, atletas, atletaFijo }: P
         <label>
           Tiempo testigo
           <CampoTiempo
-            valor={form.tiempoTestigo}
-            onChange={(tiempoTestigo) => setForm({ tiempoTestigo })}
+            valor={bloque.tiempoTestigo}
+            onChange={(tiempoTestigo) => onChange({ tiempoTestigo })}
           />
         </label>
 
@@ -186,10 +319,10 @@ export function FormularioControlAgua({ form, onChange, atletas, atletaFijo }: P
           Año testigo
           <input
             inputMode="numeric"
-            value={form.anioTestigo}
-            onChange={(e) => setForm({ anioTestigo: e.target.value })}
+            value={bloque.anioTestigo}
+            onChange={(e) => onChange({ anioTestigo: e.target.value })}
             placeholder="2026"
-            disabled={!form.tiempoTestigo.trim()}
+            disabled={!bloque.tiempoTestigo.trim()}
           />
         </label>
       </div>
@@ -208,16 +341,6 @@ export function FormularioControlAgua({ form, onChange, atletas, atletaFijo }: P
           <strong>{diferencia ?? '—'}</strong>
         </div>
       </div>
-
-      <label>
-        Observaciones
-        <input
-          value={form.observaciones}
-          maxLength={300}
-          onChange={(e) => setForm({ observaciones: e.target.value })}
-          placeholder="Opcional"
-        />
-      </label>
     </div>
   )
 }
