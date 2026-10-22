@@ -19,9 +19,18 @@ import {
   formularioDesdeControl,
   type FormControlGim,
 } from '../componentes/FormularioControlGim'
+import {
+  armarGuardarControlTierra,
+  armarGuardarControlesTierra,
+  FormularioControlTierra,
+  formularioDesdeControlTierra,
+  formularioTierraVacio,
+  type FormControlTierra,
+} from '../componentes/FormularioControlTierra'
 import { NombreAtleta } from '../componentes/NombreAtleta'
 import { VistaControlAgua } from '../componentes/VistaControlAgua'
 import { VistaControlGim } from '../componentes/VistaControlGim'
+import { VistaControlTierra } from '../componentes/VistaControlTierra'
 import { esStaff, type AtletaDto, type ControlDto, type TipoTrabajo } from '../tipos/api'
 import { hoyISO } from '../util/fechas'
 
@@ -83,6 +92,8 @@ export function ControlesPage() {
         <section className="controles-panel">
           {tipoActual.slug === 'gimnasio' ? (
             <PanelGimnasio staff={staff} />
+          ) : tipoActual.slug === 'tierra' ? (
+            <PanelTierra staff={staff} />
           ) : tipoActual.slug === 'agua' ? (
             <PanelAgua staff={staff} />
           ) : (
@@ -289,6 +300,212 @@ function PanelGimnasio({ staff }: { staff: boolean }) {
   )
 }
 
+function PanelTierra({ staff }: { staff: boolean }) {
+  const [atletas, setAtletas] = useState<AtletaDto[]>([])
+  const [controles, setControles] = useState<ControlDto[]>([])
+  const [atletaId, setAtletaId] = useState('')
+  const [form, setForm] = useState<FormControlTierra>(() => formularioTierraVacio(hoyISO()))
+  const [mostrarForm, setMostrarForm] = useState(false)
+  const [cargando, setCargando] = useState(true)
+  const [ocupado, setOcupado] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const cargar = useCallback(async () => {
+    setCargando(true)
+    setError(null)
+
+    try {
+      if (staff) {
+        const id = atletaId ? Number(atletaId) : undefined
+        setControles(await controlesApi.listar({ atletaId: id, tipo: 'Tierra' }))
+      } else {
+        setControles(await controlesApi.mios('Tierra'))
+      }
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudieron cargar los controles.')
+    } finally {
+      setCargando(false)
+    }
+  }, [staff, atletaId])
+
+  useEffect(() => {
+    void cargar()
+  }, [cargar])
+
+  useEffect(() => {
+    if (!staff) {
+      return
+    }
+
+    void atletasApi
+      .listar()
+      .then(setAtletas)
+      .catch(() => setAtletas([]))
+  }, [staff])
+
+  const atletasActivos = useMemo(
+    () => atletas.filter((a) => a.activo).sort((a, b) => a.apellido.localeCompare(b.apellido)),
+    [atletas],
+  )
+
+  function abrirNuevo() {
+    setForm(formularioTierraVacio(hoyISO(), atletaId))
+    setMostrarForm(true)
+    setError(null)
+  }
+
+  function abrirEditar(control: ControlDto) {
+    setForm(formularioDesdeControlTierra(control))
+    setMostrarForm(true)
+    setError(null)
+  }
+
+  function cerrarForm() {
+    setMostrarForm(false)
+    setForm(formularioTierraVacio(hoyISO(), atletaId))
+    setError(null)
+  }
+
+  async function guardar() {
+    setOcupado(true)
+    setError(null)
+
+    try {
+      if (form.id) {
+        const armado = armarGuardarControlTierra(form)
+        if ('error' in armado) {
+          setError(armado.error)
+          return
+        }
+        await controlesApi.actualizar(form.id, armado.datos)
+        if (staff && String(armado.datos.atletaId) !== atletaId) {
+          setAtletaId(String(armado.datos.atletaId))
+        }
+      } else {
+        const armado = armarGuardarControlesTierra(form)
+        if ('error' in armado) {
+          setError(armado.error)
+          return
+        }
+
+        for (const pedido of armado.pedidos) {
+          await controlesApi.crear(pedido)
+        }
+
+        if (staff && String(armado.pedidos[0].atletaId) !== atletaId) {
+          setAtletaId(String(armado.pedidos[0].atletaId))
+        }
+      }
+
+      cerrarForm()
+      await cargar()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo guardar el control.')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  async function eliminar(control: ControlDto) {
+    if (!window.confirm('¿Eliminar este control de tierra?')) {
+      return
+    }
+
+    setOcupado(true)
+    setError(null)
+
+    try {
+      await controlesApi.eliminar(control.id)
+      if (form.id === control.id) {
+        cerrarForm()
+      }
+      await cargar()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo eliminar el control.')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  return (
+    <div className="controles-gim">
+      {staff && (
+        <div className="controles-acciones">
+          <label>
+            Atleta
+            <select value={atletaId} onChange={(e) => setAtletaId(e.target.value)}>
+              <option value="">Todos</option>
+              {atletasActivos.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.apellido}, {a.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button type="button" className="boton" onClick={abrirNuevo}>
+            Nuevo control
+          </button>
+        </div>
+      )}
+
+      {error && <p className="error">{error}</p>}
+
+      {mostrarForm && staff && (
+        <div className="tarjeta">
+          <h3>{form.id ? 'Editar control' : 'Nuevo control de tierra'}</h3>
+          <FormularioControlTierra
+            form={form}
+            onChange={setForm}
+            atletas={atletasActivos}
+            atletaFijo={form.id != null}
+          />
+          <div className="acciones-form">
+            <button type="button" className="boton" disabled={ocupado} onClick={() => void guardar()}>
+              {ocupado
+                ? 'Guardando…'
+                : form.id
+                  ? 'Guardar'
+                  : form.distancias.length > 1
+                    ? `Guardar ${form.distancias.length} controles`
+                    : 'Guardar'}
+            </button>
+            <button type="button" className="boton-fantasma" disabled={ocupado} onClick={cerrarForm}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {cargando ? (
+        <p className="sutil">Cargando…</p>
+      ) : (
+        <>
+          <VistaControlTierra
+            controles={controles}
+            vacio={
+              staff
+                ? atletaId
+                  ? 'Este atleta todavía no tiene controles de tierra.'
+                  : 'Todavía no hay controles de tierra. Elegí un atleta o creá uno nuevo.'
+                : 'Todavía no tenés controles de tierra cargados.'
+            }
+          />
+
+          {staff && controles.length > 0 && (
+            <ListaAdminControles
+              controles={controles}
+              ocupado={ocupado}
+              onEditar={abrirEditar}
+              onEliminar={(c) => void eliminar(c)}
+            />
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function PanelAgua({ staff }: { staff: boolean }) {
   const [atletas, setAtletas] = useState<AtletaDto[]>([])
   const [controles, setControles] = useState<ControlDto[]>([])
@@ -472,6 +689,7 @@ function PanelAgua({ staff }: { staff: boolean }) {
         <>
           <VistaControlAgua
             controles={controles}
+            mostrarDiferenciaTestigo={staff}
             vacio={
               staff
                 ? atletaId
@@ -517,6 +735,8 @@ function ListaAdminControles({
               color={c.atletaColor}
             />{' '}
             · {c.fecha}
+            {c.distanciaMetros != null ? ` · ${c.distanciaMetros} m` : ''}
+            {c.tiempo ? ` · ${c.tiempo}` : ''}
           </span>
           <span className="acciones-fila">
             <button type="button" className="boton-fantasma" onClick={() => onEditar(c)}>

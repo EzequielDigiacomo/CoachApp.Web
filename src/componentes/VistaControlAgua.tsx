@@ -6,9 +6,12 @@ import { NombreAtleta } from './NombreAtleta'
 export function VistaControlAgua({
   controles,
   vacio = 'Todavía no hay controles de agua.',
+  /** Solo staff ve la diferencia vs tiempo testigo. */
+  mostrarDiferenciaTestigo = false,
 }: {
   controles: ControlDto[]
   vacio?: string
+  mostrarDiferenciaTestigo?: boolean
 }) {
   if (controles.length === 0) {
     return <p className="sutil">{vacio}</p>
@@ -57,7 +60,9 @@ export function VistaControlAgua({
               }
             />
             <Dato etiqueta="Categoría" valor={control.categoria ?? '—'} />
-            <Dato etiqueta="vs testigo" valor={control.diferenciaTestigo ?? '—'} />
+            {mostrarDiferenciaTestigo && (
+              <Dato etiqueta="vs testigo" valor={control.diferenciaTestigo ?? '—'} />
+            )}
           </div>
         </article>
       ))}

@@ -12,6 +12,7 @@ import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { VistaControlAgua } from '../componentes/VistaControlAgua'
 import { VistaControlGim } from '../componentes/VistaControlGim'
+import { VistaControlTierra } from '../componentes/VistaControlTierra'
 import type {
   AnotacionDto,
   AtletaDto,
@@ -44,6 +45,7 @@ export function AtletaHistorialPage() {
   const [atleta, setAtleta] = useState<AtletaDto | null>(null)
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
   const [controlesGim, setControlesGim] = useState<ControlDto[]>([])
+  const [controlesTierra, setControlesTierra] = useState<ControlDto[]>([])
   const [controlesAgua, setControlesAgua] = useState<ControlDto[]>([])
   const [asistencias, setAsistencias] = useState<SesionHistorialDto[]>([])
   const [notas, setNotas] = useState<AnotacionDto[]>([])
@@ -68,12 +70,13 @@ export function AtletaHistorialPage() {
     setError(null)
 
     try {
-      const [datosAtleta, historial, sesiones, anotaciones, gim, agua] = await Promise.all([
+      const [datosAtleta, historial, sesiones, anotaciones, gim, tierra, agua] = await Promise.all([
         atletasApi.obtener(atletaId),
         trabajosApi.historial(atletaId),
         asistenciaApi.historial(atletaId).catch(() => [] as SesionHistorialDto[]),
         anotacionesApi.listar({ atletaId }),
         controlesApi.listar({ atletaId, tipo: 'Gimnasio' }).catch(() => [] as ControlDto[]),
+        controlesApi.listar({ atletaId, tipo: 'Tierra' }).catch(() => [] as ControlDto[]),
         controlesApi.listar({ atletaId, tipo: 'Agua' }).catch(() => [] as ControlDto[]),
       ])
 
@@ -82,6 +85,7 @@ export function AtletaHistorialPage() {
       setAsistencias(sesiones)
       setNotas(anotaciones)
       setControlesGim(gim)
+      setControlesTierra(tierra)
       setControlesAgua(agua)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar el historial.')
@@ -181,9 +185,17 @@ export function AtletaHistorialPage() {
             />
           </section>
           <section className="seccion-controles-gim">
+            <h3 className="titulo-dia">Controles de tierra</h3>
+            <VistaControlTierra
+              controles={controlesTierra}
+              vacio="Todavía no hay controles de tierra cargados para este atleta."
+            />
+          </section>
+          <section className="seccion-controles-gim">
             <h3 className="titulo-dia">Controles de agua</h3>
             <VistaControlAgua
               controles={controlesAgua}
+              mostrarDiferenciaTestigo
               vacio="Todavía no hay controles de agua cargados para este atleta."
             />
           </section>
