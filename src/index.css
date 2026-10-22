@@ -2392,3 +2392,25 @@ button.sesion.ausente {
   font-size: 12px;
   padding: 4px 8px;
 }
+
+.control-agua-preview,
+.control-agua-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.control-agua-preview > div,
+.control-agua-dato {
+  display: grid;
+  gap: 2px;
+}
+
+.control-agua-preview strong,
+.control-agua-dato strong {
+  font-size: 15px;
+}

@@ -10,6 +10,7 @@ import { ModalGraficoTrabajo } from '../componentes/ModalGraficoTrabajo'
 import { TarjetaTrabajo } from '../componentes/TarjetaTrabajo'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
+import { VistaControlAgua } from '../componentes/VistaControlAgua'
 import { VistaControlGim } from '../componentes/VistaControlGim'
 import type {
   AnotacionDto,
@@ -43,6 +44,7 @@ export function AtletaHistorialPage() {
   const [atleta, setAtleta] = useState<AtletaDto | null>(null)
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
   const [controlesGim, setControlesGim] = useState<ControlDto[]>([])
+  const [controlesAgua, setControlesAgua] = useState<ControlDto[]>([])
   const [asistencias, setAsistencias] = useState<SesionHistorialDto[]>([])
   const [notas, setNotas] = useState<AnotacionDto[]>([])
   const [cargando, setCargando] = useState(true)
@@ -66,19 +68,21 @@ export function AtletaHistorialPage() {
     setError(null)
 
     try {
-      const [datosAtleta, historial, sesiones, anotaciones, controles] = await Promise.all([
+      const [datosAtleta, historial, sesiones, anotaciones, gim, agua] = await Promise.all([
         atletasApi.obtener(atletaId),
         trabajosApi.historial(atletaId),
         asistenciaApi.historial(atletaId).catch(() => [] as SesionHistorialDto[]),
         anotacionesApi.listar({ atletaId }),
         controlesApi.listar({ atletaId, tipo: 'Gimnasio' }).catch(() => [] as ControlDto[]),
+        controlesApi.listar({ atletaId, tipo: 'Agua' }).catch(() => [] as ControlDto[]),
       ])
 
       setAtleta(datosAtleta)
       setTrabajos(historial)
       setAsistencias(sesiones)
       setNotas(anotaciones)
-      setControlesGim(controles)
+      setControlesGim(gim)
+      setControlesAgua(agua)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar el historial.')
     } finally {
@@ -168,13 +172,22 @@ export function AtletaHistorialPage() {
       {error && <p className="error">{error}</p>}
 
       {!cargando && (
-        <section className="seccion-controles-gim">
-          <h3 className="titulo-dia">Controles de gim</h3>
-          <VistaControlGim
-            controles={controlesGim}
-            vacio="Todavía no hay controles de gimnasio cargados para este atleta."
-          />
-        </section>
+        <>
+          <section className="seccion-controles-gim">
+            <h3 className="titulo-dia">Controles de gim</h3>
+            <VistaControlGim
+              controles={controlesGim}
+              vacio="Todavía no hay controles de gimnasio cargados para este atleta."
+            />
+          </section>
+          <section className="seccion-controles-gim">
+            <h3 className="titulo-dia">Controles de agua</h3>
+            <VistaControlAgua
+              controles={controlesAgua}
+              vacio="Todavía no hay controles de agua cargados para este atleta."
+            />
+          </section>
+        </>
       )}
 
       {cargando ? (

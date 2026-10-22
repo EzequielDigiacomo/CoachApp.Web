@@ -350,6 +350,20 @@ export interface ControlDto {
   fecha: string
   /** Sin kilos ni 1RM: solo ejercicio y repeticiones. */
   esAutoCarga?: boolean
+  /** Agua: distancia en metros. */
+  distanciaMetros?: number | null
+  /** Agua: tiempo logrado, ya formateado. */
+  tiempo?: string | null
+  /** Agua: tiempo testigo de referencia. */
+  tiempoTestigo?: string | null
+  /** Agua: año del tiempo testigo. */
+  anioTestigo?: number | null
+  /** Agua: velocidad promedio km/h. */
+  velocidadKmh?: number | null
+  /** Categoria etaria del atleta. */
+  categoria?: string | null
+  /** Diferencia vs testigo (+ mas lento / - mas rapido). */
+  diferenciaTestigo?: string | null
   observaciones: string | null
   fechaCreacion: string
   ejercicios: ControlEjercicioDto[]
@@ -371,8 +385,12 @@ export interface GuardarControlRequest {
   tipo: TipoTrabajo
   fecha: string
   esAutoCarga?: boolean
+  distanciaMetros?: number | null
+  tiempo?: string | null
+  tiempoTestigo?: string | null
+  anioTestigo?: number | null
   observaciones?: string | null
-  ejercicios: GuardarControlEjercicioRequest[]
+  ejercicios?: GuardarControlEjercicioRequest[]
 }
 
 /* ---------- Anotaciones ---------- */
