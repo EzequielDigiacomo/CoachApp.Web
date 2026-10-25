@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
 import { BotonTema } from '../componentes/BotonTema'
@@ -8,7 +8,6 @@ import type { LoginResponse } from '../tipos/api'
 export function LoginPage() {
   const { iniciarSesion } = useAuth()
   const navegar = useNavigate()
-  const ubicacion = useLocation()
 
   const [nombreUsuario, setNombreUsuario] = useState('')
   const [password, setPassword] = useState('')
@@ -27,9 +26,8 @@ export function LoginPage() {
       })
 
       iniciarSesion({ token: respuesta.token, usuario: respuesta.usuario })
-
-      const destino = (ubicacion.state as { desde?: string } | null)?.desde
-      navegar(destino ?? '/', { replace: true })
+      // Siempre al dashboard al ingresar, sin volver a la URL previa.
+      navegar('/', { replace: true })
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo conectar con el servidor.')
     } finally {
