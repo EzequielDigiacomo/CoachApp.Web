@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { anotacionesApi } from '../api/anotaciones'
+import { ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
 import { IconoDashboard, type IdIconoDashboard } from '../componentes/IconosDashboard'
 import { esStaff } from '../tipos/api'
@@ -8,7 +11,6 @@ interface CardModulo {
   titulo: string
   descripcion: string
   icono: IdIconoDashboard
-  destacada?: boolean
   /** Resalta Atletas un poco mas que el resto. */
   enfasis?: boolean
 }
@@ -32,13 +34,6 @@ export function DashboardPage() {
           titulo: 'Controles',
           descripcion: 'Gim, tierra y agua por atleta.',
           icono: 'controles',
-        },
-        {
-          to: '/anotaciones?nueva=1',
-          titulo: 'Anotaciones',
-          descripcion: 'Anotá algo al toque.',
-          icono: 'anotaciones',
-          destacada: true,
         },
         {
           to: '/atletas',
@@ -102,7 +97,6 @@ export function DashboardPage() {
           titulo: 'Anotación',
           descripcion: 'Escribile al entrenador.',
           icono: 'anotaciones',
-          destacada: true,
         },
         {
           to: '/sensaciones',
@@ -118,12 +112,6 @@ export function DashboardPage() {
         },
       ]
 
-  const destacada = cards.find((c) => c.destacada)
-  const resto = cards.filter((c) => !c.destacada)
-  const mitad = Math.ceil(resto.length / 2)
-  const arriba = resto.slice(0, mitad)
-  const abajo = resto.slice(mitad)
-
   return (
     <div className="dashboard">
       <header className="dashboard-cabecera">
@@ -133,13 +121,9 @@ export function DashboardPage() {
       </header>
 
       <div className="dashboard-grilla">
-        {arriba.map((card) => (
-          <Card key={card.to} card={card} />
-        ))}
+        {staff && <CardAnotacionRapida />}
 
-        {destacada && <Card card={destacada} />}
-
-        {abajo.map((card) => (
+        {cards.map((card) => (
           <Card key={card.to} card={card} />
         ))}
       </div>
@@ -148,11 +132,7 @@ export function DashboardPage() {
 }
 
 function Card({ card }: { card: CardModulo }) {
-  const clases = [
-    'dashboard-card',
-    card.destacada ? 'dashboard-card-destacada' : '',
-    card.enfasis ? 'dashboard-card-enfasis' : '',
-  ]
+  const clases = ['dashboard-card', card.enfasis ? 'dashboard-card-enfasis' : '']
     .filter(Boolean)
     .join(' ')
 
@@ -164,5 +144,76 @@ function Card({ card }: { card: CardModulo }) {
         <span className="sutil">{card.descripcion}</span>
       </div>
     </Link>
+  )
+}
+
+/** Anotaciones arriba: ir a la lista a la izquierda, nota rapida a la derecha. */
+function CardAnotacionRapida() {
+  const [texto, setTexto] = useState('')
+  const [ocupado, setOcupado] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [ok, setOk] = useState(false)
+
+  async function guardar(evento: React.FormEvent) {
+    evento.preventDefault()
+    const limpio = texto.trim()
+    if (!limpio) {
+      setError('Escribí algo para guardar.')
+      setOk(false)
+      return
+    }
+
+    setOcupado(true)
+    setError(null)
+    setOk(false)
+
+    try {
+      await anotacionesApi.crear({ texto: limpio })
+      setTexto('')
+      setOk(true)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo guardar la anotación.')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  return (
+    <div className="dashboard-card dashboard-card-destacada dashboard-card-anotacion">
+      <Link to="/anotaciones" className="dashboard-anotacion-ir">
+        <IconoDashboard id="anotaciones" />
+        <div className="dashboard-card-texto">
+          <strong>Anotaciones</strong>
+          <span className="sutil">Ver, editar o buscar notas.</span>
+        </div>
+      </Link>
+
+      <form className="dashboard-anotacion-rapida" onSubmit={(e) => void guardar(e)}>
+        <label className="dashboard-anotacion-campo">
+          <span className="sutil">Nota rápida</span>
+          <textarea
+            value={texto}
+            onChange={(e) => {
+              setTexto(e.target.value)
+              setOk(false)
+              if (error) {
+                setError(null)
+              }
+            }}
+            placeholder="Escribí acá y guardá sin salir del inicio"
+            rows={3}
+            maxLength={4000}
+            disabled={ocupado}
+          />
+        </label>
+        <div className="dashboard-anotacion-acciones">
+          {error && <p className="error">{error}</p>}
+          {ok && !error && <p className="sutil dashboard-anotacion-ok">Guardada.</p>}
+          <button type="submit" className="boton" disabled={ocupado || !texto.trim()}>
+            {ocupado ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
