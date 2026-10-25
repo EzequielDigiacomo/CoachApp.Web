@@ -109,6 +109,8 @@ export interface EntrenamientoDto {
   fecha: string
   turno: Turno
   sesion: number
+  /** Gimnasio, tierra o agua: fija el tipo de los trabajos. */
+  tipo: TipoTrabajo
   descripcion: string | null
   club: string | null
   fechaCreacion: string
@@ -200,6 +202,7 @@ export interface SesionHistorialDto {
   fecha: string
   turno: Turno
   sesion: number
+  tipo: TipoTrabajo
   asistio: boolean
 }
 
@@ -207,6 +210,7 @@ export interface CrearEntrenamientoRequest {
   fecha: string
   turno: Turno
   sesion: number
+  tipo: TipoTrabajo
   descripcion?: string | null
   club?: string | null
   atletaIds?: number[]

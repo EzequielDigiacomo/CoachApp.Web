@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ApiError } from '../api/cliente'
 import { entrenamientosApi } from '../api/entrenamientos'
-import type { CrearEntrenamientoRequest, EntrenamientoDto, Turno } from '../tipos/api'
+import type { CrearEntrenamientoRequest, EntrenamientoDto, TipoTrabajo, Turno } from '../tipos/api'
 import { Modal } from './Modal'
 
 const SESIONES = [1, 2, 3, 4, 5]
@@ -12,12 +12,13 @@ interface Props {
   onGuardado: (actualizado: EntrenamientoDto) => void
 }
 
-/** Corrige fecha, turno, sesión, club o descripción sin borrar la sesión. */
+/** Corrige fecha, turno, sesión, tipo, club o descripción sin borrar la sesión. */
 export function ModalEditarSesion({ entrenamiento, onCerrar, onGuardado }: Props) {
   const [datos, setDatos] = useState<CrearEntrenamientoRequest>({
     fecha: entrenamiento.fecha,
     turno: entrenamiento.turno,
     sesion: entrenamiento.sesion,
+    tipo: entrenamiento.tipo ?? 'Agua',
     descripcion: entrenamiento.descripcion ?? '',
     club: entrenamiento.club ?? '',
   })
@@ -80,6 +81,19 @@ export function ModalEditarSesion({ entrenamiento, onCerrar, onGuardado }: Props
                   {n}
                 </option>
               ))}
+            </select>
+          </label>
+
+          <label>
+            Tipo
+            <select
+              value={datos.tipo}
+              onChange={(e) => setDatos((d) => ({ ...d, tipo: e.target.value as TipoTrabajo }))}
+              required
+            >
+              <option value="Gimnasio">Gimnasio</option>
+              <option value="Tierra">Tierra</option>
+              <option value="Agua">Agua</option>
             </select>
           </label>
 

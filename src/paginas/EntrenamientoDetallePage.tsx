@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
-import { atletasApi, entrenamientosApi, etiquetaTurno } from '../api/entrenamientos'
+import { atletasApi, entrenamientosApi, etiquetaTipoTrabajo, etiquetaTurno } from '../api/entrenamientos'
 import { garminApi } from '../api/garmin'
 import { equiposApi } from '../api/equipos'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
@@ -330,7 +330,7 @@ export function EntrenamientoDetallePage() {
           <h2>{fechaLarga(entrenamiento.fecha)}</h2>
           <p className="sutil">
             {fechaNumerica(entrenamiento.fecha)} · {etiquetaTurno(entrenamiento.turno)} ·
-            Sesión {entrenamiento.sesion}
+            Sesión {entrenamiento.sesion} · {etiquetaTipoTrabajo(entrenamiento.tipo ?? 'Agua')}
             {entrenamiento.club && ` · ${entrenamiento.club}`}
           </p>
           {staff && garmin?.vinculada && (
@@ -459,9 +459,11 @@ export function EntrenamientoDetallePage() {
             </button>
           )}
 
-          <button type="button" className="boton-fantasma" onClick={() => setCargaEquipo(true)}>
-            Carga equipo
-          </button>
+          {(entrenamiento.tipo ?? 'Agua') === 'Agua' && (
+            <button type="button" className="boton-fantasma" onClick={() => setCargaEquipo(true)}>
+              Carga equipo
+            </button>
+          )}
           <button type="button" className="boton" onClick={() => setPanelAbierto((v) => !v)}>
             {panelAbierto ? 'Cerrar' : 'Agregar atletas'}
           </button>
@@ -653,7 +655,7 @@ export function EntrenamientoDetallePage() {
         </div>
       )}
 
-      {(entrenamiento.equipos ?? []).length > 0 && (
+      {(entrenamiento.tipo ?? 'Agua') === 'Agua' && (entrenamiento.equipos ?? []).length > 0 && (
         <>
           <div className="encabezado">
             <h3 className="titulo-seccion">Equipos</h3>
@@ -737,6 +739,7 @@ export function EntrenamientoDetallePage() {
         <ModalTrabajos
           entrenamientoId={entrenamientoId}
           atleta={enTrabajos}
+          tipoSesion={entrenamiento.tipo ?? 'Agua'}
           onCerrar={() => setEnTrabajos(null)}
           onCambio={() => void refrescar()}
         />
@@ -771,6 +774,7 @@ export function EntrenamientoDetallePage() {
       {cargaMultiple && (
         <ModalCargaMultiple
           entrenamientoId={entrenamientoId}
+          tipoSesion={entrenamiento.tipo ?? 'Agua'}
           atletas={entrenamiento.atletas.filter((a) => seleccionados.includes(a.atletaId))}
           onCerrar={() => {
             setCargaMultiple(false)

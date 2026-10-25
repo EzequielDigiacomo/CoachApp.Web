@@ -6,9 +6,7 @@ import { horaActual } from '../util/fechas'
 import { Modal } from './Modal'
 import {
   FormularioTrabajo,
-  TIPOS,
   armarRequest,
-  cambiarTipoDe,
   nuevoFormulario,
   type FormTrabajo,
 } from './FormularioTrabajo'
@@ -16,6 +14,8 @@ import { NombreAtleta, textoAtleta } from './NombreAtleta'
 
 interface Props {
   entrenamientoId: number
+  /** Tipo fijo de la sesion. */
+  tipoSesion: TipoTrabajo
   /** Los atletas elegidos en la tabla de la sesion, hasta cinco. */
   atletas: AtletaEnEntrenamientoDto[]
   onCerrar: () => void
@@ -23,40 +23,38 @@ interface Props {
   onCambio: () => void
 }
 
-/** Tipo con el que arranca la carga. Las ppm son de agua, el caso mas completo. */
-const TIPO_INICIAL: TipoTrabajo = 'Agua'
-
 interface Carga {
   atleta: AtletaEnEntrenamientoDto
   form: FormTrabajo
 }
 
 /**
- * Carga de trabajos para varios atletas a la vez. El tipo, la hora y las
- * observaciones son de la tanda entera; cada atleta carga sus propias
- * distancias, tiempos y ppm, porque el cronometro trae todo en una sola toma.
- * Un solo boton guarda los trabajos de todos.
+ * Carga de trabajos para varios atletas a la vez. El tipo lo fija la sesion;
+ * la hora y las observaciones son de la tanda; cada atleta carga sus marcas.
  */
-export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambio }: Props) {
-  const [tipo, setTipo] = useState<TipoTrabajo>(TIPO_INICIAL)
+export function ModalCargaMultiple({
+  entrenamientoId,
+  tipoSesion,
+  atletas,
+  onCerrar,
+  onCambio,
+}: Props) {
   const [hora, setHora] = useState(() => horaActual())
   const [observaciones, setObservaciones] = useState('')
   const [cargas, setCargas] = useState<Carga[]>(() =>
     atletas.map((atleta) => ({
       atleta,
-      form: { ...nuevoFormulario(TIPO_INICIAL), horaInicio: hora },
+      form: { ...nuevoFormulario(tipoSesion), horaInicio: hora },
     })),
   )
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /** El tipo es de la tanda: cambia la grilla de todos los formularios. */
-  function cambiarTipo(nuevo: TipoTrabajo) {
-    setTipo(nuevo)
-    setCargas((previas) => previas.map((c) => ({ ...c, form: cambiarTipoDe(c.form, nuevo) })))
+  function alIntentarCerrar() {
+    return window.confirm('¿Cancelar la carga? Se pierde lo que no guardaste.')
   }
 
-  /** La hora tambien es de la tanda, asi que se copia en cada formulario. */
+  /** La hora es de la tanda, asi que se copia en cada formulario. */
   function cambiarHora(valor: string) {
     setHora(valor)
     setCargas((previas) => previas.map((c) => ({ ...c, form: { ...c.form, horaInicio: valor } })))
@@ -78,11 +76,10 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
   async function guardar() {
     setError(null)
 
-    // Primero se valida todo: si algo esta mal, no se guarda ningun trabajo.
     const pedidos: { atletaId: number; nombre: string; datos: GuardarTrabajoRequest }[] = []
 
     for (const carga of cargas) {
-      const armado = armarRequest(carga.form)
+      const armado = armarRequest({ ...carga.form, tipo: tipoSesion })
       if ('error' in armado) {
         setError(`${nombreDe(carga.atleta)}: ${armado.error}`)
         return
@@ -91,7 +88,7 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
       pedidos.push({
         atletaId: carga.atleta.atletaId,
         nombre: nombreDe(carga.atleta),
-        datos: armado.datos,
+        datos: { ...armado.datos, tipo: tipoSesion },
       })
     }
 
@@ -100,7 +97,6 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
     const guardados: number[] = []
     const fallas: { atletaId: number; texto: string }[] = []
 
-    // El backend guarda de a un atleta, asi que se manda uno por vez.
     for (const pedido of pedidos) {
       try {
         await trabajosApi.crear(entrenamientoId, pedido.atletaId, pedido.datos)
@@ -108,24 +104,26 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
       } catch (e) {
         fallas.push({
           atletaId: pedido.atletaId,
-          texto: `${pedido.nombre}: ${e instanceof ApiError ? e.message : 'no se pudo guardar'}`,
+          texto: `${pedido.nombre}: ${e instanceof ApiError ? e.message : 'error al guardar'}`,
         })
       }
     }
 
     setOcupado(false)
 
-    if (guardados.length > 0) {
-      onCambio()
-    }
-
     if (fallas.length === 0) {
+      onCambio()
       onCerrar()
       return
     }
 
-    // Quedan en pantalla solo los que fallaron, para no volver a guardar los
-    // que ya entraron si se toca Guardar otra vez.
+    onCambio()
+
+    if (guardados.length === 0) {
+      setError(`No se pudo guardar: ${fallas.map((f) => f.texto).join(' · ')}`)
+      return
+    }
+
     const fallados = new Set(fallas.map((f) => f.atletaId))
     setCargas((previas) => previas.filter((c) => fallados.has(c.atleta.atletaId)))
     setError(
@@ -135,14 +133,10 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
     )
   }
 
-  function alIntentarCerrar() {
-    return window.confirm('¿Cancelar la carga? Se pierde lo que no guardaste.')
-  }
-
   return (
     <Modal
       titulo="Carga múltiple de trabajos"
-      subtitulo={`${cargas.length} ${cargas.length === 1 ? 'atleta' : 'atletas'} · un trabajo por atleta`}
+      subtitulo={`${cargas.length} ${cargas.length === 1 ? 'atleta' : 'atletas'} · ${etiquetaTipoTrabajo(tipoSesion)}`}
       ancho="grande"
       alIntentarCerrar={alIntentarCerrar}
       onCerrar={onCerrar}
@@ -152,22 +146,11 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
       <div className="carga-multiple">
         <div className="tarjeta carga-multiple-comun">
           <p className="sutil">
-            El tipo, la hora y las observaciones valen para toda la tanda. Cada atleta carga sus
-            propias distancias, tiempos y ppm, y al final se guardan todos juntos.
+            Tipo de la sesión: {etiquetaTipoTrabajo(tipoSesion)}. La hora y las observaciones valen
+            para toda la tanda.
           </p>
 
           <div className="grilla">
-            <label>
-              Tipo de trabajo
-              <select value={tipo} onChange={(e) => cambiarTipo(e.target.value as TipoTrabajo)}>
-                {TIPOS.map((opcion) => (
-                  <option value={opcion} key={opcion}>
-                    {etiquetaTipoTrabajo(opcion)}
-                  </option>
-                ))}
-              </select>
-            </label>
-
             <label>
               Hora de trabajo
               <input
@@ -206,6 +189,7 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
               form={carga.form}
               mostrarCabecera={false}
               mostrarAcciones={false}
+              tipoFijo
               autoFocus={indice === 0}
               onCambiar={(form) => actualizarForm(carga.atleta.atletaId, form)}
             />

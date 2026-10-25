@@ -578,6 +578,16 @@ button.sesion {
   font-weight: 600;
 }
 
+.etiqueta-tipo-sesion {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--acento-suave);
+  color: var(--acento);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .turno {
   color: var(--texto-suave);
   font-size: 13px;

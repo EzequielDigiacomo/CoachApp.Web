@@ -172,6 +172,8 @@ interface Props {
   autoFocus?: boolean
   /** Encabezado propio; sin esto usa el que arma con el tipo de trabajo. */
   titulo?: string
+  /** Si es true, el tipo viene de la sesion y no se puede cambiar aca. */
+  tipoFijo?: boolean
   onCambiar: (form: FormTrabajo) => void
   onCancelar?: () => void
   onGuardar?: () => void
@@ -193,6 +195,7 @@ export function FormularioTrabajo({
   mostrarAcciones = true,
   autoFocus = true,
   titulo,
+  tipoFijo = false,
   onCambiar,
   onCancelar,
   onGuardar,
@@ -306,19 +309,21 @@ export function FormularioTrabajo({
           </h4>
 
           <div className="grilla">
-            <label>
-              Tipo de trabajo
-              <select
-                value={form.tipo}
-                onChange={(e) => onCambiar(cambiarTipoDe(form, e.target.value as TipoTrabajo))}
-              >
-                {TIPOS.map((tipo) => (
-                  <option value={tipo} key={tipo}>
-                    {etiquetaTipoTrabajo(tipo)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!tipoFijo && (
+              <label>
+                Tipo de trabajo
+                <select
+                  value={form.tipo}
+                  onChange={(e) => onCambiar(cambiarTipoDe(form, e.target.value as TipoTrabajo))}
+                >
+                  {TIPOS.map((tipo) => (
+                    <option value={tipo} key={tipo}>
+                      {etiquetaTipoTrabajo(tipo)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label>
               Hora de trabajo

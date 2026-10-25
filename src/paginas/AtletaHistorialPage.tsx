@@ -18,6 +18,7 @@ import type {
   AtletaDto,
   ControlDto,
   SesionHistorialDto,
+  TipoTrabajo,
   TrabajoDto,
   Turno,
 } from '../tipos/api'
@@ -29,6 +30,7 @@ interface GrupoSesion {
   fecha: string | null
   turno: Turno | null
   sesion: number | null
+  tipo: TipoTrabajo | null
   /** null si la asistencia no se marco y la sesion entro por sus trabajos. */
   asistio: boolean | null
   trabajos: TrabajoDto[]
@@ -234,6 +236,7 @@ export function AtletaHistorialPage() {
                     {grupo.fecha && fechaNumerica(grupo.fecha)}
                     {grupo.turno && ` · ${etiquetaTurno(grupo.turno)}`}
                     {grupo.sesion !== null && ` · Sesión ${grupo.sesion}`}
+                    {grupo.tipo && ` · ${etiquetaTipoTrabajo(grupo.tipo)}`}
                   </p>
                 </div>
                 <span className="sutil">{resumenTrabajos(grupo)}</span>
@@ -362,6 +365,7 @@ function armarGrupos(asistencias: SesionHistorialDto[], trabajos: TrabajoDto[]):
       fecha: asistencia.fecha,
       turno: asistencia.turno,
       sesion: asistencia.sesion,
+      tipo: asistencia.tipo ?? null,
       asistio: asistencia.asistio,
       trabajos: [],
     })
@@ -371,6 +375,9 @@ function armarGrupos(asistencias: SesionHistorialDto[], trabajos: TrabajoDto[]):
     const grupo = mapa.get(trabajo.entrenamientoId)
     if (grupo) {
       grupo.trabajos.push(trabajo)
+      if (!grupo.tipo) {
+        grupo.tipo = trabajo.tipo
+      }
       continue
     }
 
@@ -379,6 +386,7 @@ function armarGrupos(asistencias: SesionHistorialDto[], trabajos: TrabajoDto[]):
       fecha: trabajo.entrenamientoFecha,
       turno: trabajo.entrenamientoTurno,
       sesion: trabajo.entrenamientoSesion,
+      tipo: trabajo.tipo,
       asistio: null,
       trabajos: [trabajo],
     })

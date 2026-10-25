@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/cliente'
-import { entrenamientosApi, etiquetaTurno } from '../api/entrenamientos'
+import { entrenamientosApi, etiquetaTipoTrabajo, etiquetaTurno } from '../api/entrenamientos'
 import { ModalImportarPlanilla } from '../componentes/ModalImportarPlanilla'
 import { useAuth } from '../auth/contextoAuth'
-import { esStaff, type CrearEntrenamientoRequest, type EntrenamientoDto, type Turno } from '../tipos/api'
+import {
+  esStaff,
+  type CrearEntrenamientoRequest,
+  type EntrenamientoDto,
+  type TipoTrabajo,
+  type Turno,
+} from '../tipos/api'
 import { esPasado, fechaCorta, fechaLarga, hoyISO } from '../util/fechas'
 
 const SESIONES = [1, 2, 3, 4, 5]
@@ -125,6 +131,9 @@ export function EntrenamientosPage() {
                     <div className="sesion-titulo">
                       <span className="etiqueta-sesion">Sesión {sesion.sesion}</span>
                       <span className="turno">{etiquetaTurno(sesion.turno)}</span>
+                      <span className="etiqueta-tipo-sesion">
+                        {etiquetaTipoTrabajo(sesion.tipo ?? 'Agua')}
+                      </span>
                     </div>
 
                     {sesion.descripcion && <p className="sutil">{sesion.descripcion}</p>}
@@ -155,6 +164,7 @@ function FormularioEntrenamiento({ onCreado }: { onCreado: (nuevo: Entrenamiento
     fecha: hoyISO(),
     turno: 'Manana',
     sesion: 1,
+    tipo: 'Agua',
     descripcion: '',
     club: '',
   })
@@ -216,6 +226,19 @@ function FormularioEntrenamiento({ onCreado }: { onCreado: (nuevo: Entrenamiento
                   {n}
                 </option>
               ))}
+            </select>
+          </label>
+
+          <label>
+            Tipo
+            <select
+              value={datos.tipo}
+              onChange={(e) => setDatos((d) => ({ ...d, tipo: e.target.value as TipoTrabajo }))}
+              required
+            >
+              <option value="Gimnasio">Gimnasio</option>
+              <option value="Tierra">Tierra</option>
+              <option value="Agua">Agua</option>
             </select>
           </label>
 

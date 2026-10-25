@@ -2,14 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import { esTrabajoDeGimnasio, etiquetaTipoTrabajo, trabajosApi } from '../api/entrenamientos'
-import type { AtletaEnEntrenamientoDto, TrabajoDto } from '../tipos/api'
+import type { AtletaEnEntrenamientoDto, TipoTrabajo, TrabajoDto } from '../tipos/api'
 import { Modal } from './Modal'
 import { ModalAnotaciones } from './ModalAnotaciones'
 import { ModalGraficoTrabajo } from './ModalGraficoTrabajo'
 import {
   ETIQUETA_TIPO,
   FormularioTrabajo,
-  TIPOS,
   armarRequest,
   formularioDesde,
   nuevoFormulario,
@@ -21,6 +20,8 @@ import { TarjetaTrabajo } from './TarjetaTrabajo'
 interface Props {
   entrenamientoId: number
   atleta: AtletaEnEntrenamientoDto
+  /** Tipo fijo de la sesion: el trabajo se carga con ese tipo. */
+  tipoSesion: TipoTrabajo
   onCerrar: () => void
   /** Avisa al detalle de la sesion que cambio la cantidad de trabajos. */
   onCambio: () => void
@@ -31,7 +32,7 @@ interface Props {
  * La grilla cambia segun el tipo: en gimnasio se cargan ejercicios con sus
  * series (reps, kg, %) y en tierra y agua, parciales de distancia y tiempo.
  */
-export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: Props) {
+export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, onCambio }: Props) {
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -177,6 +178,7 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
         <FormularioTrabajo
           form={form}
           ocupado={ocupado}
+          tipoFijo
           onCambiar={setForm}
           onCancelar={() => {
             setForm(null)
@@ -195,27 +197,24 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
           </div>
 
           <div className="acciones-trabajo">
-            {TIPOS.map((tipo) => (
-              <button
-                type="button"
-                className={`boton-tipo tipo-${tipo.toLowerCase()}`}
-                key={tipo}
-                onClick={() => {
-                  setError(null)
-                  setForm(nuevoFormulario(tipo))
-                }}
-              >
-                Agregar trabajo {ETIQUETA_TIPO[tipo]}
-              </button>
-            ))}
+            <button
+              type="button"
+              className={`boton-tipo tipo-${tipoSesion.toLowerCase()}`}
+              onClick={() => {
+                setError(null)
+                setForm(nuevoFormulario(tipoSesion))
+              }}
+            >
+              Agregar trabajo {ETIQUETA_TIPO[tipoSesion]}
+            </button>
           </div>
 
           {cargando ? (
             <p className="sutil">Cargando…</p>
           ) : trabajos.length === 0 ? (
             <p className="sutil">
-              Elegí dónde fue el trabajo: en gimnasio se cargan ejercicios con sus series, y en
-              tierra y agua, los parciales con distancia y tiempo.
+              Esta sesión es de {etiquetaTipoTrabajo(tipoSesion).toLowerCase()}. El trabajo se carga
+              con ese tipo.
             </p>
           ) : (
             <div className="trabajos">
