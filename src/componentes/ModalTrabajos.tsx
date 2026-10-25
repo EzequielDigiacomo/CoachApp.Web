@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import { esTrabajoDeGimnasio, etiquetaTipoTrabajo, trabajosApi } from '../api/entrenamientos'
-import type { AtletaEnEntrenamientoDto, TipoTrabajo, TrabajoDto } from '../tipos/api'
+import { useAuth } from '../auth/contextoAuth'
+import { esStaff, type AtletaEnEntrenamientoDto, type TipoTrabajo, type TrabajoDto } from '../tipos/api'
 import { Modal } from './Modal'
 import { ModalAnotaciones } from './ModalAnotaciones'
 import { ModalGraficoTrabajo } from './ModalGraficoTrabajo'
@@ -33,6 +34,11 @@ interface Props {
  * series (reps, kg, %) y en tierra y agua, parciales de distancia y tiempo.
  */
 export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, onCambio }: Props) {
+  const { sesion } = useAuth()
+  const staff = esStaff(sesion?.usuario.rol)
+  /** Atleta solo carga gimnasio; tierra/agua son lectura (coach o Garmin). */
+  const puedeCargar = staff || tipoSesion === 'Gimnasio'
+
   const [trabajos, setTrabajos] = useState<TrabajoDto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -235,25 +241,28 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
             </h4>
           </div>
 
-          <div className="acciones-trabajo">
-            <button
-              type="button"
-              className={`boton-tipo tipo-${tipoSesion.toLowerCase()}`}
-              onClick={() => {
-                setError(null)
-                setForm(nuevoFormulario(tipoSesion))
-              }}
-            >
-              Agregar trabajo {ETIQUETA_TIPO[tipoSesion]}
-            </button>
-          </div>
+          {puedeCargar && (
+            <div className="acciones-trabajo">
+              <button
+                type="button"
+                className={`boton-tipo tipo-${tipoSesion.toLowerCase()}`}
+                onClick={() => {
+                  setError(null)
+                  setForm(nuevoFormulario(tipoSesion))
+                }}
+              >
+                Agregar trabajo {ETIQUETA_TIPO[tipoSesion]}
+              </button>
+            </div>
+          )}
 
           {cargando ? (
             <p className="sutil">Cargando…</p>
           ) : trabajos.length === 0 ? (
             <p className="sutil">
-              Esta sesión es de {etiquetaTipoTrabajo(tipoSesion).toLowerCase()}. El trabajo se carga
-              con ese tipo.
+              {puedeCargar
+                ? `Esta sesión es de ${etiquetaTipoTrabajo(tipoSesion).toLowerCase()}. El trabajo se carga con ese tipo.`
+                : `Sesión de ${etiquetaTipoTrabajo(tipoSesion).toLowerCase()}: acá ves lo que cargó el entrenador o lo que vino de Garmin.`}
             </p>
           ) : (
             <div className="trabajos">
@@ -273,14 +282,14 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
                       setTrabajoParaGrafico(trabajo)
                     }}
                     onQuitarParcial={
-                      !deEquipo && !esTrabajoDeGimnasio(trabajo.tipo)
+                      puedeCargar && !deEquipo && !esTrabajoDeGimnasio(trabajo.tipo)
                         ? (parcialId) => void quitarParcial(trabajo, parcialId)
                         : undefined
                     }
                     acciones={
                       <>
                         {deEquipo && <span className="etiqueta">Equipo</span>}
-                        {!deEquipo && (
+                        {staff && !deEquipo && (
                           <button
                             type="button"
                             className="boton-fantasma"
@@ -291,7 +300,7 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
                               ` · ${notasPorTrabajo[trabajo.id]}`}
                           </button>
                         )}
-                        {!deEquipo && (
+                        {puedeCargar && !deEquipo && (
                           <button
                             type="button"
                             className="boton-fantasma"
@@ -304,7 +313,7 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
                             Editar
                           </button>
                         )}
-                        {!deEquipo && (
+                        {puedeCargar && !deEquipo && (
                           <button
                             type="button"
                             className="boton-fantasma peligro"

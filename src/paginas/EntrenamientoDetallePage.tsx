@@ -11,7 +11,7 @@ import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
 import { ModalEditarSesion } from '../componentes/ModalEditarSesion'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalTrabajosEquipo } from '../componentes/ModalTrabajosEquipo'
-import { ModalImportarGarmin, pedidoAutoImport } from '../componentes/ModalImportarGarmin'
+import { ModalImportarGarmin } from '../componentes/ModalImportarGarmin'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
@@ -275,12 +275,8 @@ export function EntrenamientoDetallePage() {
         return
       }
 
-      if (preview.requiereEleccion) {
-        setPreviewGarmin(preview)
-        return
-      }
-
-      await confirmarImportGarmin(pedidoAutoImport(preview))
+      // Siempre mostramos el modal para elegir actividades y series.
+      setPreviewGarmin(preview)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudieron leer las actividades de Garmin.')
     } finally {
