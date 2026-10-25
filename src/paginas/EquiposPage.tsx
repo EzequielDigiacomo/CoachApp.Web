@@ -156,17 +156,19 @@ export function EquiposPage() {
             return (
               <li key={atleta.id}>
                 <label className="check">
+                  <span className="check-texto">
+                    <NombreAtleta
+                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                      color={atleta.color}
+                    />
+                    <span className="sutil"> · {atleta.dni}</span>
+                  </span>
                   <input
                     type="checkbox"
                     checked={marcado}
                     disabled={!marcado && elegidos.length >= cupo}
                     onChange={() => alternar(atleta.id)}
                   />
-                  <NombreAtleta
-                    nombre={textoAtleta(atleta.apellido, atleta.nombre)}
-                    color={atleta.color}
-                  />
-                  <span className="sutil"> · {atleta.dni}</span>
                 </label>
               </li>
             )

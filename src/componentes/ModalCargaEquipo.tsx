@@ -161,15 +161,17 @@ export function ModalCargaEquipo({ entrenamientoId, atletas, onCerrar, onCargado
               return (
                 <li key={atleta.atletaId}>
                   <label className="check">
+                    <span className="check-texto">
+                      <NombreAtleta
+                        nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                        color={atleta.color}
+                      />
+                    </span>
                     <input
                       type="checkbox"
                       checked={marcado}
                       disabled={!marcado && elegidos.length >= cupo}
                       onChange={() => alternar(atleta.atletaId)}
-                    />
-                    <NombreAtleta
-                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
-                      color={atleta.color}
                     />
                   </label>
                 </li>

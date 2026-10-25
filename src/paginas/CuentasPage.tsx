@@ -107,99 +107,103 @@ export function CuentasPage() {
         <p className="sutil">Cargando…</p>
       ) : (
         <div className="tarjeta sin-relleno">
-          <table className="tabla">
+          <table className="tabla tabla-cuentas">
             <thead>
               <tr>
                 <th>Atleta</th>
-                <th>Usuario</th>
-                <th>Estado</th>
+                <th>Usuario / estado</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {cuentas.map((cuenta) => (
-                <tr key={cuenta.atletaId}>
-                  <td>
-                    <NombreAtleta
-                      nombre={textoAtleta(cuenta.apellido, cuenta.nombre)}
-                      color={cuenta.color}
-                    />
-                    {abierta === cuenta.atletaId && (
-                      <form
-                        className="formulario"
-                        onSubmit={(evento) => {
-                          evento.preventDefault()
-                          void guardar(cuenta)
-                        }}
-                      >
-                        <label>
-                          Usuario
-                          <input
-                            value={datos.nombreUsuario}
-                            onChange={(e) => setDatos({ ...datos, nombreUsuario: e.target.value })}
-                            required
-                            autoComplete="off"
-                          />
-                        </label>
-                        <label>
-                          Email
-                          <input
-                            type="email"
-                            value={datos.email}
-                            onChange={(e) => setDatos({ ...datos, email: e.target.value })}
-                            required
-                            autoComplete="off"
-                          />
-                        </label>
-                        <label>
-                          {cuenta.usuarioId == null ? 'Contraseña' : 'Nueva contraseña'}
-                          <input
-                            type="password"
-                            value={datos.password}
-                            onChange={(e) => setDatos({ ...datos, password: e.target.value })}
-                            required={cuenta.usuarioId == null}
-                            autoComplete="new-password"
-                            placeholder={cuenta.usuarioId == null ? '' : 'Dejar vacío para no cambiarla'}
-                          />
-                        </label>
-                        {cuenta.usuarioId != null && (
-                          <label className="check">
+              {cuentas.map((cuenta) => {
+                const estado =
+                  cuenta.usuarioId == null ? 'Sin login' : cuenta.activo ? 'Activa' : 'Pausada'
+
+                return (
+                  <tr key={cuenta.atletaId} className={abierta === cuenta.atletaId ? 'cuenta-abierta' : undefined}>
+                    <td className="cuenta-nombre">
+                      <NombreAtleta
+                        nombre={textoAtleta(cuenta.apellido, cuenta.nombre)}
+                        color={cuenta.color}
+                      />
+                      {abierta === cuenta.atletaId && (
+                        <form
+                          className="formulario"
+                          onSubmit={(evento) => {
+                            evento.preventDefault()
+                            void guardar(cuenta)
+                          }}
+                        >
+                          <label>
+                            Usuario
                             <input
-                              type="checkbox"
-                              checked={datos.activo}
-                              onChange={(e) => setDatos({ ...datos, activo: e.target.checked })}
+                              value={datos.nombreUsuario}
+                              onChange={(e) => setDatos({ ...datos, nombreUsuario: e.target.value })}
+                              required
+                              autoComplete="off"
                             />
-                            Activa
                           </label>
-                        )}
-                        <div className="acciones-fila">
-                          <button type="submit" className="boton" disabled={ocupado}>
-                            {cuenta.usuarioId == null ? 'Crear login' : 'Guardar'}
-                          </button>
-                          <button
-                            type="button"
-                            className="boton-fantasma"
-                            onClick={() => setAbierta(null)}
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </form>
-                    )}
-                  </td>
-                  <td>{cuenta.nombreUsuario ?? '—'}</td>
-                  <td>
-                    {cuenta.usuarioId == null ? 'Sin login' : cuenta.activo ? 'Activa' : 'Pausada'}
-                  </td>
-                  <td className="derecha">
-                    {abierta !== cuenta.atletaId && (
-                      <button type="button" className="boton-fantasma" onClick={() => abrir(cuenta)}>
-                        {cuenta.usuarioId == null ? 'Crear' : 'Editar'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                          <label>
+                            Email
+                            <input
+                              type="email"
+                              value={datos.email}
+                              onChange={(e) => setDatos({ ...datos, email: e.target.value })}
+                              required
+                              autoComplete="off"
+                            />
+                          </label>
+                          <label>
+                            {cuenta.usuarioId == null ? 'Contraseña' : 'Nueva contraseña'}
+                            <input
+                              type="password"
+                              value={datos.password}
+                              onChange={(e) => setDatos({ ...datos, password: e.target.value })}
+                              required={cuenta.usuarioId == null}
+                              autoComplete="new-password"
+                              placeholder={cuenta.usuarioId == null ? '' : 'Dejar vacío para no cambiarla'}
+                            />
+                          </label>
+                          {cuenta.usuarioId != null && (
+                            <label className="check">
+                              <span className="check-texto">Activa</span>
+                              <input
+                                type="checkbox"
+                                checked={datos.activo}
+                                onChange={(e) => setDatos({ ...datos, activo: e.target.checked })}
+                              />
+                            </label>
+                          )}
+                          <div className="acciones-fila">
+                            <button type="submit" className="boton" disabled={ocupado}>
+                              {cuenta.usuarioId == null ? 'Crear login' : 'Guardar'}
+                            </button>
+                            <button
+                              type="button"
+                              className="boton-fantasma"
+                              onClick={() => setAbierta(null)}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </td>
+                    <td className="cuenta-meta">
+                      <span>{cuenta.nombreUsuario ?? '—'}</span>
+                      <span className="sutil"> · {estado}</span>
+                    </td>
+                    <td className="derecha cuenta-accion">
+                      {abierta !== cuenta.atletaId && (
+                        <button type="button" className="boton-fantasma" onClick={() => abrir(cuenta)}>
+                          {cuenta.usuarioId == null ? 'Crear' : 'Editar'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

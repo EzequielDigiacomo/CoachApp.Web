@@ -184,8 +184,11 @@ function CardAnotacionRapida() {
         <IconoDashboard id="anotaciones" />
         <div className="dashboard-card-texto">
           <strong>Anotaciones</strong>
-          <span className="sutil">Ver, editar o buscar notas.</span>
+          <span className="sutil dashboard-anotacion-ir-desc">Ver, editar o buscar notas.</span>
         </div>
+        <span className="dashboard-anotacion-flecha" aria-hidden="true">
+          ›
+        </span>
       </Link>
 
       <form className="dashboard-anotacion-rapida" onSubmit={(e) => void guardar(e)}>
@@ -200,10 +203,11 @@ function CardAnotacionRapida() {
                 setError(null)
               }
             }}
-            placeholder="Escribí acá y guardá sin salir del inicio"
+            placeholder="Escribí y guardá acá"
             rows={3}
             maxLength={4000}
             disabled={ocupado}
+            enterKeyHint="done"
           />
         </label>
         <div className="dashboard-anotacion-acciones">
