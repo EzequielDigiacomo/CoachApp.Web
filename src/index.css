@@ -3013,6 +3013,25 @@ button.sesion.ausente {
   gap: 12px;
 }
 
+.login-marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.login-marca h1 {
+  margin: 0;
+}
+
+.login-icono {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--acento) 28%, transparent);
+}
+
 .boton-tema {
   white-space: nowrap;
 }

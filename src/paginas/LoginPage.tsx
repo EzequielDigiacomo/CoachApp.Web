@@ -39,7 +39,17 @@ export function LoginPage() {
     <div className="login">
       <form className="tarjeta login-tarjeta" onSubmit={enviar}>
         <div className="login-cabecera">
-          <h1>CoachApp</h1>
+          <div className="login-marca">
+            <img
+              className="login-icono"
+              src="/favicon.svg"
+              width={44}
+              height={44}
+              alt=""
+              aria-hidden="true"
+            />
+            <h1>CoachApp</h1>
+          </div>
           <BotonTema />
         </div>
         <p className="sutil">Entrá con la cuenta que te dio el administrador.</p>
