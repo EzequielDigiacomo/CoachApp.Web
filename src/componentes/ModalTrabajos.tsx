@@ -149,6 +149,45 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
     }
   }
 
+  async function quitarParcial(trabajo: TrabajoDto, parcialId: number) {
+    const restantes = trabajo.parciales.filter((p) => p.id !== parcialId)
+    if (restantes.length === 0) {
+      return
+    }
+
+    if (!window.confirm('¿Quitar esta serie del trabajo?')) {
+      return
+    }
+
+    setOcupado(true)
+    setError(null)
+
+    try {
+      const actualizado = await trabajosApi.actualizar(entrenamientoId, atleta.atletaId, trabajo.id, {
+        tipo: trabajo.tipo,
+        horaInicio: trabajo.horaInicio,
+        observaciones: trabajo.observaciones,
+        parciales: restantes.map((p) => ({
+          distanciaMetros: p.distanciaMetros,
+          tiempo: p.tiempo,
+        })),
+        paladas: restantes.flatMap((p) =>
+          p.paladas.map((palada) => ({
+            tiempo: palada.tiempo,
+            ppm: palada.ppm,
+          })),
+        ),
+      })
+
+      setTrabajos((previos) => previos.map((t) => (t.id === actualizado.id ? actualizado : t)))
+      onCambio()
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo quitar la serie.')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
   function alIntentarCerrar() {
     if (!form) {
       return true
@@ -233,6 +272,11 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
                       setError(null)
                       setTrabajoParaGrafico(trabajo)
                     }}
+                    onQuitarParcial={
+                      !deEquipo && !esTrabajoDeGimnasio(trabajo.tipo)
+                        ? (parcialId) => void quitarParcial(trabajo, parcialId)
+                        : undefined
+                    }
                     acciones={
                       <>
                         {deEquipo && <span className="etiqueta">Equipo</span>}

@@ -179,6 +179,51 @@ export interface SincronizacionGarminDto {
   avisos: string[]
 }
 
+export interface TramoPreviewGarminDto {
+  indice: number
+  metros: number
+  tiempo: string
+  ppm: number | null
+}
+
+export interface ActividadPreviewGarminDto {
+  actividadId: number
+  nombre: string
+  tipo: string | null
+  inicio: string | null
+  distanciaMetros: number | null
+  duracionSegundos: number | null
+  coincideTipoSesion: boolean
+  tramos: TramoPreviewGarminDto[]
+}
+
+export interface AtletaPreviewGarminDto {
+  atletaId: number
+  nombre: string
+  apellido: string
+  actividades: ActividadPreviewGarminDto[]
+}
+
+export interface PreviewGarminDto {
+  avisos: string[]
+  requiereEleccion: boolean
+  atletas: AtletaPreviewGarminDto[]
+}
+
+export interface ImportarActividadGarminRequest {
+  actividadId: number
+  indicesTramos: number[]
+}
+
+export interface ImportarAtletaGarminRequest {
+  atletaId: number
+  actividades: ImportarActividadGarminRequest[]
+}
+
+export interface ImportarGarminRequest {
+  atletas: ImportarAtletaGarminRequest[]
+}
+
 export interface AmigoCalendarioGarminDto {
   nombre: string
   /** Usuario de Garmin. Puede faltar si la API en ejecucion es anterior. */

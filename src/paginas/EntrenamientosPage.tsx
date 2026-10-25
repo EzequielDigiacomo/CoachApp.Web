@@ -131,7 +131,9 @@ export function EntrenamientosPage() {
                     <div className="sesion-titulo">
                       <span className="etiqueta-sesion">Sesión {sesion.sesion}</span>
                       <span className="turno">{etiquetaTurno(sesion.turno)}</span>
-                      <span className="etiqueta-tipo-sesion">
+                      <span
+                        className={`etiqueta-tipo-sesion tipo-${(sesion.tipo ?? 'Agua').toLowerCase()}`}
+                      >
                         {etiquetaTipoTrabajo(sesion.tipo ?? 'Agua')}
                       </span>
                     </div>

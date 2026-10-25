@@ -17,6 +17,8 @@ interface Props {
    * de las paladas: alcanza con distancia y tiempo.
    */
   onVelocidad?: () => void
+  /** Quitar una serie/parcial ya guardada (p. ej. importada de Garmin). */
+  onQuitarParcial?: (parcialId: number) => void
   /** Contenido extra al pie de la tarjeta, como las notas del historial. */
   children?: React.ReactNode
 }
@@ -26,7 +28,14 @@ interface Props {
  * ejercicios con sus series para gimnasio. La usan el modal de trabajos y el
  * historial del atleta, asi el detalle se ve igual en los dos lados.
  */
-export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, children }: Props) {
+export function TarjetaTrabajo({
+  trabajo,
+  acciones,
+  onGrafico,
+  onVelocidad,
+  onQuitarParcial,
+  children,
+}: Props) {
   const gimnasio = esTrabajoDeGimnasio(trabajo.tipo)
 
   // Las paladas son propias del agua: en tierra la tabla se queda con sus
@@ -150,6 +159,7 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, chil
                 <th>Tiempo</th>
                 <th title="Velocidad promedio en kilómetros por hora">km/h</th>
                 <th title="Diferencia con el parcial anterior">Dif.</th>
+                {onQuitarParcial && <th />}
               </tr>
             </thead>
             <tbody>
@@ -167,6 +177,23 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, chil
                     {velocidadKmh(parcial.distanciaMetros, parcial.tiempo) ?? '—'}
                   </td>
                   <td className="mono sutil">{parcial.parcial ?? '—'}</td>
+                  {onQuitarParcial && (
+                    <td className="derecha">
+                      <button
+                        type="button"
+                        className="boton-fantasma"
+                        disabled={trabajo.parciales.length <= 1}
+                        title={
+                          trabajo.parciales.length <= 1
+                            ? 'No se puede dejar el trabajo sin series'
+                            : 'Quitar esta serie'
+                        }
+                        onClick={() => onQuitarParcial(parcial.id)}
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -181,6 +208,7 @@ export function TarjetaTrabajo({ trabajo, acciones, onGrafico, onVelocidad, chil
                     {tiempoTotal ? (velocidadKmh(distanciaTotal, tiempoTotal) ?? '—') : '—'}
                   </td>
                   <td />
+                  {onQuitarParcial && <td />}
                 </tr>
               </tfoot>
             )}

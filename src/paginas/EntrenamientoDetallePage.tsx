@@ -11,6 +11,7 @@ import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
 import { ModalEditarSesion } from '../componentes/ModalEditarSesion'
 import { ModalTrabajos } from '../componentes/ModalTrabajos'
 import { ModalTrabajosEquipo } from '../componentes/ModalTrabajosEquipo'
+import { ModalImportarGarmin, pedidoAutoImport } from '../componentes/ModalImportarGarmin'
 import { ModalVincularGarmin } from '../componentes/ModalVincularGarmin'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
@@ -24,6 +25,8 @@ import type {
   EntrenamientoDto,
   EquipoEnEntrenamientoDto,
   EstadoGarminDto,
+  ImportarGarminRequest,
+  PreviewGarminDto,
   ResumenTrabajoDto,
 } from '../tipos/api'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
@@ -60,6 +63,8 @@ export function EntrenamientoDetallePage() {
   const [vinculando, setVinculando] = useState(false)
   const [sincronizando, setSincronizando] = useState(false)
   const [avisosGarmin, setAvisosGarmin] = useState<string[]>([])
+  const [previewGarmin, setPreviewGarmin] = useState<PreviewGarminDto | null>(null)
+  const [importandoGarmin, setImportandoGarmin] = useState(false)
   const [anotando, setAnotando] = useState(false)
   const [notasSesion, setNotasSesion] = useState<AnotacionDto[]>([])
   /**
@@ -260,15 +265,42 @@ export function EntrenamientoDetallePage() {
     setSincronizando(true)
     setError(null)
     setAvisosGarmin([])
+    setPreviewGarmin(null)
 
     try {
-      const resultado = await garminApi.sincronizar(entrenamientoId)
-      setEntrenamiento(resultado.entrenamiento)
-      setAvisosGarmin(resultado.avisos)
+      const preview = await garminApi.preview(entrenamientoId)
+      setAvisosGarmin(preview.avisos)
+
+      if (preview.atletas.length === 0) {
+        return
+      }
+
+      if (preview.requiereEleccion) {
+        setPreviewGarmin(preview)
+        return
+      }
+
+      await confirmarImportGarmin(pedidoAutoImport(preview))
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudieron leer las actividades de Garmin.')
     } finally {
       setSincronizando(false)
+    }
+  }
+
+  async function confirmarImportGarmin(pedido: ImportarGarminRequest) {
+    setImportandoGarmin(true)
+    setError(null)
+
+    try {
+      const resultado = await garminApi.importar(entrenamientoId, pedido)
+      setEntrenamiento(resultado.entrenamiento)
+      setAvisosGarmin(resultado.avisos)
+      setPreviewGarmin(null)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudieron importar las actividades de Garmin.')
+    } finally {
+      setImportandoGarmin(false)
     }
   }
 
@@ -353,10 +385,10 @@ export function EntrenamientoDetallePage() {
             <button
               type="button"
               className="boton"
-              disabled={sincronizando || ocupado}
+              disabled={sincronizando || importandoGarmin || ocupado}
               onClick={() => void traerGarmin()}
             >
-              {sincronizando ? 'Trayendo…' : 'Traer de Garmin'}
+              {sincronizando || importandoGarmin ? 'Trayendo…' : 'Traer de Garmin'}
             </button>
           ) : (
             <button type="button" className="boton" onClick={() => setVinculando(true)}>
@@ -802,6 +834,15 @@ export function EntrenamientoDetallePage() {
             setVinculando(false)
             window.dispatchEvent(new CustomEvent('coachapp:garmin', { detail: estado }))
           }}
+        />
+      )}
+
+      {previewGarmin && (
+        <ModalImportarGarmin
+          preview={previewGarmin}
+          ocupado={importandoGarmin}
+          onCerrar={() => setPreviewGarmin(null)}
+          onConfirmar={(pedido) => void confirmarImportGarmin(pedido)}
         />
       )}
     </div>
