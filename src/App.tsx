@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProveedorAuth } from './auth/ProveedorAuth'
 import { RutaProtegida, RutaStaff } from './auth/RutaProtegida'
+import { ProveedorConfirmacion } from './componentes/Confirmacion'
 import { Layout } from './componentes/Layout'
 import { AnotacionAtletaPage } from './paginas/AnotacionAtletaPage'
 import { AnotacionesPage } from './paginas/AnotacionesPage'
@@ -30,7 +31,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <ProveedorAuth>
-        <Routes>
+        <ProveedorConfirmacion>
+          <Routes>
           <Route path="/login" element={<LoginPage />} />
 
           <Route
@@ -181,7 +183,8 @@ export default function App() {
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          </Routes>
+        </ProveedorConfirmacion>
       </ProveedorAuth>
     </BrowserRouter>
   )

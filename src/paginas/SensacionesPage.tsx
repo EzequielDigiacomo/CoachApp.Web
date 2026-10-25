@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
+import { confirmar } from '../componentes/Confirmacion'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { esStaff, type NotaAtletaDto } from '../tipos/api'
 
@@ -63,7 +64,7 @@ export function SensacionesPage() {
   }
 
   async function borrar(id: number) {
-    if (!window.confirm('¿Borrar esta sensación?')) {
+    if (!(await confirmar('¿Borrar esta sensación?', { peligro: true, aceptar: 'Borrar' }))) {
       return
     }
     setError(null)

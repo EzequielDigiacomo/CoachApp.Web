@@ -830,6 +830,32 @@ select {
   color: var(--error);
 }
 
+.boton.peligro {
+  background: var(--error);
+}
+
+.boton.peligro:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+/* Confirmacion encima de otros modales. */
+.modal-fondo.modal-fondo-confirmacion {
+  z-index: 80;
+}
+
+.modal-confirmacion .confirmacion-mensaje {
+  margin: 0 0 16px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.modal-confirmacion .confirmacion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* ---------- Trabajos del atleta ---------- */
 
 .fila-clicable {

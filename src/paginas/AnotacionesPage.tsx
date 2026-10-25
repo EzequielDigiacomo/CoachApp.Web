@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { anotacionesApi, contextoAnotacion, fechaNota } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import { atletasApi } from '../api/entrenamientos'
+import { confirmar } from '../componentes/Confirmacion'
 import {
   ANOTACION_VACIA,
   FormularioAnotacion,
@@ -136,7 +137,7 @@ export function AnotacionesPage() {
   }
 
   async function eliminar(nota: AnotacionDto) {
-    if (!window.confirm('¿Eliminar esta anotación?')) {
+    if (!(await confirmar('¿Eliminar esta anotación?', { peligro: true, aceptar: 'Eliminar' }))) {
       return
     }
 

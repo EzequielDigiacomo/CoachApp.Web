@@ -122,18 +122,22 @@ export function partirTiempoCampo(texto: string): { m: string; s: string; c: str
 
 /**
  * Arma el texto que ya entiende el resto de la app. Si sigue en cero, queda
- * vacío: la fila no se tocó.
+ * vacío: la fila no se tocó. Sin centesimas queda "m:ss".
  */
-export function armarTiempoCampo(partes: { m: string; s: string; c: string }): string {
+export function armarTiempoCampo(
+  partes: { m: string; s: string; c: string },
+  conCentesimas = true,
+): string {
   const minutos = Number(partes.m) || 0
   const segundos = Math.min(59, Number(partes.s) || 0)
-  const centesimas = Math.min(99, Number(partes.c) || 0)
+  const centesimas = conCentesimas ? Math.min(99, Number(partes.c) || 0) : 0
 
   if (minutos === 0 && segundos === 0 && centesimas === 0) {
     return ''
   }
 
-  return `${minutos}:${String(segundos).padStart(2, '0')},${String(centesimas).padStart(2, '0')}`
+  const base = `${minutos}:${String(segundos).padStart(2, '0')}`
+  return conCentesimas ? `${base},${String(centesimas).padStart(2, '0')}` : base
 }
 
 /** true si el texto es una hora del dia valida ("09:30"). */

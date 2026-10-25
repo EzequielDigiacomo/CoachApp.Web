@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '../api/cliente'
+import { confirmar } from '../componentes/Confirmacion'
 import { Modal } from '../componentes/Modal'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import type { AtletaDto, CrearAtletaRequest } from '../tipos/api'
@@ -57,7 +58,7 @@ export function AtletasPage() {
       ? `¿Dar de baja a ${atleta.apellido}, ${atleta.nombre}? El historial se conserva.`
       : `¿Reactivar a ${atleta.apellido}, ${atleta.nombre}?`
 
-    if (!window.confirm(mensaje)) {
+    if (!(await confirmar(mensaje, { peligro: bajando, aceptar: bajando ? 'Dar de baja' : 'Reactivar' }))) {
       return
     }
 

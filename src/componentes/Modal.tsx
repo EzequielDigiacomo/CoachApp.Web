@@ -20,9 +20,9 @@ interface Props {
   cerrarConFondo?: boolean
   /**
    * Si devuelve false, se cancela el cierre (Escape, fondo o boton Cerrar).
-   * Sirve para confirmar cuando hay datos sin guardar.
+   * Puede ser async (p. ej. modal de confirmacion).
    */
-  alIntentarCerrar?: () => boolean
+  alIntentarCerrar?: () => boolean | Promise<boolean>
   onCerrar: () => void
   children: React.ReactNode
 }
@@ -60,9 +60,12 @@ export function Modal({
   onCerrar,
   children,
 }: Props) {
-  function intentarCerrar() {
-    if (alIntentarCerrar && !alIntentarCerrar()) {
-      return
+  async function intentarCerrar() {
+    if (alIntentarCerrar) {
+      const ok = await alIntentarCerrar()
+      if (!ok) {
+        return
+      }
     }
     onCerrar()
   }
@@ -75,12 +78,18 @@ export function Modal({
 
   useEffect(() => {
     function alTeclear(evento: KeyboardEvent) {
-      if (evento.key === 'Escape' && !pausado) {
-        if (alIntentarCerrar && !alIntentarCerrar()) {
-          return
+      if (evento.key !== 'Escape' || pausado) {
+        return
+      }
+      void (async () => {
+        if (alIntentarCerrar) {
+          const ok = await alIntentarCerrar()
+          if (!ok) {
+            return
+          }
         }
         onCerrar()
-      }
+      })()
     }
 
     window.addEventListener('keydown', alTeclear)

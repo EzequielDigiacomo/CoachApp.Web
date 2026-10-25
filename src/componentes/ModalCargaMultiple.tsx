@@ -3,6 +3,7 @@ import { ApiError } from '../api/cliente'
 import { etiquetaTipoTrabajo, trabajosApi } from '../api/entrenamientos'
 import type { AtletaEnEntrenamientoDto, GuardarTrabajoRequest, TipoTrabajo } from '../tipos/api'
 import { horaActual } from '../util/fechas'
+import { confirmar } from './Confirmacion'
 import { Modal } from './Modal'
 import {
   FormularioTrabajo,
@@ -50,8 +51,10 @@ export function ModalCargaMultiple({
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function alIntentarCerrar() {
-    return window.confirm('¿Cancelar la carga? Se pierde lo que no guardaste.')
+  async function alIntentarCerrar() {
+    return confirmar('¿Cancelar la carga? Se pierde lo que no guardaste?', {
+      aceptar: 'Cancelar carga',
+    })
   }
 
   /** La hora es de la tanda, asi que se copia en cada formulario. */
@@ -203,9 +206,11 @@ export function ModalCargaMultiple({
           className="boton-fantasma"
           disabled={ocupado}
           onClick={() => {
-            if (alIntentarCerrar()) {
-              onCerrar()
-            }
+            void alIntentarCerrar().then((ok) => {
+              if (ok) {
+                onCerrar()
+              }
+            })
           }}
         >
           Cancelar

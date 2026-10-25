@@ -3,7 +3,8 @@ import { armarTiempoCampo, partirTiempoCampo } from '../util/tiempos'
 
 type Parte = 'm' | 's' | 'c'
 
-const ORDEN: Parte[] = ['m', 's', 'c']
+const ORDEN_COMPLETO: Parte[] = ['m', 's', 'c']
+const ORDEN_SIN_CENTESIMAS: Parte[] = ['m', 's']
 
 const MAXIMO: Record<Parte, number> = { m: 2, s: 2, c: 2 }
 const TOPE: Record<Parte, number> = { m: 99, s: 59, c: 99 }
@@ -15,19 +16,23 @@ const ETIQUETA: Record<Parte, string> = {
 }
 
 /**
- * Tiempo en tres casillas, 00:00,00. Los dos puntos y la coma ya estan: en el
- * celular el teclado numerico no los tiene. Al tocar una casilla se selecciona
- * el numero y lo que se escribe lo reemplaza.
+ * Tiempo en casillas m:ss o m:ss,cc. Los separadores ya estan: en el celular
+ * el teclado numerico no los tiene. Al tocar una casilla se selecciona el
+ * numero y lo que se escribe lo reemplaza.
  */
 export function CampoTiempo({
   valor,
   onChange,
   className,
+  conCentesimas = true,
 }: {
   valor: string
   onChange: (valor: string) => void
   className?: string
+  /** Si es false, solo minutos y segundos (p. ej. ppm). */
+  conCentesimas?: boolean
 }) {
+  const orden = conCentesimas ? ORDEN_COMPLETO : ORDEN_SIN_CENTESIMAS
   const refs = {
     m: useRef<HTMLInputElement>(null),
     s: useRef<HTMLInputElement>(null),
@@ -84,17 +89,20 @@ export function CampoTiempo({
     // no, el segundo digito se pierde contra el 0 que se agrega adelante.
     setEdicion({ parte, texto: digitos })
 
+    const actuales = partirTiempoCampo(valor)
     const siguientes = {
-      ...partirTiempoCampo(valor),
+      ...actuales,
       [parte]: digitos === '' ? '00' : digitos.padStart(2, '0'),
+      // Sin casilla de centesimas, el valor queda en segundos exactos.
+      ...(conCentesimas ? {} : { c: '00' }),
     }
-    onChange(armarTiempoCampo(siguientes))
+    onChange(armarTiempoCampo(siguientes, conCentesimas))
 
-    if (!listo || parte === 'c') {
+    if (!listo || parte === orden[orden.length - 1]) {
       return
     }
 
-    const siguiente = ORDEN[ORDEN.indexOf(parte) + 1]
+    const siguiente = orden[orden.indexOf(parte) + 1]
     window.setTimeout(() => {
       const casilla = refs[siguiente].current
       casilla?.focus()
@@ -115,7 +123,7 @@ export function CampoTiempo({
 
   return (
     <div className={className ? `tiempo-mask ${className}` : 'tiempo-mask'}>
-      {ORDEN.map((parte, indice) => (
+      {orden.map((parte, indice) => (
         <Fragment key={parte}>
           {indice > 0 && (
             <span className="tiempo-sep" aria-hidden="true">

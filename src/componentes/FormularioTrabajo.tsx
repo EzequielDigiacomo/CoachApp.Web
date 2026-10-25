@@ -544,6 +544,7 @@ export function FormularioTrabajo({
                     <CampoTiempo
                       className="palada-tiempo"
                       valor={palada.tiempo}
+                      conCentesimas={false}
                       onChange={(tiempo) => cambiarPalada(palada.clave, { tiempo })}
                     />
                     <input

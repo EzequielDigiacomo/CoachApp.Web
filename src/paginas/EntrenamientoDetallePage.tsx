@@ -5,6 +5,7 @@ import { ApiError } from '../api/cliente'
 import { atletasApi, entrenamientosApi, etiquetaTipoTrabajo, etiquetaTurno } from '../api/entrenamientos'
 import { garminApi } from '../api/garmin'
 import { equiposApi } from '../api/equipos'
+import { confirmar } from '../componentes/Confirmacion'
 import { ModalAnotaciones } from '../componentes/ModalAnotaciones'
 import { ModalCargaEquipo } from '../componentes/ModalCargaEquipo'
 import { ModalCargaMultiple } from '../componentes/ModalCargaMultiple'
@@ -230,8 +231,13 @@ export function EntrenamientoDetallePage() {
     setEnTrabajos((actual) => (actual?.atletaId === atleta.atletaId ? null : actual))
   }
 
-  function quitarEquipo(equipo: EquipoEnEntrenamientoDto) {
-    if (!window.confirm(`¿Quitar ${equipo.etiqueta} de la sesión?`)) {
+  async function quitarEquipo(equipo: EquipoEnEntrenamientoDto) {
+    if (
+      !(await confirmar(`¿Quitar ${equipo.etiqueta} de la sesión?`, {
+        peligro: true,
+        aceptar: 'Quitar',
+      }))
+    ) {
       return
     }
 
@@ -301,7 +307,12 @@ export function EntrenamientoDetallePage() {
   }
 
   async function desvincularGarmin() {
-    if (!window.confirm('¿Desvincular la cuenta de Garmin? Las actividades ya guardadas se conservan.')) {
+    if (
+      !(await confirmar(
+        '¿Desvincular la cuenta de Garmin? Las actividades ya guardadas se conservan.',
+        { aceptar: 'Desvincular' },
+      ))
+    ) {
       return
     }
 
@@ -316,7 +327,12 @@ export function EntrenamientoDetallePage() {
   }
 
   async function eliminarSesion() {
-    if (!window.confirm('¿Eliminar la sesión? Se pierden las asistencias marcadas.')) {
+    if (
+      !(await confirmar('¿Eliminar la sesión? Se pierden las asistencias marcadas.', {
+        peligro: true,
+        aceptar: 'Eliminar',
+      }))
+    ) {
       return
     }
 

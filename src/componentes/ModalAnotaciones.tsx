@@ -3,6 +3,7 @@ import { anotacionesApi, fechaNota } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
 import type { AnotacionDto, GuardarAnotacionRequest } from '../tipos/api'
 import { ANOTACION_VACIA, FormularioAnotacion, type DatosAnotacion } from './FormularioAnotacion'
+import { confirmar } from './Confirmacion'
 import { Modal } from './Modal'
 import { TextoConEnlaces } from './TextoConEnlaces'
 
@@ -113,7 +114,7 @@ export function ModalAnotaciones({ titulo, subtitulo, contexto, onCerrar, onCamb
   }
 
   async function eliminar(nota: AnotacionDto) {
-    if (!window.confirm('¿Eliminar esta anotación?')) {
+    if (!(await confirmar('¿Eliminar esta anotación?', { peligro: true, aceptar: 'Eliminar' }))) {
       return
     }
 

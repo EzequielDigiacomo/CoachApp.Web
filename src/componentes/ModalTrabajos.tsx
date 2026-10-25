@@ -4,6 +4,7 @@ import { ApiError } from '../api/cliente'
 import { esTrabajoDeGimnasio, etiquetaTipoTrabajo, trabajosApi } from '../api/entrenamientos'
 import { useAuth } from '../auth/contextoAuth'
 import { esStaff, type AtletaEnEntrenamientoDto, type TipoTrabajo, type TrabajoDto } from '../tipos/api'
+import { confirmar } from './Confirmacion'
 import { Modal } from './Modal'
 import { ModalAnotaciones } from './ModalAnotaciones'
 import { ModalGraficoTrabajo } from './ModalGraficoTrabajo'
@@ -134,8 +135,9 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
       ? `${trabajo.ejercicios.length} ${trabajo.ejercicios.length === 1 ? 'ejercicio' : 'ejercicios'}`
       : `${trabajo.parciales.length} ${trabajo.parciales.length === 1 ? 'parcial' : 'parciales'}`
 
-    const confirmado = window.confirm(
+    const confirmado = await confirmar(
       `¿Eliminar el trabajo de ${etiquetaTipoTrabajo(trabajo.tipo).toLowerCase()}${trabajo.horaInicio ? ` de las ${trabajo.horaInicio}` : ''} con sus ${detalle}?`,
+      { peligro: true, aceptar: 'Eliminar' },
     )
     if (!confirmado) {
       return
@@ -161,7 +163,7 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
       return
     }
 
-    if (!window.confirm('¿Quitar esta serie del trabajo?')) {
+    if (!(await confirmar('¿Quitar esta serie del trabajo?', { peligro: true, aceptar: 'Quitar' }))) {
       return
     }
 
@@ -194,11 +196,13 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
     }
   }
 
-  function alIntentarCerrar() {
+  async function alIntentarCerrar() {
     if (!form) {
       return true
     }
-    return window.confirm('Hay un trabajo sin guardar. ¿Cerrar igual?')
+    return confirmar('Hay un trabajo sin guardar. ¿Cerrar igual?', {
+      aceptar: 'Cerrar igual',
+    })
   }
 
   return (

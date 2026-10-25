@@ -27,6 +27,7 @@ import {
   formularioTierraVacio,
   type FormControlTierra,
 } from '../componentes/FormularioControlTierra'
+import { confirmar } from '../componentes/Confirmacion'
 import { NombreAtleta } from '../componentes/NombreAtleta'
 import { VistaControlAgua } from '../componentes/VistaControlAgua'
 import { VistaControlGim } from '../componentes/VistaControlGim'
@@ -207,7 +208,7 @@ function PanelGimnasio({ staff }: { staff: boolean }) {
   }
 
   async function eliminar(control: ControlDto) {
-    if (!window.confirm('¿Eliminar este control de gimnasio?')) {
+    if (!(await confirmar('¿Eliminar este control de gimnasio?', { peligro: true, aceptar: 'Eliminar' }))) {
       return
     }
 
@@ -407,7 +408,7 @@ function PanelTierra({ staff }: { staff: boolean }) {
   }
 
   async function eliminar(control: ControlDto) {
-    if (!window.confirm('¿Eliminar este control de tierra?')) {
+    if (!(await confirmar('¿Eliminar este control de tierra?', { peligro: true, aceptar: 'Eliminar' }))) {
       return
     }
 
@@ -613,7 +614,7 @@ function PanelAgua({ staff }: { staff: boolean }) {
   }
 
   async function eliminar(control: ControlDto) {
-    if (!window.confirm('¿Eliminar este control de agua?')) {
+    if (!(await confirmar('¿Eliminar este control de agua?', { peligro: true, aceptar: 'Eliminar' }))) {
       return
     }
 

@@ -6,6 +6,7 @@ import type {
   EquipoDto,
   TipoBote,
 } from '../tipos/api'
+import { confirmar } from './Confirmacion'
 import { Modal } from './Modal'
 import { NombreAtleta, textoAtleta } from './NombreAtleta'
 
@@ -86,8 +87,10 @@ export function ModalCargaEquipo({ entrenamientoId, atletas, onCerrar, onCargado
     }
   }
 
-  function alIntentarCerrar() {
-    return window.confirm('¿Cancelar la carga de equipo? Se pierde lo que no guardaste.')
+  async function alIntentarCerrar() {
+    return confirmar('¿Cancelar la carga de equipo? Se pierde lo que no guardaste?', {
+      aceptar: 'Cancelar carga',
+    })
   }
 
   return (
@@ -186,9 +189,11 @@ export function ModalCargaEquipo({ entrenamientoId, atletas, onCerrar, onCargado
           type="button"
           className="boton-fantasma"
           onClick={() => {
-            if (alIntentarCerrar()) {
-              onCerrar()
-            }
+            void alIntentarCerrar().then((ok) => {
+              if (ok) {
+                onCerrar()
+              }
+            })
           }}
         >
           Cancelar

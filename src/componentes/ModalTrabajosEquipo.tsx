@@ -11,6 +11,7 @@ import {
   nuevoFormulario,
   type FormTrabajo,
 } from './FormularioTrabajo'
+import { confirmar } from './Confirmacion'
 import { Modal } from './Modal'
 import { ModalGraficoTrabajo } from './ModalGraficoTrabajo'
 import { TarjetaTrabajo } from './TarjetaTrabajo'
@@ -98,9 +99,10 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
 
   async function eliminar(trabajo: TrabajoDto) {
     if (
-      !window.confirm(
+      !(await confirmar(
         `¿Eliminar el trabajo de agua${trabajo.horaInicio ? ` de las ${trabajo.horaInicio}` : ''}?`,
-      )
+        { peligro: true, aceptar: 'Eliminar' },
+      ))
     ) {
       return
     }
@@ -118,11 +120,13 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
     }
   }
 
-  function alIntentarCerrar() {
+  async function alIntentarCerrar() {
     if (!form) {
       return true
     }
-    return window.confirm('Hay un trabajo sin guardar. ¿Cerrar igual?')
+    return confirmar('Hay un trabajo sin guardar. ¿Cerrar igual?', {
+      aceptar: 'Cerrar igual',
+    })
   }
 
   return (
