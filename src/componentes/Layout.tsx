@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { garminApi } from '../api/garmin'
 import { useAuth } from '../auth/contextoAuth'
 import { esStaff, type EstadoGarminDto } from '../tipos/api'
@@ -11,6 +11,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { sesion, cerrarSesion } = useAuth()
   const staff = esStaff(sesion?.usuario.rol)
   const navegar = useNavigate()
+  const ubicacion = useLocation()
+  const enHome = ubicacion.pathname === '/'
   const [garmin, setGarmin] = useState<EstadoGarminDto>({ vinculada: false, nombre: null })
   const [vinculando, setVinculando] = useState(false)
 
@@ -40,22 +42,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="app">
       <header className="barra">
-        <span className="marca">CoachApp</span>
+        <Link to="/" className="marca">
+          CoachApp
+        </Link>
 
-        <nav className="barra-nav">
-          <NavLink to="/entrenamientos">Entrenamientos</NavLink>
-          <NavLink to="/controles">Controles</NavLink>
-          {staff && <NavLink to="/atletas">Atletas</NavLink>}
-          {staff && <NavLink to="/colores">Colores atletas</NavLink>}
-          {staff && <NavLink to="/equipos">K2 / K4</NavLink>}
-          {staff && <NavLink to="/anotaciones">Anotaciones</NavLink>}
-          {staff && <NavLink to="/cuentas">Cuentas</NavLink>}
-          <NavLink to={staff ? '/anotacion-atleta' : '/anotacion'}>
-            {staff ? 'Anotación atleta' : 'Anotación'}
-          </NavLink>
-          <NavLink to="/sensaciones">Sensaciones</NavLink>
-          <NavLink to="/garmin">GarCalendar</NavLink>
-        </nav>
+        {!enHome && (
+          <nav className="barra-nav">
+            <NavLink to="/entrenamientos">Entrenamientos</NavLink>
+            <NavLink to="/controles">Controles</NavLink>
+            {staff && <NavLink to="/atletas">Atletas</NavLink>}
+            {staff && <NavLink to="/colores">Colores atletas</NavLink>}
+            {staff && <NavLink to="/equipos">K2 / K4</NavLink>}
+            {staff && <NavLink to="/anotaciones">Anotaciones</NavLink>}
+            {staff && <NavLink to="/cuentas">Cuentas</NavLink>}
+            <NavLink to={staff ? '/anotacion-atleta' : '/anotacion'}>
+              {staff ? 'Anotación atleta' : 'Anotación'}
+            </NavLink>
+            <NavLink to="/sensaciones">Sensaciones</NavLink>
+            <NavLink to="/garmin">GarCalendar</NavLink>
+          </nav>
+        )}
 
         <div className="barra-usuario">
           {staff && garmin.vinculada ? (
@@ -77,7 +83,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="contenido">{children}</main>
+      <main className={enHome ? 'contenido contenido-dashboard' : 'contenido'}>{children}</main>
 
       {vinculando && (
         <ModalVincularGarmin

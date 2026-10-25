@@ -29,7 +29,7 @@ export function LoginPage() {
       iniciarSesion({ token: respuesta.token, usuario: respuesta.usuario })
 
       const destino = (ubicacion.state as { desde?: string } | null)?.desde
-      navegar(destino ?? '/atletas', { replace: true })
+      navegar(destino ?? '/', { replace: true })
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo conectar con el servidor.')
     } finally {

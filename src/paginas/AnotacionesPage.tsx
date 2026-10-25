@@ -31,6 +31,23 @@ export function AnotacionesPage() {
   // El atleta elegido vive en la URL, asi se puede linkear desde el historial.
   const atletaFiltro = parametros.get('atleta') ?? ''
 
+  // Desde el dashboard (?nueva=1) abrimos el form al toque y limpiamos el query.
+  useEffect(() => {
+    if (parametros.get('nueva') !== '1') {
+      return
+    }
+
+    const atleta = parametros.get('atleta') ?? ''
+    setEditando(null)
+    setDatos({ ...ANOTACION_VACIA, atletaId: atleta })
+    setMostrarForm(true)
+    setError(null)
+
+    const siguientes = new URLSearchParams(parametros)
+    siguientes.delete('nueva')
+    setParametros(siguientes, { replace: true })
+  }, [parametros, setParametros])
+
   const cargar = useCallback(async () => {
     setCargando(true)
     setError(null)

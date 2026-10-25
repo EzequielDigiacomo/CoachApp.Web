@@ -93,6 +93,80 @@ h2 {
 
 .marca {
   font-weight: 600;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.marca:hover {
+  color: var(--acento);
+}
+
+/* ---------- Dashboard ---------- */
+
+.contenido-dashboard {
+  max-width: 960px;
+}
+
+.dashboard {
+  display: grid;
+  gap: 24px;
+}
+
+.dashboard-cabecera h1 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+}
+
+.dashboard-grilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.dashboard-card {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 18px 16px;
+  min-height: 96px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  color: var(--texto);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.dashboard-card:hover {
+  border-color: var(--acento);
+  box-shadow: 0 4px 14px var(--sombra);
+  transform: translateY(-1px);
+}
+
+.dashboard-card strong {
+  font-size: 1.05rem;
+}
+
+.dashboard-card-destacada {
+  grid-column: 1 / -1;
+  min-height: 140px;
+  place-content: center;
+  text-align: center;
+  padding: 28px 20px;
+  border-color: var(--acento);
+  background: var(--acento-suave);
+}
+
+.dashboard-card-destacada strong {
+  font-size: 1.45rem;
+}
+
+.dashboard-card-destacada .sutil {
+  font-size: 1rem;
 }
 
 .barra-nav {
@@ -1512,6 +1586,19 @@ button.sesion.ausente {
 
   .marca {
     font-size: 15px;
+  }
+
+  .dashboard-grilla {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card-destacada {
+    min-height: 120px;
+    padding: 22px 16px;
+  }
+
+  .dashboard-card-destacada strong {
+    font-size: 1.25rem;
   }
 
   .barra-nav {

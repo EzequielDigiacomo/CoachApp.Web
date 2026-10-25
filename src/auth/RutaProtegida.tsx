@@ -20,7 +20,7 @@ export function RutaStaff({ children }: { children: ReactNode }) {
   const { sesion } = useAuth()
 
   if (!esStaff(sesion?.usuario.rol)) {
-    return <Navigate to="/entrenamientos" replace />
+    return <Navigate to="/" replace />
   }
 
   return <>{children}</>

@@ -5,6 +5,7 @@ import { Layout } from './componentes/Layout'
 import { AnotacionAtletaPage } from './paginas/AnotacionAtletaPage'
 import { AnotacionesPage } from './paginas/AnotacionesPage'
 import { CuentasPage } from './paginas/CuentasPage'
+import { DashboardPage } from './paginas/DashboardPage'
 import { EquiposPage } from './paginas/EquiposPage'
 import { SensacionesPage } from './paginas/SensacionesPage'
 import { AtletaHistorialPage } from './paginas/AtletaHistorialPage'
@@ -31,6 +32,15 @@ export default function App() {
       <ProveedorAuth>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+
+          <Route
+            path="/"
+            element={
+              <Pagina>
+                <DashboardPage />
+              </Pagina>
+            }
+          />
 
           <Route
             path="/atletas"
@@ -170,7 +180,7 @@ export default function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/entrenamientos" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ProveedorAuth>
     </BrowserRouter>
