@@ -109,64 +109,173 @@ h2 {
 
 .dashboard {
   display: grid;
-  gap: 24px;
+  gap: 28px;
+  padding-top: 8px;
+}
+
+.dashboard-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acento);
 }
 
 .dashboard-cabecera h1 {
-  margin: 0 0 4px;
-  font-size: 1.6rem;
+  margin: 0 0 6px;
+  font-size: clamp(1.7rem, 3vw, 2.1rem);
+  letter-spacing: -0.02em;
 }
 
 .dashboard-grilla {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
   align-items: stretch;
 }
 
 .dashboard-card {
+  position: relative;
   display: grid;
-  gap: 6px;
-  align-content: start;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
   padding: 18px 16px;
-  min-height: 96px;
-  background: var(--superficie);
+  min-height: 104px;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--superficie) 88%, var(--acento-suave)) 0%, var(--superficie) 55%);
   border: 1px solid var(--borde);
-  border-radius: var(--radio);
+  border-radius: 14px;
   color: var(--texto);
   text-decoration: none;
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.dashboard-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% -40% auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--acento) 8%, transparent);
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .dashboard-card:hover {
-  border-color: var(--acento);
-  box-shadow: 0 4px 14px var(--sombra);
-  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--acento) 55%, var(--borde));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--sombra) 35%, transparent);
+  transform: translateY(-3px);
+}
+
+.dashboard-card:hover::after {
+  transform: scale(1.25);
+  opacity: 0.9;
+}
+
+.dashboard-card:hover .dashboard-icono {
+  background: var(--acento);
+  color: #fff;
+  transform: scale(1.06);
+}
+
+.dashboard-icono {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--acento-suave);
+  color: var(--acento);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dashboard-icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dashboard-card-texto {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  z-index: 1;
 }
 
 .dashboard-card strong {
-  font-size: 1.05rem;
+  font-size: 1.08rem;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-card-enfasis {
+  border-color: color-mix(in srgb, var(--acento) 35%, var(--borde));
+}
+
+.dashboard-card-enfasis .dashboard-icono {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+}
+
+.dashboard-card-enfasis .dashboard-icono svg {
+  width: 26px;
+  height: 26px;
+}
+
+.dashboard-card-enfasis strong {
+  font-size: 1.18rem;
 }
 
 .dashboard-card-destacada {
   grid-column: 1 / -1;
-  min-height: 140px;
-  place-content: center;
-  text-align: center;
-  padding: 28px 20px;
-  border-color: var(--acento);
-  background: var(--acento-suave);
+  grid-template-columns: auto 1fr;
+  justify-content: center;
+  min-height: 148px;
+  padding: 28px 24px;
+  border-color: color-mix(in srgb, var(--acento) 50%, var(--borde));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--acento-suave) 90%, var(--superficie)) 0%,
+      color-mix(in srgb, var(--acento) 18%, var(--superficie)) 100%
+    );
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--acento) 12%, transparent);
+}
+
+.dashboard-card-destacada .dashboard-icono {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--acento);
+  color: #fff;
+}
+
+.dashboard-card-destacada .dashboard-icono svg {
+  width: 28px;
+  height: 28px;
 }
 
 .dashboard-card-destacada strong {
-  font-size: 1.45rem;
+  font-size: 1.5rem;
 }
 
 .dashboard-card-destacada .sutil {
   font-size: 1rem;
+}
+
+.dashboard-card-destacada:hover .dashboard-icono {
+  background: var(--acento-hover);
 }
 
 .barra-nav {
@@ -1590,6 +1699,23 @@ button.sesion.ausente {
 
   .dashboard-grilla {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-card {
+    min-height: 88px;
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .dashboard-icono {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dashboard-card-enfasis .dashboard-icono {
+    width: 46px;
+    height: 46px;
   }
 
   .dashboard-card-destacada {
@@ -1597,8 +1723,13 @@ button.sesion.ausente {
     padding: 22px 16px;
   }
 
+  .dashboard-card-destacada .dashboard-icono {
+    width: 48px;
+    height: 48px;
+  }
+
   .dashboard-card-destacada strong {
-    font-size: 1.25rem;
+    font-size: 1.28rem;
   }
 
   .barra-nav {
@@ -2288,6 +2419,14 @@ button.sesion.ausente {
   justify-content: space-between;
   gap: 12px;
   align-items: start;
+}
+
+.control-tipo {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--acento);
 }
 
 .control-ejercicios {

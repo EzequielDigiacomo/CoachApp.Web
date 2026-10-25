@@ -22,15 +22,14 @@ export function VistaControlGim({
           <header className="control-cabecera">
             <div>
               <strong>{fechaLarga(control.fecha)}</strong>
-              <p className="sutil">
-                {fechaNumerica(control.fecha)}
-                {control.esAutoCarga ? ' · Auto carga' : ''}
-              </p>
+              <p className="sutil">{fechaNumerica(control.fecha)}</p>
             </div>
             {control.atletaNombre && (
               <NombreAtleta className="sutil" nombre={control.atletaNombre} color={control.atletaColor} />
             )}
           </header>
+
+          {control.esAutoCarga && <p className="control-tipo">Auto carga</p>}
 
           {control.observaciones && <p className="sutil">{control.observaciones}</p>}
 
