@@ -3,6 +3,8 @@
  * del backend a mensajes mostrables.
  */
 
+import { tokenVencido } from '../util/token'
+
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
 export const CLAVE_TOKEN = 'coachapp.token'
@@ -22,6 +24,11 @@ function esRutaPublica(ruta: string): boolean {
   return RUTAS_PUBLICAS.some((publica) => ruta.startsWith(publica))
 }
 
+function avisarSesionExpirada(): never {
+  window.dispatchEvent(new Event(EVENTO_SESION_EXPIRADA))
+  throw new ApiError('La sesión venció. Iniciá sesión de nuevo.', 401)
+}
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -36,6 +43,11 @@ async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   const cabeceras = new Headers(opciones.headers)
   const token = localStorage.getItem(CLAVE_TOKEN)
 
+  // Si el JWT ya vencio, no pegamos a la API: cerramos sesion al toque.
+  if (token && !esRutaPublica(ruta) && tokenVencido(token)) {
+    avisarSesionExpirada()
+  }
+
   if (opciones.body) {
     cabeceras.set('Content-Type', 'application/json')
   }
@@ -48,8 +60,7 @@ async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   // Un 401 en una ruta publica (el login) son credenciales invalidas: hay que
   // seguir de largo para mostrar el mensaje que devuelve el backend.
   if (respuesta.status === 401 && !esRutaPublica(ruta)) {
-    window.dispatchEvent(new Event(EVENTO_SESION_EXPIRADA))
-    throw new ApiError('La sesión venció. Iniciá sesión de nuevo.', 401)
+    avisarSesionExpirada()
   }
 
   if (!respuesta.ok) {
