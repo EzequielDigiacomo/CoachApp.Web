@@ -148,6 +148,13 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
     }
   }
 
+  function alIntentarCerrar() {
+    if (!form) {
+      return true
+    }
+    return window.confirm('Hay un trabajo sin guardar. ¿Cerrar igual?')
+  }
+
   return (
     <Modal
       titulo="Trabajos"
@@ -161,6 +168,7 @@ export function ModalTrabajos({ entrenamientoId, atleta, onCerrar, onCambio }: P
         </span>
       }
       pausado={trabajoParaNotas !== null || trabajoParaGrafico !== null || trabajoParaVelocidad !== null}
+      alIntentarCerrar={alIntentarCerrar}
       onCerrar={onCerrar}
     >
       {error && <p className="error">{error}</p>}

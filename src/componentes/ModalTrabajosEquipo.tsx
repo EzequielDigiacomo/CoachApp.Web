@@ -118,11 +118,19 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
     }
   }
 
+  function alIntentarCerrar() {
+    if (!form) {
+      return true
+    }
+    return window.confirm('Hay un trabajo sin guardar. ¿Cerrar igual?')
+  }
+
   return (
     <Modal
       titulo="Trabajo de equipo"
       subtitulo={equipo.etiqueta}
       pausado={trabajoParaGrafico !== null || trabajoParaVelocidad !== null}
+      alIntentarCerrar={alIntentarCerrar}
       onCerrar={onCerrar}
     >
       {error && <p className="error">{error}</p>}

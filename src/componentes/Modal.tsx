@@ -13,6 +13,16 @@ interface Props {
    * si no, la misma tecla cerraria los dos.
    */
   pausado?: boolean
+  /**
+   * Si es true, un click en el fondo oscuro cierra el modal.
+   * Por defecto no: en carga de trabajos un click accidental tira el progreso.
+   */
+  cerrarConFondo?: boolean
+  /**
+   * Si devuelve false, se cancela el cierre (Escape, fondo o boton Cerrar).
+   * Sirve para confirmar cuando hay datos sin guardar.
+   */
+  alIntentarCerrar?: () => boolean
   onCerrar: () => void
   children: React.ReactNode
 }
@@ -45,9 +55,18 @@ export function Modal({
   ancho = 'normal',
   apilado = false,
   pausado = false,
+  cerrarConFondo = false,
+  alIntentarCerrar,
   onCerrar,
   children,
 }: Props) {
+  function intentarCerrar() {
+    if (alIntentarCerrar && !alIntentarCerrar()) {
+      return
+    }
+    onCerrar()
+  }
+
   // Solo al montar / desmontar: no se vuelve a correr si cambia onCerrar.
   useEffect(() => {
     bloquearScrollFondo()
@@ -57,13 +76,16 @@ export function Modal({
   useEffect(() => {
     function alTeclear(evento: KeyboardEvent) {
       if (evento.key === 'Escape' && !pausado) {
+        if (alIntentarCerrar && !alIntentarCerrar()) {
+          return
+        }
         onCerrar()
       }
     }
 
     window.addEventListener('keydown', alTeclear)
     return () => window.removeEventListener('keydown', alTeclear)
-  }, [onCerrar, pausado])
+  }, [onCerrar, pausado, alIntentarCerrar])
 
   return (
     <div
@@ -71,7 +93,9 @@ export function Modal({
       role="presentation"
       onClick={(evento) => {
         evento.stopPropagation()
-        onCerrar()
+        if (cerrarConFondo) {
+          intentarCerrar()
+        }
       }}
     >
       <div
@@ -86,7 +110,7 @@ export function Modal({
             <h3>{titulo}</h3>
             {subtitulo && <p className="sutil">{subtitulo}</p>}
           </div>
-          <button type="button" className="boton-fantasma" onClick={onCerrar}>
+          <button type="button" className="boton-fantasma" onClick={intentarCerrar}>
             Cerrar
           </button>
         </header>

@@ -135,11 +135,16 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
     )
   }
 
+  function alIntentarCerrar() {
+    return window.confirm('¿Cancelar la carga? Se pierde lo que no guardaste.')
+  }
+
   return (
     <Modal
       titulo="Carga múltiple de trabajos"
       subtitulo={`${cargas.length} ${cargas.length === 1 ? 'atleta' : 'atletas'} · un trabajo por atleta`}
       ancho="grande"
+      alIntentarCerrar={alIntentarCerrar}
       onCerrar={onCerrar}
     >
       {error && <p className="error">{error}</p>}
@@ -209,7 +214,16 @@ export function ModalCargaMultiple({ entrenamientoId, atletas, onCerrar, onCambi
       </div>
 
       <div className="form-acciones carga-multiple-acciones">
-        <button type="button" className="boton-fantasma" disabled={ocupado} onClick={onCerrar}>
+        <button
+          type="button"
+          className="boton-fantasma"
+          disabled={ocupado}
+          onClick={() => {
+            if (alIntentarCerrar()) {
+              onCerrar()
+            }
+          }}
+        >
           Cancelar
         </button>
         <button type="button" className="boton" disabled={ocupado} onClick={() => void guardar()}>

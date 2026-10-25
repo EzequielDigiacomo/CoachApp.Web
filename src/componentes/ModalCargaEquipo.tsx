@@ -86,8 +86,12 @@ export function ModalCargaEquipo({ entrenamientoId, atletas, onCerrar, onCargado
     }
   }
 
+  function alIntentarCerrar() {
+    return window.confirm('¿Cancelar la carga de equipo? Se pierde lo que no guardaste.')
+  }
+
   return (
-    <Modal titulo="Carga equipo" onCerrar={onCerrar}>
+    <Modal titulo="Carga equipo" alIntentarCerrar={alIntentarCerrar} onCerrar={onCerrar}>
       <div className="acciones-fila">
         <button
           type="button"
@@ -178,7 +182,15 @@ export function ModalCargaEquipo({ entrenamientoId, atletas, onCerrar, onCargado
         <button type="button" className="boton" disabled={ocupado} onClick={() => void guardar()}>
           Cargar
         </button>
-        <button type="button" className="boton-fantasma" onClick={onCerrar}>
+        <button
+          type="button"
+          className="boton-fantasma"
+          onClick={() => {
+            if (alIntentarCerrar()) {
+              onCerrar()
+            }
+          }}
+        >
           Cancelar
         </button>
       </div>
