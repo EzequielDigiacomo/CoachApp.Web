@@ -30,7 +30,7 @@ export const controlesApi = {
 
   /** Promueve un trabajo de sesion a control(es) del historial. */
   marcarDesdeTrabajo: (trabajoId: number) =>
-    api.post<ControlDto[]>(`/api/controles/desde-trabajo/${trabajoId}`),
+    api.post<ControlDto[]>(`/api/controles/desde-trabajo/${trabajoId}`, {}),
 
   /** Quita los controles creados desde ese trabajo. */
   desmarcarDesdeTrabajo: (trabajoId: number) =>
