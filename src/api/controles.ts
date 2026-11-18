@@ -27,4 +27,12 @@ export const controlesApi = {
     api.put<ControlDto>(`/api/controles/${id}`, datos),
 
   eliminar: (id: number) => api.delete(`/api/controles/${id}`),
+
+  /** Promueve un trabajo de sesion a control(es) del historial. */
+  marcarDesdeTrabajo: (trabajoId: number) =>
+    api.post<ControlDto[]>(`/api/controles/desde-trabajo/${trabajoId}`),
+
+  /** Quita los controles creados desde ese trabajo. */
+  desmarcarDesdeTrabajo: (trabajoId: number) =>
+    api.delete(`/api/controles/desde-trabajo/${trabajoId}`),
 }

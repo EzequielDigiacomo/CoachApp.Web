@@ -1264,8 +1264,37 @@ select {
 
 .trabajo-acciones {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   margin-left: auto;
+}
+
+.trabajo-acciones .trabajo-check-control {
+  width: auto;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--superficie);
+  font-size: 13px;
+  gap: 8px;
+}
+
+.trabajo-acciones .trabajo-check-control.activo {
+  border-color: color-mix(in srgb, #166534 35%, var(--borde));
+  background: #dcfce7;
+  color: #166534;
+}
+
+.trabajo-acciones .trabajo-check-control input[type='checkbox'] {
+  margin-left: 0;
+}
+
+[data-tema='oscuro'] .trabajo-acciones .trabajo-check-control.activo {
+  background: color-mix(in srgb, #166534 28%, var(--superficie));
+  color: #86efac;
+  border-color: color-mix(in srgb, #86efac 30%, var(--borde));
 }
 
 .tabla-scroll {

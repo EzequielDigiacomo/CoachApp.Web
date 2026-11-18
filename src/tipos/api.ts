@@ -334,6 +334,8 @@ export interface TrabajoDto {
   entrenamientoFecha: string | null
   entrenamientoTurno: Turno | null
   entrenamientoSesion: number | null
+  /** True si ya se promociono a control(es) del historial. */
+  esControl?: boolean
 }
 
 export interface GuardarParcialRequest {
@@ -415,6 +417,8 @@ export interface ControlDto {
   diferenciaTestigo?: string | null
   observaciones: string | null
   fechaCreacion: string
+  /** Trabajo de sesion origen, si se marco desde un entrenamiento. */
+  trabajoId?: number | null
   ejercicios: ControlEjercicioDto[]
 }
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { anotacionesApi } from '../api/anotaciones'
 import { ApiError } from '../api/cliente'
+import { controlesApi } from '../api/controles'
 import { esTrabajoDeGimnasio, etiquetaTipoTrabajo, trabajosApi } from '../api/entrenamientos'
 import { useAuth } from '../auth/contextoAuth'
 import { esStaff, type AtletaEnEntrenamientoDto, type TipoTrabajo, type TrabajoDto } from '../tipos/api'
@@ -157,6 +158,51 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
     }
   }
 
+  async function alternarControl(trabajo: TrabajoDto) {
+    const marcado = Boolean(trabajo.esControl)
+    const detalle = esTrabajoDeGimnasio(trabajo.tipo)
+      ? 'el trabajo completo'
+      : trabajo.parciales.length === 1
+        ? 'ese parcial'
+        : `sus ${trabajo.parciales.length} parciales`
+
+    if (marcado) {
+      const ok = await confirmar(
+        `¿Sacar este trabajo del historial de controles? Se borran los controles creados desde ${detalle}.`,
+        { peligro: true, aceptar: 'Sacar' },
+      )
+      if (!ok) {
+        return
+      }
+    }
+
+    setOcupado(true)
+    setError(null)
+    try {
+      if (marcado) {
+        await controlesApi.desmarcarDesdeTrabajo(trabajo.id)
+        setTrabajos((previos) =>
+          previos.map((t) => (t.id === trabajo.id ? { ...t, esControl: false } : t)),
+        )
+      } else {
+        await controlesApi.marcarDesdeTrabajo(trabajo.id)
+        setTrabajos((previos) =>
+          previos.map((t) => (t.id === trabajo.id ? { ...t, esControl: true } : t)),
+        )
+      }
+    } catch (e) {
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : marcado
+            ? 'No se pudo sacar el control.'
+            : 'No se pudo marcar como control.',
+      )
+    } finally {
+      setOcupado(false)
+    }
+  }
+
   async function quitarParcial(trabajo: TrabajoDto, parcialId: number) {
     const restantes = trabajo.parciales.filter((p) => p.id !== parcialId)
     if (restantes.length === 0) {
@@ -293,6 +339,24 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
                     acciones={
                       <>
                         {deEquipo && <span className="etiqueta">Equipo</span>}
+                        {staff && !deEquipo && (
+                          <label
+                            className={`check trabajo-check-control${trabajo.esControl ? ' activo' : ''}`}
+                            title={
+                              trabajo.esControl
+                                ? 'Ya figura en el historial de controles. Clic para sacar.'
+                                : 'Marcar este trabajo como control del historial del atleta'
+                            }
+                          >
+                            <span className="check-texto">Control</span>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(trabajo.esControl)}
+                              disabled={ocupado}
+                              onChange={() => void alternarControl(trabajo)}
+                            />
+                          </label>
+                        )}
                         {staff && !deEquipo && (
                           <button
                             type="button"

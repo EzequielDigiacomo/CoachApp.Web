@@ -59,6 +59,7 @@ export function TarjetaTrabajo({
         <span className={`etiqueta-tipo tipo-${trabajo.tipo.toLowerCase()}`}>
           {etiquetaTipoTrabajo(trabajo.tipo)}
         </span>
+        {trabajo.esControl && <span className="etiqueta presente">Control</span>}
         <strong>{trabajo.horaInicio ? `${trabajo.horaInicio} h` : 'Sin hora'}</strong>
 
         {gimnasio ? (
