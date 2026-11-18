@@ -180,12 +180,12 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
     setError(null)
     try {
       if (marcado) {
-        await controlesApi.desmarcarDesdeTrabajo(trabajo.id)
+        await controlesApi.desmarcarDesdeTrabajo(trabajo.id, atleta.atletaId)
         setTrabajos((previos) =>
           previos.map((t) => (t.id === trabajo.id ? { ...t, esControl: false } : t)),
         )
       } else {
-        await controlesApi.marcarDesdeTrabajo(trabajo.id)
+        await controlesApi.marcarDesdeTrabajo(trabajo.id, atleta.atletaId)
         setTrabajos((previos) =>
           previos.map((t) => (t.id === trabajo.id ? { ...t, esControl: true } : t)),
         )
@@ -339,23 +339,20 @@ export function ModalTrabajos({ entrenamientoId, atleta, tipoSesion, onCerrar, o
                     acciones={
                       <>
                         {deEquipo && <span className="etiqueta">Equipo</span>}
-                        {staff && !deEquipo && (
-                          <label
-                            className={`check trabajo-check-control${trabajo.esControl ? ' activo' : ''}`}
+                        {staff && (
+                          <button
+                            type="button"
+                            className={`boton-fantasma trabajo-boton-control${trabajo.esControl ? ' activo' : ''}`}
+                            disabled={ocupado}
                             title={
                               trabajo.esControl
                                 ? 'Ya figura en el historial de controles. Clic para sacar.'
                                 : 'Marcar este trabajo como control del historial del atleta'
                             }
+                            onClick={() => void alternarControl(trabajo)}
                           >
-                            <span className="check-texto">Control</span>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(trabajo.esControl)}
-                              disabled={ocupado}
-                              onChange={() => void alternarControl(trabajo)}
-                            />
-                          </label>
+                            {trabajo.esControl ? '✓ Control' : 'Control'}
+                          </button>
                         )}
                         {staff && !deEquipo && (
                           <button
