@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../api/cliente'
+import { controlesApi } from '../api/controles'
 import { trabajosApi } from '../api/entrenamientos'
 import { trabajosEquipoApi } from '../api/equipos'
 import { useAuth } from '../auth/contextoAuth'
@@ -120,6 +121,55 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
     }
   }
 
+  /** Marca o saca el control en el historial de todos los remadores del bote. */
+  async function alternarControl(trabajo: TrabajoDto) {
+    const marcado = Boolean(trabajo.esControl)
+    const nombres = equipo.miembros
+      .map((m) => `${m.apellido}, ${m.nombre}`)
+      .join(' · ')
+
+    if (marcado) {
+      const ok = await confirmar(
+        `¿Sacar este trabajo del historial de controles de ${nombres}?`,
+        { peligro: true, aceptar: 'Sacar' },
+      )
+      if (!ok) {
+        return
+      }
+    }
+
+    setOcupado(true)
+    setError(null)
+    try {
+      if (marcado) {
+        await Promise.all(
+          equipo.miembros.map((m) => controlesApi.desmarcarDesdeTrabajo(trabajo.id, m.atletaId)),
+        )
+        setTrabajos((previos) =>
+          previos.map((t) => (t.id === trabajo.id ? { ...t, esControl: false } : t)),
+        )
+      } else {
+        await Promise.all(
+          equipo.miembros.map((m) => controlesApi.marcarDesdeTrabajo(trabajo.id, m.atletaId)),
+        )
+        setTrabajos((previos) =>
+          previos.map((t) => (t.id === trabajo.id ? { ...t, esControl: true } : t)),
+        )
+      }
+    } catch (e) {
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : marcado
+            ? 'No se pudo sacar el control.'
+            : 'No se pudo marcar como control.',
+      )
+      await cargar()
+    } finally {
+      setOcupado(false)
+    }
+  }
+
   async function alIntentarCerrar() {
     if (!form) {
       return true
@@ -199,6 +249,19 @@ export function ModalTrabajosEquipo({ entrenamientoId, equipo, onCerrar, onCambi
                   acciones={
                     staff ? (
                       <>
+                        <button
+                          type="button"
+                          className={`boton-fantasma trabajo-boton-control${trabajo.esControl ? ' activo' : ''}`}
+                          disabled={ocupado}
+                          title={
+                            trabajo.esControl
+                              ? 'Ya figura en el historial de controles de todos los remadores. Clic para sacar.'
+                              : 'Marcar este trabajo como control en el historial de todos los remadores del bote'
+                          }
+                          onClick={() => void alternarControl(trabajo)}
+                        >
+                          {trabajo.esControl ? '✓ Control' : 'Control'}
+                        </button>
                         <button
                           type="button"
                           className="boton-fantasma"

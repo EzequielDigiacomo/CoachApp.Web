@@ -22,13 +22,11 @@ export function VistaControlAgua({
       {controles.map((control) => (
         <article className="tarjeta control-tarjeta" key={control.id}>
           <header className="control-cabecera">
-            <div>
-              <strong>{fechaLarga(control.fecha)}</strong>
-              <p className="sutil">{fechaNumerica(control.fecha)}</p>
-            </div>
+            <strong>{fechaLarga(control.fecha)}</strong>
+            <p className="sutil">{fechaNumerica(control.fecha)}</p>
             {control.atletaNombre && (
               <NombreAtleta
-                className="sutil"
+                className="control-atleta"
                 nombre={control.atletaNombre}
                 color={control.atletaColor}
               />
