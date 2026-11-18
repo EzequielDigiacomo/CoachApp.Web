@@ -110,6 +110,8 @@ export function AvisosPage() {
     setActivo(aviso.activo)
   }
 
+  const ultimoActivo = avisos.find((aviso) => aviso.activo) ?? null
+
   return (
     <div className="pagina">
       <div className="encabezado">
@@ -120,6 +122,20 @@ export function AvisosPage() {
           ? 'Mensajes y links que ven los atletas al entrar. Máximo 1000 caracteres.'
           : 'Novedades del cuerpo técnico.'}
       </p>
+
+      {staff && !cargando && !error && (
+        <div className={`tarjeta aviso-estado ${ultimoActivo ? 'aviso-estado-activo' : ''}`}>
+          {ultimoActivo ? (
+            <p>
+              <span className="etiqueta presente">Activo</span>{' '}
+              El último aviso visible es <strong>«{ultimoActivo.titulo}»</strong>. Los atletas lo
+              ven al entrar al home.
+            </p>
+          ) : (
+            <p className="sutil">No hay ningún aviso activo. Los atletas no ven nada en el home.</p>
+          )}
+        </div>
+      )}
 
       {staff && (
         <form className="tarjeta formulario" onSubmit={(evento) => void guardar(evento)}>
@@ -182,9 +198,20 @@ export function AvisosPage() {
         <p className="sutil">Todavía no hay avisos.</p>
       ) : (
         avisos.map((aviso) => (
-          <article key={aviso.id} className="tarjeta">
+          <article
+            key={aviso.id}
+            className={['tarjeta', staff && aviso.id === ultimoActivo?.id ? 'aviso-destacado' : '']
+              .filter(Boolean)
+              .join(' ')}
+          >
             <div className="encabezado" style={{ marginBottom: 6 }}>
               <h3 className="titulo-seccion">{aviso.titulo}</h3>
+              {staff && aviso.id === ultimoActivo?.id && (
+                <span className="etiqueta presente">Activo en el home</span>
+              )}
+              {staff && aviso.activo && aviso.id !== ultimoActivo?.id && (
+                <span className="etiqueta presente">Activo</span>
+              )}
               {staff && !aviso.activo && <span className="etiqueta">Oculto</span>}
             </div>
             <p style={{ whiteSpace: 'pre-wrap' }}>{aviso.texto}</p>

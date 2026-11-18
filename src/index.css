@@ -690,6 +690,24 @@ input:focus-visible {
   white-space: nowrap;
 }
 
+.aviso-estado {
+  padding: 12px 14px;
+}
+
+.aviso-estado p {
+  margin: 0;
+}
+
+.aviso-estado-activo {
+  border-color: color-mix(in srgb, var(--acento) 35%, var(--borde));
+  background: color-mix(in srgb, var(--acento-suave) 70%, var(--superficie));
+}
+
+.aviso-destacado {
+  border-color: color-mix(in srgb, var(--acento) 40%, var(--borde));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--acento) 18%, transparent);
+}
+
 .sutil {
   color: var(--texto-suave);
   font-size: 13px;
@@ -3105,7 +3123,23 @@ button.sesion.ausente {
 }
 
 .boton-tema {
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  color: var(--texto-suave);
+}
+
+.boton-tema:hover {
+  color: var(--texto);
+  background: var(--acento-suave);
+}
+
+.boton-tema svg {
+  display: block;
 }
 
 [data-tema='oscuro'] .controles-menu a:hover,

@@ -126,7 +126,7 @@ export function DashboardPage() {
           <h1>Hola{nombre ? `, ${nombre}` : ''}</h1>
           <p className="sutil">Elegí un módulo para empezar.</p>
         </div>
-        {!staff && <BloqueAvisos />}
+        <BloqueAvisos esStaff={staff} />
       </header>
 
       <div className="dashboard-grilla">
@@ -157,7 +157,7 @@ function Card({ card }: { card: CardModulo }) {
 }
 
 /** Ultimos avisos activos, a la derecha del saludo (arriba de Controles). */
-function BloqueAvisos() {
+function BloqueAvisos({ esStaff }: { esStaff: boolean }) {
   const [avisos, setAvisos] = useState<AvisoDto[] | null>(null)
 
   useEffect(() => {
@@ -166,7 +166,8 @@ function BloqueAvisos() {
       .get<AvisoDto[]>('/api/avisos')
       .then((lista) => {
         if (vivo) {
-          setAvisos(lista.slice(0, 3))
+          // Staff recibe también ocultos: en el home solo mostramos los activos.
+          setAvisos(lista.filter((aviso) => aviso.activo).slice(0, 3))
         }
       })
       .catch(() => {
@@ -192,9 +193,12 @@ function BloqueAvisos() {
         </Link>
       </div>
       <ul className="dashboard-avisos-lista">
-        {avisos.map((aviso) => (
+        {avisos.map((aviso, indice) => (
           <li key={aviso.id} className="dashboard-aviso-item">
-            <strong>{aviso.titulo}</strong>
+            <strong>
+              {aviso.titulo}
+              {esStaff && indice === 0 && <span className="etiqueta presente">Activo</span>}
+            </strong>
             <p className="sutil">{aviso.texto}</p>
             {aviso.link && (
               <a className="enlace-texto" href={aviso.link} target="_blank" rel="noreferrer">
