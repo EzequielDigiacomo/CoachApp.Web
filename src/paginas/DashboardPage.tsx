@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { anotacionesApi } from '../api/anotaciones'
-import { ApiError } from '../api/cliente'
+import { api, ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
 import { IconoDashboard, type IdIconoDashboard } from '../componentes/IconosDashboard'
-import { esStaff } from '../tipos/api'
+import { esStaff, type AvisoDto } from '../tipos/api'
 
 interface CardModulo {
   to: string
@@ -61,6 +61,12 @@ export function DashboardPage() {
           icono: 'cuentas',
         },
         {
+          to: '/avisos',
+          titulo: 'Avisos',
+          descripcion: 'Mensajes y links para atletas.',
+          icono: 'avisos',
+        },
+        {
           to: '/anotacion-atleta',
           titulo: 'Anotación atleta',
           descripcion: 'Lo que escribieron los atletas.',
@@ -114,10 +120,13 @@ export function DashboardPage() {
 
   return (
     <div className="dashboard">
-      <header className="dashboard-cabecera">
-        <p className="dashboard-eyebrow">CoachApp</p>
-        <h1>Hola{nombre ? `, ${nombre}` : ''}</h1>
-        <p className="sutil">Elegí un módulo para empezar.</p>
+      <header className="dashboard-cabecera dashboard-cabecera-con-avisos">
+        <div className="dashboard-saludo">
+          <p className="dashboard-eyebrow">CoachApp</p>
+          <h1>Hola{nombre ? `, ${nombre}` : ''}</h1>
+          <p className="sutil">Elegí un módulo para empezar.</p>
+        </div>
+        {!staff && <BloqueAvisos />}
       </header>
 
       <div className="dashboard-grilla">
@@ -144,6 +153,58 @@ function Card({ card }: { card: CardModulo }) {
         <span className="sutil">{card.descripcion}</span>
       </div>
     </Link>
+  )
+}
+
+/** Ultimos avisos activos, a la derecha del saludo (arriba de Controles). */
+function BloqueAvisos() {
+  const [avisos, setAvisos] = useState<AvisoDto[] | null>(null)
+
+  useEffect(() => {
+    let vivo = true
+    void api
+      .get<AvisoDto[]>('/api/avisos')
+      .then((lista) => {
+        if (vivo) {
+          setAvisos(lista.slice(0, 3))
+        }
+      })
+      .catch(() => {
+        if (vivo) {
+          setAvisos([])
+        }
+      })
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  if (avisos == null || avisos.length === 0) {
+    return null
+  }
+
+  return (
+    <aside className="dashboard-avisos" aria-label="Avisos">
+      <div className="dashboard-avisos-cabecera">
+        <p className="dashboard-eyebrow">Avisos</p>
+        <Link to="/avisos" className="enlace-texto">
+          Ver todos
+        </Link>
+      </div>
+      <ul className="dashboard-avisos-lista">
+        {avisos.map((aviso) => (
+          <li key={aviso.id} className="dashboard-aviso-item">
+            <strong>{aviso.titulo}</strong>
+            <p className="sutil">{aviso.texto}</p>
+            {aviso.link && (
+              <a className="enlace-texto" href={aviso.link} target="_blank" rel="noreferrer">
+                Abrir link
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </aside>
   )
 }
 

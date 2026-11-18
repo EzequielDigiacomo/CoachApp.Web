@@ -55,6 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {staff && <NavLink to="/equipos">K2 / K4</NavLink>}
             {staff && <NavLink to="/anotaciones">Anotaciones</NavLink>}
             {staff && <NavLink to="/cuentas">Cuentas</NavLink>}
+            <NavLink to="/avisos">Avisos</NavLink>
             <NavLink to={staff ? '/anotacion-atleta' : '/anotacion'}>
               {staff ? 'Anotación atleta' : 'Anotación'}
             </NavLink>

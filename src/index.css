@@ -128,6 +128,68 @@ h2 {
   letter-spacing: -0.02em;
 }
 
+.dashboard-cabecera-con-avisos {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dashboard-saludo {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dashboard-avisos {
+  flex: 0 1 340px;
+  min-width: 0;
+  padding: 14px 16px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--superficie) 88%, var(--acento-suave)) 0%, var(--superficie) 55%);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--texto) 6%, transparent);
+}
+
+.dashboard-avisos-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dashboard-avisos-cabecera .dashboard-eyebrow {
+  margin: 0;
+}
+
+.dashboard-avisos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-aviso-item {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dashboard-aviso-item strong {
+  font-size: 0.95rem;
+  color: var(--texto);
+}
+
+.dashboard-aviso-item .sutil {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .dashboard-grilla {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2004,6 +2066,16 @@ button.sesion.ausente {
 
   .dashboard-cabecera h1 {
     font-size: 1.55rem;
+  }
+
+  .dashboard-cabecera-con-avisos {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .dashboard-avisos {
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .dashboard-grilla {

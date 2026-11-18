@@ -11,6 +11,7 @@ export type IdIconoDashboard =
   | 'cuentas'
   | 'anotacionAtleta'
   | 'sensaciones'
+  | 'avisos'
   | 'garmin'
 
 const props = {
@@ -83,6 +84,12 @@ const iconos: Record<IdIconoDashboard, ReactNode> = {
     <svg {...props}>
       <circle cx="12" cy="12" r="9" />
       <path d="M8.5 10h.01M15.5 10h.01M8.5 15c1.2 1.2 2.5 1.8 3.5 1.8s2.3-.6 3.5-1.8" />
+    </svg>
+  ),
+  avisos: (
+    <svg {...props}>
+      <path d="M4 5h16v11H8l-4 3V5z" />
+      <path d="M8 9h8M8 13h5" />
     </svg>
   ),
   garmin: (

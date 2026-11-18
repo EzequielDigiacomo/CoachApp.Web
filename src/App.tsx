@@ -5,6 +5,7 @@ import { ProveedorConfirmacion } from './componentes/Confirmacion'
 import { Layout } from './componentes/Layout'
 import { AnotacionAtletaPage } from './paginas/AnotacionAtletaPage'
 import { AnotacionesPage } from './paginas/AnotacionesPage'
+import { AvisosPage } from './paginas/AvisosPage'
 import { CuentasPage } from './paginas/CuentasPage'
 import { DashboardPage } from './paginas/DashboardPage'
 import { EquiposPage } from './paginas/EquiposPage'
@@ -160,6 +161,15 @@ export default function App() {
             element={
               <Pagina>
                 <AnotacionAtletaPage />
+              </Pagina>
+            }
+          />
+
+          <Route
+            path="/avisos"
+            element={
+              <Pagina>
+                <AvisosPage />
               </Pagina>
             }
           />

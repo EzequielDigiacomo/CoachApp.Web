@@ -545,6 +545,24 @@ export interface NotaAtletaDto {
   fechaCreacion: string
 }
 
+/* ---------- Avisos del staff hacia los atletas ---------- */
+
+export interface AvisoDto {
+  id: number
+  titulo: string
+  texto: string
+  link?: string | null
+  activo: boolean
+  fechaCreacion: string
+}
+
+export interface GuardarAvisoRequest {
+  titulo: string
+  texto: string
+  link?: string | null
+  activo: boolean
+}
+
 export interface ColorAtletaItem {
   atletaId: number
   color: string | null
