@@ -19,9 +19,18 @@
   }
 }
 
-/* Contenido bajo la Navbar del Layout Konsta */
+/* Contenido bajo la Navbar del Layout Konsta: centrado con márgenes laterales */
 .coach-contenido {
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 16px max(1.5rem, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.coach-contenido .dashboard {
+  max-width: 960px;
+  margin-inline: auto;
 }
 
 /* ListInput de Konsta: no aplicar el reset de forms legacy */
