@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDeferredValue, useMemo, useState } from 'react'
-import { Badge, Block, BlockTitle, Button, List, ListInput, ListItem, Preloader } from 'konsta/react'
+import { Badge, Block, Button, List, ListInput, ListItem, Preloader } from 'konsta/react'
 import { Link, useNavigate } from 'react-router-dom'
 import { mensajeApi } from '../api/cliente'
 import { clavesConsulta } from '../api/clavesConsulta'
@@ -40,6 +40,8 @@ export function EntrenamientosPage() {
   const [hasta, setHasta] = useState('')
   const [turno, setTurno] = useState<Turno | ''>('')
   const [mostrarForm, setMostrarForm] = useState(false)
+  /** null = aún no eligió el usuario; se abre hoy o el día más reciente. */
+  const [diasAbiertos, setDiasAbiertos] = useState<Set<string> | null>(null)
 
   const filtros: FiltrosEntrenamiento = useMemo(
     () => ({
@@ -73,6 +75,31 @@ export function EntrenamientosPage() {
 
     return [...grupos.entries()].sort((a, b) => b[0].localeCompare(a[0]))
   }, [entrenamientos])
+
+  const diasVisibles = useMemo(() => {
+    if (diasAbiertos) {
+      return diasAbiertos
+    }
+    if (porFecha.length === 0) {
+      return new Set<string>()
+    }
+    const hoy = hoyISO()
+    const inicial = porFecha.some(([fecha]) => fecha === hoy) ? hoy : porFecha[0][0]
+    return new Set([inicial])
+  }, [diasAbiertos, porFecha])
+
+  function alternarDia(fecha: string) {
+    setDiasAbiertos((prev) => {
+      const base = prev ?? new Set(diasVisibles)
+      const next = new Set(base)
+      if (next.has(fecha)) {
+        next.delete(fecha)
+      } else {
+        next.add(fecha)
+      }
+      return next
+    })
+  }
 
   function creado(nuevo: EntrenamientoDto) {
     setMostrarForm(false)
@@ -149,47 +176,71 @@ export function EntrenamientosPage() {
           <p className="opacity-60">No hay sesiones cargadas para esos filtros.</p>
         </Block>
       ) : (
-        porFecha.map(([fecha, sesiones]) => (
-          <div key={fecha}>
-            <BlockTitle className={esPasado(fecha) ? 'opacity-60' : undefined}>
-              {fechaLarga(fecha)}
-              <span className="font-normal opacity-60"> · {fechaCorta(fecha)}</span>
-            </BlockTitle>
+        porFecha.map(([fecha, sesiones]) => {
+          const abierto = diasVisibles.has(fecha)
+          const pasado = esPasado(fecha)
 
-            <List strong inset>
-              {sesiones.map((item) => {
-                const tipo = item.tipo ?? 'Agua'
-                const detalle = [
-                  staff
-                    ? item.cantidadAtletas === 0
-                      ? 'Sin atletas'
-                      : `${item.cantidadPresentes}/${item.cantidadAtletas} presentes`
-                    : null,
-                  item.club,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
+          return (
+            <List key={fecha} strong inset>
+              <ListItem
+                link
+                title={
+                  <span
+                    className={`text-[19px] font-semibold capitalize tracking-tight ${pasado ? 'opacity-60' : ''}`}
+                  >
+                    {fechaLarga(fecha)}
+                  </span>
+                }
+                after={
+                  <span className="flex items-center gap-2 text-[13px] opacity-60">
+                    <span>
+                      {sesiones.length} {sesiones.length === 1 ? 'sesión' : 'sesiones'}
+                    </span>
+                    <span aria-hidden className="text-[15px]">
+                      {abierto ? '▾' : '▸'}
+                    </span>
+                  </span>
+                }
+                subtitle={fechaCorta(fecha)}
+                onClick={() => alternarDia(fecha)}
+              />
 
-                return (
-                  <ListItem
-                    key={item.id}
-                    link
-                    linkComponent={linkRouter(Link)}
-                    linkProps={{ to: `/entrenamientos/${item.id}` }}
-                    title={`Sesión ${item.sesion} · ${etiquetaTurno(item.turno)}`}
-                    subtitle={item.descripcion || undefined}
-                    footer={detalle || undefined}
-                    after={
-                      <Badge colors={{ bg: COLOR_TIPO[tipo] ?? 'bg-primary' }}>
-                        {etiquetaTipoTrabajo(tipo)}
-                      </Badge>
-                    }
-                  />
-                )
-              })}
+              {abierto &&
+                sesiones.map((item) => {
+                  const tipo = item.tipo ?? 'Agua'
+                  const detalle = [
+                    staff
+                      ? item.cantidadAtletas === 0
+                        ? 'Sin atletas'
+                        : `${item.cantidadPresentes}/${item.cantidadAtletas} presentes`
+                      : null,
+                    item.club,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+
+                  return (
+                    <ListItem
+                      key={item.id}
+                      link
+                      linkComponent={linkRouter(Link)}
+                      linkProps={{ to: `/entrenamientos/${item.id}` }}
+                      title={`Sesión ${item.sesion} · ${etiquetaTurno(item.turno)}`}
+                      titleFontSizeIos="text-[18px]"
+                      titleFontSizeMaterial="text-[18px]"
+                      subtitle={item.descripcion || undefined}
+                      footer={detalle || undefined}
+                      after={
+                        <Badge colors={{ bg: COLOR_TIPO[tipo] ?? 'bg-primary' }}>
+                          {etiquetaTipoTrabajo(tipo)}
+                        </Badge>
+                      }
+                    />
+                  )
+                })}
             </List>
-          </div>
-        ))
+          )
+        })
       )}
     </MarcoPagina>
   )
