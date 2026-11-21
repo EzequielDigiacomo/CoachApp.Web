@@ -67,20 +67,81 @@
 }
 
 [data-tema='oscuro'] {
-  --fondo: #0f1419;
-  --superficie: #1a222c;
-  --borde: #2d3744;
-  --texto: #e8eef4;
-  --texto-suave: #9aa5b5;
-  --acento: #3b82f6;
-  --acento-hover: #60a5fa;
-  --acento-suave: #1e3a5f;
+  /* Fondo más negro; superficies más claras para separar cards del fondo */
+  --fondo: #070a0e;
+  --superficie: #1c2530;
+  --superficie-alta: #273341;
+  --borde: #3d4b5c;
+  --texto: #f3f6fa;
+  --texto-suave: #b6c0ce;
+  --acento: #5b9cff;
+  --acento-hover: #7eb0ff;
+  --acento-suave: #243958;
   --error: #f87171;
   --exito: #34d399;
   --radio: 8px;
-  --sombra: rgb(0 0 0 / 55%);
-  --overlay: rgb(0 0 0 / 65%);
+  --sombra: rgb(0 0 0 / 65%);
+  --overlay: rgb(0 0 0 / 70%);
   color-scheme: dark;
+}
+
+[data-tema='claro'] {
+  --superficie-alta: #ffffff;
+}
+
+/* Cards del home: más relieve en oscuro */
+[data-tema='oscuro'] .dashboard-card {
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--superficie-alta) 70%, var(--acento-suave)) 0%,
+      var(--superficie) 58%
+    );
+  border-color: color-mix(in srgb, var(--borde) 75%, var(--acento) 25%);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 6%, transparent), 0 8px 24px rgb(0 0 0 / 35%);
+}
+
+[data-tema='oscuro'] .dashboard-card strong {
+  color: #ffffff;
+}
+
+[data-tema='oscuro'] .dashboard-card .sutil {
+  color: var(--texto-suave);
+}
+
+[data-tema='oscuro'] .dashboard-avisos {
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--superficie-alta) 80%, var(--acento-suave)) 0%,
+      var(--superficie) 60%
+    );
+  border-color: color-mix(in srgb, var(--borde) 70%, var(--acento) 30%);
+}
+
+[data-tema='oscuro'] .dashboard-eyebrow {
+  color: var(--acento-hover);
+}
+
+[data-tema='oscuro'] .dashboard-cabecera h1 {
+  color: #ffffff;
+}
+
+[data-tema='oscuro'] .dashboard-icono {
+  background: color-mix(in srgb, var(--acento) 28%, var(--superficie-alta));
+  color: #9ec5ff;
+}
+
+[data-tema='oscuro'] .dashboard-card-enfasis .dashboard-icono,
+[data-tema='oscuro'] .dashboard-card-destacada .dashboard-icono {
+  background: var(--acento);
+  color: #fff;
+}
+
+[data-tema='oscuro'] .tarjeta,
+[data-tema='oscuro'] .k-list.bg-ios-dark-surface-1,
+[data-tema='oscuro'] .k-block.bg-ios-dark-surface-1 {
+  border-color: var(--borde);
 }
 
 * {
