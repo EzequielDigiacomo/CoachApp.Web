@@ -23,6 +23,26 @@ interface ItemNav {
   staff?: boolean
 }
 
+function IconoSalir() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={18}
+      height={18}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  )
+}
+
 /** Marco Konsta: Navbar + panel lateral de navegación. */
 export function Layout({ children }: { children: React.ReactNode }) {
   const { sesion, cerrarSesion } = useAuth()
@@ -84,22 +104,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <Page>
       <Navbar
-        title="CoachApp"
-        subtitle={
-          sesion
-            ? `${sesion.usuario.nombre} · ${sesion.usuario.rol}`
-            : undefined
-        }
+        title={sesion?.usuario.rol ?? 'CoachApp'}
+        subtitle={undefined}
         left={
-          <NavbarLink onClick={() => setMenuAbierto(true)}>Menú</NavbarLink>
+          <div className="flex items-center gap-0.5 pl-1">
+            <NavbarLink onClick={() => setMenuAbierto(true)}>Menú</NavbarLink>
+            <NavbarLink
+              onClick={() => navegar('/')}
+              aria-label="Ir al inicio"
+              title="Inicio"
+            >
+              <img
+                src="/favicon.svg"
+                width={20}
+                height={20}
+                alt=""
+                className="block rounded-[5px]"
+              />
+            </NavbarLink>
+          </div>
         }
         right={
-          <div className="flex items-center gap-1 pr-1">
+          <div className="flex items-center gap-0.5 pr-1">
             {staff && !garmin.vinculada && (
-              <NavbarLink onClick={() => setVinculando(true)}>Garmin</NavbarLink>
+              <NavbarLink
+                onClick={() => setVinculando(true)}
+                aria-label="Vincular Garmin"
+                title="Vincular Garmin"
+                className="max-[410px]:hidden"
+              >
+                Garmin
+              </NavbarLink>
             )}
             <BotonTema />
-            <NavbarLink onClick={salir}>Salir</NavbarLink>
+            <NavbarLink onClick={salir} aria-label="Salir" title="Salir">
+              <IconoSalir />
+            </NavbarLink>
           </div>
         }
       />

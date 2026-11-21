@@ -1,4 +1,4 @@
-import { Block, BlockFooter, Button, List, ListInput, Navbar, Page } from 'konsta/react'
+import { Block, Button, List, ListInput, Navbar, Page } from 'konsta/react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, mensajeApi } from '../api/cliente'
@@ -46,59 +46,60 @@ export function LoginPage() {
         }
       />
 
-      <div className="login-konsta mx-auto w-full max-w-[340px] px-4 pt-8">
-        <Block strong inset className="!mx-0 !mt-0 text-center">
-          <img
-            className="mx-auto mb-3"
-            src="/favicon.svg"
-            width={48}
-            height={48}
-            alt=""
-            aria-hidden="true"
-          />
-          <div className="text-[20px] font-semibold tracking-tight text-black dark:text-white">
-            Bienvenido
-          </div>
-          <p className="mt-1 text-[13px] text-black/60 dark:text-white/60">
-            Entrá con la cuenta que te dio el administrador.
-          </p>
-        </Block>
-
-        <form onSubmit={(e) => void enviar(e)}>
-          <List strong inset className="!mx-0">
-            <ListInput
-              label="Usuario"
-              type="text"
-              placeholder="usuario"
-              value={nombreUsuario}
-              onChange={(e) => setNombreUsuario((e.target as HTMLInputElement).value)}
-              autoComplete="username"
-              autoFocus
+      <div className="login-konsta flex min-h-[calc(100dvh-3.5rem)] items-center justify-center px-4 py-8">
+        <div className="w-full max-w-[340px]">
+          <Block strong inset className="!mx-0 !mt-0 text-center">
+            <img
+              className="mx-auto mb-3"
+              src="/favicon.svg"
+              width={48}
+              height={48}
+              alt=""
+              aria-hidden="true"
             />
-            <ListInput
-              label="Contraseña"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
-              autoComplete="current-password"
-            />
-          </List>
-
-          {error && (
-            <Block className="!mx-0 !py-0">
-              <p className="text-center text-[13px] text-red-500">{error}</p>
-            </Block>
-          )}
-
-          <Block className="!mx-0">
-            <Button large rounded type="submit" disabled={enviando}>
-              {enviando ? 'Entrando…' : 'Entrar'}
-            </Button>
+            <div className="text-[20px] font-semibold tracking-tight text-black dark:text-white">
+              Bienvenido
+            </div>
+            <p className="mt-1 text-[13px] text-black/60 dark:text-white/60">
+              Entrá con la cuenta que te dio el administrador.
+            </p>
           </Block>
-        </form>
 
-        <BlockFooter className="!mx-0 text-center">CoachApp</BlockFooter>
+          <form onSubmit={(e) => void enviar(e)}>
+            <List strong inset className="!mx-0">
+              <ListInput
+                label="Usuario"
+                type="text"
+                placeholder="usuario"
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario((e.target as HTMLInputElement).value)}
+                autoComplete="username"
+                autoFocus
+              />
+              <ListInput
+                label="Contraseña"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
+                autoComplete="current-password"
+              />
+            </List>
+
+            {error && (
+              <Block className="!mx-0 !py-0">
+                <p className="text-center text-[13px] text-red-500">{error}</p>
+              </Block>
+            )}
+
+            <Block className="!mx-0">
+              <Button large rounded type="submit" disabled={enviando}>
+                {enviando ? 'Entrando…' : 'Entrar'}
+              </Button>
+            </Block>
+          </form>
+
+        </div>
       </div>
     </Page>
   )
