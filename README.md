@@ -34,9 +34,10 @@ Producción (Vercel): `vercel.json` reescribe `/api/*` hacia el host de la API.
 
 ## Estructura
 
-- `src/api` — cliente HTTP y módulos de dominio
+- `src/api` — cliente HTTP (AbortSignal), claves React Query y módulos de dominio
+- `src/consultas` — `ProveedorConsultas` (TanStack Query)
 - `src/auth` — contexto y guards
-- `src/paginas` — pantallas
+- `src/paginas` — pantallas (lazy por ruta)
 - `src/componentes` — UI reutilizable
 - `src/tipos` — DTOs alineados a la API
 
@@ -44,3 +45,4 @@ Producción (Vercel): `vercel.json` reescribe `/api/*` hacia el host de la API.
 
 - No levantar la API .NET desde acá: el usuario la inicia en Visual Studio (evita lock de DLL).
 - Listados de entrenamientos piden `tamano=200` por defecto (paginación en API).
+- React Query cancela requests viejos al cambiar filtros; 409/429 tienen mensajes claros.

@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ApiError } from '../api/cliente'
+import { mensajeApi } from '../api/cliente'
+import { clavesConsulta } from '../api/clavesConsulta'
 import { entrenamientosApi, etiquetaTipoTrabajo, etiquetaTurno } from '../api/entrenamientos'
-import { ModalImportarPlanilla } from '../componentes/ModalImportarPlanilla'
 import { useAuth } from '../auth/contextoAuth'
+import { ModalImportarPlanilla } from '../componentes/ModalImportarPlanilla'
 import {
   esStaff,
   type CrearEntrenamientoRequest,
   type EntrenamientoDto,
+  type FiltrosEntrenamiento,
   type TipoTrabajo,
   type Turno,
 } from '../tipos/api'
@@ -17,41 +20,36 @@ const SESIONES = [1, 2, 3, 4, 5]
 
 export function EntrenamientosPage() {
   const navegar = useNavigate()
+  const consultas = useQueryClient()
   const { sesion } = useAuth()
   const staff = esStaff(sesion?.usuario.rol)
 
-  const [entrenamientos, setEntrenamientos] = useState<EntrenamientoDto[]>([])
-  // La vista arranca sin filtro de fecha a proposito: mostrar todo lo cargado
+  // La vista arranca sin filtro de fecha a proposito: mostrar lo cargado
   // de una, y que el entrenador acote si quiere.
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [turno, setTurno] = useState<Turno | ''>('')
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [mostrarForm, setMostrarForm] = useState(false)
 
-  const cargar = useCallback(async () => {
-    setCargando(true)
-    setError(null)
+  const filtros: FiltrosEntrenamiento = useMemo(
+    () => ({
+      desde: desde || undefined,
+      hasta: hasta || undefined,
+      turno: turno || undefined,
+    }),
+    [desde, hasta, turno],
+  )
+  const filtrosDiferidos = useDeferredValue(filtros)
 
-    try {
-      setEntrenamientos(
-        await entrenamientosApi.listar({
-          desde: desde || undefined,
-          hasta: hasta || undefined,
-          turno: turno || undefined,
-        }),
-      )
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudieron cargar los entrenamientos.')
-    } finally {
-      setCargando(false)
-    }
-  }, [desde, hasta, turno])
+  const listado = useQuery({
+    queryKey: clavesConsulta.entrenamientos(filtrosDiferidos),
+    queryFn: ({ signal }) => entrenamientosApi.listar(filtrosDiferidos, { signal }),
+  })
 
-  useEffect(() => {
-    void cargar()
-  }, [cargar])
+  const entrenamientos = listado.data ?? []
+  const error = listado.isError
+    ? mensajeApi(listado.error, 'No se pudieron cargar los entrenamientos.')
+    : null
 
   /** Agrupa las sesiones por dia para leerlas como una agenda. */
   const porFecha = useMemo(() => {
@@ -63,12 +61,12 @@ export function EntrenamientosPage() {
       grupos.set(entrenamiento.fecha, lista)
     }
 
-    // El dia mas nuevo arriba: hoy primero, el 23 de septiembre al final.
     return [...grupos.entries()].sort((a, b) => b[0].localeCompare(a[0]))
   }, [entrenamientos])
 
   function creado(nuevo: EntrenamientoDto) {
     setMostrarForm(false)
+    void consultas.invalidateQueries({ queryKey: ['entrenamientos'] })
     navegar(`/entrenamientos/${nuevo.id}`)
   }
 
@@ -105,14 +103,22 @@ export function EntrenamientosPage() {
           </select>
         </label>
 
-        <button type="button" className="boton-fantasma" onClick={() => { setDesde(''); setHasta(''); setTurno('') }}>
+        <button
+          type="button"
+          className="boton-fantasma"
+          onClick={() => {
+            setDesde('')
+            setHasta('')
+            setTurno('')
+          }}
+        >
           Ver todo
         </button>
       </div>
 
       {error && <p className="error">{error}</p>}
 
-      {cargando ? (
+      {listado.isPending ? (
         <p className="sutil">Cargando…</p>
       ) : entrenamientos.length === 0 ? (
         <p className="sutil">No hay sesiones cargadas para esos filtros.</p>
@@ -126,29 +132,29 @@ export function EntrenamientosPage() {
               </h3>
 
               <div className="sesiones">
-                {sesiones.map((sesion) => (
-                  <Link className="tarjeta sesion" key={sesion.id} to={`/entrenamientos/${sesion.id}`}>
+                {sesiones.map((item) => (
+                  <Link className="tarjeta sesion" key={item.id} to={`/entrenamientos/${item.id}`}>
                     <div className="sesion-titulo">
-                      <span className="etiqueta-sesion">Sesión {sesion.sesion}</span>
-                      <span className="turno">{etiquetaTurno(sesion.turno)}</span>
+                      <span className="etiqueta-sesion">Sesión {item.sesion}</span>
+                      <span className="turno">{etiquetaTurno(item.turno)}</span>
                       <span
-                        className={`etiqueta-tipo-sesion tipo-${(sesion.tipo ?? 'Agua').toLowerCase()}`}
+                        className={`etiqueta-tipo-sesion tipo-${(item.tipo ?? 'Agua').toLowerCase()}`}
                       >
-                        {etiquetaTipoTrabajo(sesion.tipo ?? 'Agua')}
+                        {etiquetaTipoTrabajo(item.tipo ?? 'Agua')}
                       </span>
                     </div>
 
-                    {sesion.descripcion && <p className="sutil">{sesion.descripcion}</p>}
+                    {item.descripcion && <p className="sutil">{item.descripcion}</p>}
 
                     <div className="sesion-pie">
                       {staff && (
                         <span className="sutil">
-                          {sesion.cantidadAtletas === 0
+                          {item.cantidadAtletas === 0
                             ? 'Sin atletas'
-                            : `${sesion.cantidadPresentes}/${sesion.cantidadAtletas} presentes`}
+                            : `${item.cantidadPresentes}/${item.cantidadAtletas} presentes`}
                         </span>
                       )}
-                      {sesion.club && <span className="sutil">{sesion.club}</span>}
+                      {item.club && <span className="sutil">{item.club}</span>}
                     </div>
                   </Link>
                 ))}
@@ -171,25 +177,22 @@ function FormularioEntrenamiento({ onCreado }: { onCreado: (nuevo: Entrenamiento
     club: '',
   })
   const [error, setError] = useState<string | null>(null)
-  const [guardando, setGuardando] = useState(false)
   const [mostrarPlanilla, setMostrarPlanilla] = useState(false)
+
+  const crear = useMutation({
+    mutationFn: (pedido: CrearEntrenamientoRequest) => entrenamientosApi.crear(pedido),
+    onSuccess: (nuevo) => onCreado(nuevo),
+    onError: (e) => setError(mensajeApi(e, 'No se pudo crear la sesión.')),
+  })
 
   // El backend guarda la descripcion hasta 500 caracteres: se avisa antes de
   // intentar guardar, en vez de que el error aparezca al enviar.
   const descripcionLarga = (datos.descripcion?.length ?? 0) > 500
 
-  async function guardar(evento: React.FormEvent) {
+  function guardar(evento: React.FormEvent) {
     evento.preventDefault()
     setError(null)
-    setGuardando(true)
-
-    try {
-      onCreado(await entrenamientosApi.crear(datos))
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo crear la sesión.')
-    } finally {
-      setGuardando(false)
-    }
+    crear.mutate(datos)
   }
 
   return (
@@ -280,13 +283,11 @@ function FormularioEntrenamiento({ onCreado }: { onCreado: (nuevo: Entrenamiento
 
         {error && <p className="error">{error}</p>}
 
-        <button type="submit" className="boton" disabled={guardando || descripcionLarga}>
-          {guardando ? 'Creando…' : 'Crear sesión'}
+        <button type="submit" className="boton" disabled={crear.isPending || descripcionLarga}>
+          {crear.isPending ? 'Creando…' : 'Crear sesión'}
         </button>
       </form>
 
-      {/* El modal trae su propio formulario, asi que va fuera de este: los
-          formularios anidados no son HTML valido. */}
       {mostrarPlanilla && (
         <ModalImportarPlanilla
           onElegir={(texto) => {

@@ -27,13 +27,14 @@ function aQuery(filtros: FiltrosEntrenamiento & { pagina?: number; tamano?: numb
 }
 
 export const entrenamientosApi = {
-  listar: (filtros: FiltrosEntrenamiento) =>
-    api.get<EntrenamientoDto[]>(`/api/entrenamientos${aQuery(filtros)}`),
+  listar: (filtros: FiltrosEntrenamiento, opciones?: RequestInit) =>
+    api.get<EntrenamientoDto[]>(`/api/entrenamientos${aQuery(filtros)}`, opciones),
 
-  obtener: (id: number) => api.get<EntrenamientoDto>(`/api/entrenamientos/${id}`),
+  obtener: (id: number, opciones?: RequestInit) =>
+    api.get<EntrenamientoDto>(`/api/entrenamientos/${id}`, opciones),
 
-  crear: (datos: CrearEntrenamientoRequest) =>
-    api.post<EntrenamientoDto>('/api/entrenamientos', datos),
+  crear: (datos: CrearEntrenamientoRequest, opciones?: RequestInit) =>
+    api.post<EntrenamientoDto>('/api/entrenamientos', datos, opciones),
 
   actualizar: (id: number, datos: CrearEntrenamientoRequest) =>
     api.put<EntrenamientoDto>(`/api/entrenamientos/${id}`, datos),
@@ -54,15 +55,28 @@ export const entrenamientosApi = {
 }
 
 export const atletasApi = {
-  listar: (busqueda?: string) =>
+  listar: (busqueda?: string, opciones?: RequestInit) =>
     api.get<AtletaDto[]>(
       `/api/atletas${busqueda ? `?busqueda=${encodeURIComponent(busqueda)}` : ''}`,
+      opciones,
     ),
 
-  obtener: (id: number) => api.get<AtletaDto>(`/api/atletas/${id}`),
+  listarConFiltros: (
+    filtros: { busqueda?: string; incluirInactivos?: boolean },
+    opciones?: RequestInit,
+  ) => {
+    const parametros = new URLSearchParams()
+    if (filtros.busqueda) parametros.set('busqueda', filtros.busqueda)
+    if (filtros.incluirInactivos) parametros.set('incluirInactivos', 'true')
+    const consulta = parametros.toString()
+    return api.get<AtletaDto[]>(`/api/atletas${consulta ? `?${consulta}` : ''}`, opciones)
+  },
 
-  guardarColores: (colores: { atletaId: number; color: string | null }[]) =>
-    api.put<AtletaDto[]>('/api/atletas/colores', { colores }),
+  obtener: (id: number, opciones?: RequestInit) =>
+    api.get<AtletaDto>(`/api/atletas/${id}`, opciones),
+
+  guardarColores: (colores: { atletaId: number; color: string | null }[], opciones?: RequestInit) =>
+    api.put<AtletaDto[]>('/api/atletas/colores', { colores }, opciones),
 }
 
 /** Los trabajos cuelgan del atleta dentro de la sesion. */

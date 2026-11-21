@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDeferredValue, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, ApiError } from '../api/cliente'
+import { api, mensajeApi } from '../api/cliente'
+import { clavesConsulta } from '../api/clavesConsulta'
+import { atletasApi } from '../api/entrenamientos'
 import { confirmar } from '../componentes/Confirmacion'
 import { Modal } from '../componentes/Modal'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
@@ -17,82 +20,81 @@ const ATLETA_VACIO: CrearAtletaRequest = {
 }
 
 export function AtletasPage() {
-  const [atletas, setAtletas] = useState<AtletaDto[]>([])
+  const consultas = useQueryClient()
   const [busqueda, setBusqueda] = useState('')
   const [incluirInactivos, setIncluirInactivos] = useState(false)
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [mostrarForm, setMostrarForm] = useState(false)
   /** Atleta que se esta editando en el modal, o null si no hay ninguno. */
   const [enEdicion, setEnEdicion] = useState<AtletaDto | null>(null)
-  const [ocupado, setOcupado] = useState(false)
 
-  const cargar = useCallback(async (texto: string, inactivos: boolean) => {
-    setCargando(true)
-    setError(null)
+  const busquedaDiferida = useDeferredValue(busqueda.trim())
 
-    try {
-      const parametros = new URLSearchParams()
-      if (texto) parametros.set('busqueda', texto)
-      if (inactivos) parametros.set('incluirInactivos', 'true')
+  const listado = useQuery({
+    queryKey: clavesConsulta.atletas(busquedaDiferida, incluirInactivos),
+    queryFn: ({ signal }) =>
+      atletasApi.listarConFiltros(
+        { busqueda: busquedaDiferida || undefined, incluirInactivos },
+        { signal },
+      ),
+  })
 
-      const consulta = parametros.toString()
-      setAtletas(await api.get<AtletaDto[]>(`/api/atletas${consulta ? `?${consulta}` : ''}`))
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudieron cargar los atletas.')
-    } finally {
-      setCargando(false)
-    }
-  }, [])
+  const atletas = listado.data ?? []
+  const error = listado.isError
+    ? mensajeApi(listado.error, 'No se pudieron cargar los atletas.')
+    : null
 
-  // Recarga al escribir, con una pequeña espera para no golpear la API en cada tecla.
-  useEffect(() => {
-    const temporizador = setTimeout(() => void cargar(busqueda, incluirInactivos), 300)
-    return () => clearTimeout(temporizador)
-  }, [busqueda, incluirInactivos, cargar])
-
-  async function cambiarEstado(atleta: AtletaDto) {
-    const bajando = atleta.activo
-
-    const mensaje = bajando
-      ? `¿Dar de baja a ${atleta.apellido}, ${atleta.nombre}? El historial se conserva.`
-      : `¿Reactivar a ${atleta.apellido}, ${atleta.nombre}?`
-
-    if (!(await confirmar(mensaje, { peligro: bajando, aceptar: bajando ? 'Dar de baja' : 'Reactivar' }))) {
-      return
-    }
-
-    setOcupado(true)
-    setError(null)
-
-    try {
-      if (bajando) {
-        // La baja logica la hace el DELETE; la reactivacion, el PATCH de estado.
+  const cambiarEstado = useMutation({
+    mutationFn: async (atleta: AtletaDto) => {
+      if (atleta.activo) {
         await api.delete(`/api/atletas/${atleta.id}`)
       } else {
         await api.patch<AtletaDto>(`/api/atletas/${atleta.id}/estado`, { activo: true })
       }
+    },
+    onSuccess: async () => {
+      await consultas.invalidateQueries({ queryKey: ['atletas'] })
+    },
+  })
 
-      await cargar(busqueda, incluirInactivos)
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo cambiar el estado del atleta.')
-    } finally {
-      setOcupado(false)
+  async function pedirCambioEstado(atleta: AtletaDto) {
+    const bajando = atleta.activo
+    const mensaje = bajando
+      ? `¿Dar de baja a ${atleta.apellido}, ${atleta.nombre}? El historial se conserva.`
+      : `¿Reactivar a ${atleta.apellido}, ${atleta.nombre}?`
+
+    if (
+      !(await confirmar(mensaje, {
+        peligro: bajando,
+        aceptar: bajando ? 'Dar de baja' : 'Reactivar',
+      }))
+    ) {
+      return
+    }
+
+    try {
+      await cambiarEstado.mutateAsync(atleta)
+    } catch {
+      // El error se muestra abajo via cambiarEstado.error
     }
   }
 
   function guardado(atleta: AtletaDto) {
     setMostrarForm(false)
     setEnEdicion(null)
-
-    // Con los datos que devolvio el backend la fila ya queda al dia, sin
-    // esperar otra vuelta a la API.
-    setAtletas((previos) =>
-      [...previos.filter((a) => a.id !== atleta.id), atleta].sort((a, b) =>
-        a.apellido.localeCompare(b.apellido),
-      ),
+    void consultas.invalidateQueries({ queryKey: ['atletas'] })
+    // Actualizacion optimista local mientras llega el refetch.
+    consultas.setQueryData<AtletaDto[]>(
+      clavesConsulta.atletas(busquedaDiferida, incluirInactivos),
+      (previos) =>
+        [...(previos ?? []).filter((a) => a.id !== atleta.id), atleta].sort((a, b) =>
+          a.apellido.localeCompare(b.apellido),
+        ),
     )
   }
+
+  const errorAccion = cambiarEstado.isError
+    ? mensajeApi(cambiarEstado.error, 'No se pudo cambiar el estado del atleta.')
+    : null
 
   return (
     <div className="pagina">
@@ -109,10 +111,7 @@ export function AtletasPage() {
       </div>
 
       {mostrarForm && (
-        <FormularioAtleta
-          onGuardado={guardado}
-          onCancelar={() => setMostrarForm(false)}
-        />
+        <FormularioAtleta onGuardado={guardado} onCancelar={() => setMostrarForm(false)} />
       )}
 
       <div className="filtros">
@@ -133,9 +132,9 @@ export function AtletasPage() {
         </label>
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {(error || errorAccion) && <p className="error">{error ?? errorAccion}</p>}
 
-      {cargando ? (
+      {listado.isPending ? (
         <p className="sutil">Cargando…</p>
       ) : atletas.length === 0 ? (
         <p className="sutil">No hay atletas{busqueda ? ' para esa búsqueda' : ' cargados'}.</p>
@@ -167,7 +166,9 @@ export function AtletasPage() {
                     ))}
                     {!atleta.activo && <span className="etiqueta baja">baja</span>}
                   </td>
-                  <td className="mono" data-etiqueta="DNI">{atleta.dni}</td>
+                  <td className="mono" data-etiqueta="DNI">
+                    {atleta.dni}
+                  </td>
                   <td data-etiqueta="Edad">{atleta.edad}</td>
                   <td data-etiqueta="Club">{atleta.club ?? '—'}</td>
                   <td data-etiqueta="Contacto">
@@ -182,7 +183,7 @@ export function AtletasPage() {
                       <button
                         type="button"
                         className="boton-fantasma"
-                        disabled={ocupado}
+                        disabled={cambiarEstado.isPending}
                         onClick={() => setEnEdicion(atleta)}
                       >
                         Editar
@@ -190,8 +191,8 @@ export function AtletasPage() {
                       <button
                         type="button"
                         className="boton-fantasma peligro"
-                        disabled={ocupado}
-                        onClick={() => void cambiarEstado(atleta)}
+                        disabled={cambiarEstado.isPending}
+                        onClick={() => void pedirCambioEstado(atleta)}
                       >
                         {atleta.activo ? 'Dar de baja' : 'Reactivar'}
                       </button>
@@ -249,29 +250,25 @@ function FormularioAtleta({ atleta, onGuardado, onCancelar }: PropsFormulario) {
       : ATLETA_VACIO,
   )
   const [error, setError] = useState<string | null>(null)
-  const [guardando, setGuardando] = useState(false)
+
+  const guardarMutacion = useMutation({
+    mutationFn: (pedido: CrearAtletaRequest) =>
+      atleta
+        ? api.put<AtletaDto>(`/api/atletas/${atleta.id}`, pedido)
+        : api.post<AtletaDto>('/api/atletas', pedido),
+    onSuccess: (guardado) => onGuardado(guardado),
+    onError: (e) => setError(mensajeApi(e, 'No se pudo guardar el atleta.')),
+  })
 
   function campo<C extends keyof CrearAtletaRequest>(nombre: C) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setDatos((previos) => ({ ...previos, [nombre]: e.target.value }))
   }
 
-  async function guardar(evento: React.FormEvent) {
+  function guardar(evento: React.FormEvent) {
     evento.preventDefault()
     setError(null)
-    setGuardando(true)
-
-    try {
-      const guardado = atleta
-        ? await api.put<AtletaDto>(`/api/atletas/${atleta.id}`, normalizar(datos))
-        : await api.post<AtletaDto>('/api/atletas', normalizar(datos))
-
-      onGuardado(guardado)
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo guardar el atleta.')
-    } finally {
-      setGuardando(false)
-    }
+    guardarMutacion.mutate(normalizar(datos))
   }
 
   return (
@@ -324,8 +321,8 @@ function FormularioAtleta({ atleta, onGuardado, onCancelar }: PropsFormulario) {
         <button type="button" className="boton-fantasma" onClick={onCancelar}>
           Cancelar
         </button>
-        <button type="submit" className="boton" disabled={guardando}>
-          {guardando ? 'Guardando…' : atleta ? 'Guardar cambios' : 'Guardar atleta'}
+        <button type="submit" className="boton" disabled={guardarMutacion.isPending}>
+          {guardarMutacion.isPending ? 'Guardando…' : atleta ? 'Guardar cambios' : 'Guardar atleta'}
         </button>
       </div>
     </form>

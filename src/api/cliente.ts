@@ -1,6 +1,6 @@
 /**
- * Cliente HTTP de la API. Adjunta el token JWT y traduce los errores
- * del backend a mensajes mostrables.
+ * Cliente HTTP de la API. Adjunta el token JWT, soporta AbortSignal
+ * (React Query cancela requests viejos) y traduce errores a mensajes UI.
  */
 
 import { tokenVencido } from '../util/token'
@@ -37,6 +37,28 @@ export class ApiError extends Error {
     this.name = 'ApiError'
     this.status = status
   }
+
+  get esConflicto(): boolean {
+    return this.status === 409
+  }
+
+  get esDemasiadasPeticiones(): boolean {
+    return this.status === 429
+  }
+}
+
+/** Mensaje listo para UI; prioriza 409/429 con texto claro. */
+export function mensajeApi(error: unknown, respaldo: string): string {
+  if (error instanceof ApiError) {
+    if (error.esDemasiadasPeticiones) {
+      return error.message || 'Demasiadas peticiones. Esperá un momento e intentá de nuevo.'
+    }
+    if (error.esConflicto) {
+      return error.message || 'Conflicto: ese recurso ya existe o cambió. Refrescá e intentá de nuevo.'
+    }
+    return error.message
+  }
+  return respaldo
 }
 
 async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
@@ -55,7 +77,19 @@ async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
     cabeceras.set('Authorization', `Bearer ${token}`)
   }
 
-  const respuesta = await fetch(`${BASE}${ruta}`, { ...opciones, headers: cabeceras })
+  let respuesta: Response
+  try {
+    respuesta = await fetch(`${BASE}${ruta}`, { ...opciones, headers: cabeceras })
+  } catch (error) {
+    // Abort de React Query / navegacion: no es un fallo de red para la UI.
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error
+    }
+    if (opciones.signal?.aborted) {
+      throw error
+    }
+    throw new ApiError('No se pudo conectar con el servidor.', 0)
+  }
 
   // Un 401 en una ruta publica (el login) son credenciales invalidas: hay que
   // seguir de largo para mostrar el mensaje que devuelve el backend.
@@ -64,13 +98,12 @@ async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   }
 
   if (!respuesta.ok) {
-    let mensaje = `Error ${respuesta.status}`
+    let mensaje = mensajePorEstado(respuesta.status)
     try {
       const cuerpo = await respuesta.json()
       if (cuerpo?.mensaje) {
         mensaje = cuerpo.mensaje
       } else if (cuerpo?.errors) {
-        // Errores de validacion del modelo: { Campo: ["mensaje", ...] }
         const detalles = Object.values(cuerpo.errors as Record<string, string[]>)
           .flat()
           .filter((texto): texto is string => Boolean(texto))
@@ -93,17 +126,28 @@ async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   return (await respuesta.json()) as T
 }
 
+function mensajePorEstado(status: number): string {
+  if (status === 409) {
+    return 'Conflicto: ese recurso ya existe o cambió. Refrescá e intentá de nuevo.'
+  }
+  if (status === 429) {
+    return 'Demasiadas peticiones. Esperá un momento e intentá de nuevo.'
+  }
+  return `Error ${status}`
+}
+
 export const api = {
-  get: <T>(ruta: string) => pedir<T>(ruta),
+  get: <T>(ruta: string, opciones?: RequestInit) => pedir<T>(ruta, opciones),
 
-  post: <T>(ruta: string, cuerpo: unknown) =>
-    pedir<T>(ruta, { method: 'POST', body: JSON.stringify(cuerpo) }),
+  post: <T>(ruta: string, cuerpo: unknown, opciones?: RequestInit) =>
+    pedir<T>(ruta, { ...opciones, method: 'POST', body: JSON.stringify(cuerpo) }),
 
-  put: <T>(ruta: string, cuerpo: unknown) =>
-    pedir<T>(ruta, { method: 'PUT', body: JSON.stringify(cuerpo) }),
+  put: <T>(ruta: string, cuerpo: unknown, opciones?: RequestInit) =>
+    pedir<T>(ruta, { ...opciones, method: 'PUT', body: JSON.stringify(cuerpo) }),
 
-  patch: <T>(ruta: string, cuerpo: unknown) =>
-    pedir<T>(ruta, { method: 'PATCH', body: JSON.stringify(cuerpo) }),
+  patch: <T>(ruta: string, cuerpo: unknown, opciones?: RequestInit) =>
+    pedir<T>(ruta, { ...opciones, method: 'PATCH', body: JSON.stringify(cuerpo) }),
 
-  delete: <T = void>(ruta: string) => pedir<T>(ruta, { method: 'DELETE' }),
+  delete: <T = void>(ruta: string, opciones?: RequestInit) =>
+    pedir<T>(ruta, { ...opciones, method: 'DELETE' }),
 }

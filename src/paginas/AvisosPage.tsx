@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
-import { api, ApiError } from '../api/cliente'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { api, mensajeApi } from '../api/cliente'
+import { clavesConsulta } from '../api/clavesConsulta'
 import { useAuth } from '../auth/contextoAuth'
 import { confirmar } from '../componentes/Confirmacion'
 import { esStaff, type AvisoDto } from '../tipos/api'
@@ -14,33 +16,25 @@ function cuando(iso: string): string {
 
 /** Avisos del cuerpo técnico. Staff administra; el atleta solo lee. */
 export function AvisosPage() {
+  const consultas = useQueryClient()
   const { sesion } = useAuth()
   const staff = esStaff(sesion?.usuario.rol)
-  const [avisos, setAvisos] = useState<AvisoDto[]>([])
   const [titulo, setTitulo] = useState('')
   const [texto, setTexto] = useState('')
   const [link, setLink] = useState('')
   const [activo, setActivo] = useState(true)
   const [editando, setEditando] = useState<number | null>(null)
-  const [cargando, setCargando] = useState(true)
-  const [ocupado, setOcupado] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [errorAccion, setErrorAccion] = useState<string | null>(null)
 
-  const cargar = useCallback(async () => {
-    setCargando(true)
-    setError(null)
-    try {
-      setAvisos(await api.get<AvisoDto[]>('/api/avisos'))
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudieron cargar los avisos.')
-    } finally {
-      setCargando(false)
-    }
-  }, [])
+  const listado = useQuery({
+    queryKey: clavesConsulta.avisos,
+    queryFn: ({ signal }) => api.get<AvisoDto[]>('/api/avisos', { signal }),
+  })
 
-  useEffect(() => {
-    void cargar()
-  }, [cargar])
+  const avisos = listado.data ?? []
+  const errorLista = listado.isError
+    ? mensajeApi(listado.error, 'No se pudieron cargar los avisos.')
+    : null
 
   function limpiarFormulario() {
     setTitulo('')
@@ -50,26 +44,12 @@ export function AvisosPage() {
     setEditando(null)
   }
 
-  async function guardar(evento: React.FormEvent) {
-    evento.preventDefault()
-    if (!staff) {
-      return
-    }
-
-    const tituloLimpio = titulo.trim()
-    const textoLimpio = texto.trim()
-    const linkLimpio = link.trim()
-    if (!tituloLimpio || !textoLimpio) {
-      return
-    }
-
-    setOcupado(true)
-    setError(null)
-    try {
+  const guardar = useMutation({
+    mutationFn: async () => {
       const cuerpo = {
-        titulo: tituloLimpio,
-        texto: textoLimpio,
-        link: linkLimpio || null,
+        titulo: titulo.trim(),
+        texto: texto.trim(),
+        link: link.trim() || null,
         activo,
       }
       if (editando == null) {
@@ -77,29 +57,42 @@ export function AvisosPage() {
       } else {
         await api.put(`/api/avisos/${editando}`, cuerpo)
       }
+    },
+    onSuccess: async () => {
       limpiarFormulario()
-      await cargar()
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo guardar el aviso.')
-    } finally {
-      setOcupado(false)
-    }
-  }
+      setErrorAccion(null)
+      await consultas.invalidateQueries({ queryKey: clavesConsulta.avisos })
+    },
+    onError: (e) => setErrorAccion(mensajeApi(e, 'No se pudo guardar el aviso.')),
+  })
 
-  async function borrar(id: number) {
-    if (!(await confirmar('¿Borrar este aviso?', { peligro: true, aceptar: 'Borrar' }))) {
-      return
-    }
-    setError(null)
-    try {
-      await api.delete(`/api/avisos/${id}`)
+  const borrar = useMutation({
+    mutationFn: (id: number) => api.delete(`/api/avisos/${id}`),
+    onSuccess: async (_data, id) => {
       if (editando === id) {
         limpiarFormulario()
       }
-      await cargar()
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo borrar el aviso.')
+      setErrorAccion(null)
+      await consultas.invalidateQueries({ queryKey: clavesConsulta.avisos })
+    },
+    onError: (e) => setErrorAccion(mensajeApi(e, 'No se pudo borrar el aviso.')),
+  })
+
+  function pedirGuardar(evento: React.FormEvent) {
+    evento.preventDefault()
+    if (!staff || !titulo.trim() || !texto.trim()) {
+      return
     }
+    setErrorAccion(null)
+    guardar.mutate()
+  }
+
+  async function pedirBorrar(id: number) {
+    if (!(await confirmar('¿Borrar este aviso?', { peligro: true, aceptar: 'Borrar' }))) {
+      return
+    }
+    setErrorAccion(null)
+    borrar.mutate(id)
   }
 
   function empezarEdicion(aviso: AvisoDto) {
@@ -111,6 +104,8 @@ export function AvisosPage() {
   }
 
   const ultimoActivo = avisos.find((aviso) => aviso.activo) ?? null
+  const error = errorLista ?? errorAccion
+  const ocupado = guardar.isPending || borrar.isPending
 
   return (
     <div className="pagina">
@@ -123,7 +118,7 @@ export function AvisosPage() {
           : 'Novedades del cuerpo técnico.'}
       </p>
 
-      {staff && !cargando && !error && (
+      {staff && !listado.isPending && !errorLista && (
         <div className={`tarjeta aviso-estado ${ultimoActivo ? 'aviso-estado-activo' : ''}`}>
           {ultimoActivo ? (
             <p>
@@ -138,7 +133,7 @@ export function AvisosPage() {
       )}
 
       {staff && (
-        <form className="tarjeta formulario" onSubmit={(evento) => void guardar(evento)}>
+        <form className="tarjeta formulario" onSubmit={pedirGuardar}>
           <label>
             Título
             <input
@@ -192,9 +187,9 @@ export function AvisosPage() {
       )}
 
       {error && <p className="error">{error}</p>}
-      {cargando ? (
+      {listado.isPending ? (
         <p className="sutil">Cargando…</p>
-      ) : error ? null : avisos.length === 0 ? (
+      ) : errorLista ? null : avisos.length === 0 ? (
         <p className="sutil">Todavía no hay avisos.</p>
       ) : (
         avisos.map((aviso) => (
@@ -228,7 +223,11 @@ export function AvisosPage() {
                 <button type="button" className="boton-fantasma" onClick={() => empezarEdicion(aviso)}>
                   Editar
                 </button>
-                <button type="button" className="boton-fantasma peligro" onClick={() => void borrar(aviso.id)}>
+                <button
+                  type="button"
+                  className="boton-fantasma peligro"
+                  onClick={() => void pedirBorrar(aviso.id)}
+                >
                   Borrar
                 </button>
               </div>
