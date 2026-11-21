@@ -1,3 +1,4 @@
+import { Badge, Block, BlockTitle, Button, Card, List, ListInput, Preloader } from 'konsta/react'
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { anotacionesApi, contextoAnotacion, fechaNota } from '../api/anotaciones'
@@ -12,6 +13,7 @@ import {
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { TextoConEnlaces } from '../componentes/TextoConEnlaces'
 import type { AnotacionDto, AtletaDto, GuardarAnotacionRequest } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 
 /**
  * Todas las anotaciones del entrenador, de la mas nueva a la mas vieja.
@@ -159,19 +161,17 @@ export function AnotacionesPage() {
   }
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <h2>Anotaciones</h2>
-        <button type="button" className="boton" onClick={mostrarForm ? cerrarFormulario : abrirNuevo}>
+    <MarcoPagina
+      titulo="Anotaciones"
+      right={
+        <Button inline small rounded onClick={mostrarForm ? cerrarFormulario : abrirNuevo}>
           {mostrarForm ? 'Cancelar' : 'Nueva anotación'}
-        </button>
-      </div>
-
+        </Button>
+      }
+    >
       {mostrarForm && (
-        <div className="tarjeta">
-          <h4 className="titulo-seccion">
-            {editando ? 'Editar anotación' : 'Nueva anotación'}
-          </h4>
+        <>
+          <BlockTitle>{editando ? 'Editar anotación' : 'Nueva anotación'}</BlockTitle>
           <FormularioAnotacion
             datos={datos}
             onCambiar={(cambios) => setDatos((previos) => ({ ...previos, ...cambios }))}
@@ -182,96 +182,115 @@ export function AnotacionesPage() {
             atletas={atletas}
             enfocar={!editando}
           />
-        </div>
+        </>
       )}
 
-      <div className="filtros">
-        <input
-          className="busqueda"
-          placeholder="Buscar en el texto o el título"
+      <List strong inset>
+        <ListInput
+          label="Buscar"
+          type="text"
+          placeholder="En el texto o el título"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
+        <ListInput
+          label="Atleta"
+          type="select"
+          dropdown
+          value={atletaFiltro}
+          onChange={(e) => cambiarFiltroAtleta(e.target.value)}
+        >
+          <option value="">Todos</option>
+          {atletas.map((atleta) => (
+            <option value={String(atleta.id)} key={atleta.id}>
+              {atleta.apellido}, {atleta.nombre}
+            </option>
+          ))}
+        </ListInput>
+      </List>
 
-        <label>
-          Atleta
-          <select value={atletaFiltro} onChange={(e) => cambiarFiltroAtleta(e.target.value)}>
-            <option value="">Todos</option>
-            {atletas.map((atleta) => (
-              <option value={String(atleta.id)} key={atleta.id}>
-                {atleta.apellido}, {atleta.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <Block>
+          <p className="text-red-500">{error}</p>
+        </Block>
+      )}
 
       {cargando ? (
-        <p className="sutil">Cargando…</p>
+        <Block className="text-center">
+          <Preloader />
+        </Block>
       ) : notas.length === 0 ? (
-        <p className="sutil">
-          No hay anotaciones{busqueda || atletaFiltro ? ' con esos filtros' : ' todavía'}.
-        </p>
+        <Block>
+          <p className="opacity-60">
+            No hay anotaciones{busqueda || atletaFiltro ? ' con esos filtros' : ' todavía'}.
+          </p>
+        </Block>
       ) : (
-        <ul className="notas-lista ancho">
-          {notas.map((nota) => (
-            <li className="nota" key={nota.id}>
-              <div className="nota-cabecera">
-                {nota.titulo && (
-                  <strong>
-                    <TextoConEnlaces texto={nota.titulo} />
-                  </strong>
-                )}
-                <span className="sutil">{fechaNota(nota)}</span>
-                <div className="nota-acciones">
-                  <button
-                    type="button"
-                    className="boton-fantasma"
-                    disabled={ocupado}
-                    onClick={() => editar(nota)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="boton-fantasma peligro"
-                    disabled={ocupado}
-                    onClick={() => void eliminar(nota)}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
+        notas.map((nota) => {
+          const nombreAtleta = textoAtleta(nota.atletaApellido ?? '', nota.atletaNombre ?? '')
+          const contexto = contextoAnotacion(nota).filter((parte) => parte !== nombreAtleta)
 
-              {(nota.atletaApellido || contextoAnotacion(nota).length > 0) && (
-                <p className="contexto">
+          return (
+            <Card
+              key={nota.id}
+              header={
+                <div className="flex items-baseline justify-between gap-2">
+                  <strong className="min-w-0 break-words">
+                    {nota.titulo ? <TextoConEnlaces texto={nota.titulo} /> : null}
+                  </strong>
+                  <span className="shrink-0 text-[13px] opacity-60">{fechaNota(nota)}</span>
+                </div>
+              }
+            >
+              {(nota.atletaApellido || contexto.length > 0) && (
+                <p className="mb-2 flex flex-wrap gap-1">
                   {nota.atletaApellido && (
-                    <NombreAtleta
-                      className="etiqueta-contexto"
-                      nombre={textoAtleta(nota.atletaApellido, nota.atletaNombre ?? '')}
-                      color={nota.atletaColor}
-                    />
+                    <Badge colors={{ bg: 'bg-primary/15', text: 'text-primary' }}>
+                      <NombreAtleta nombre={nombreAtleta} color={nota.atletaColor} />
+                    </Badge>
                   )}
-                  {contextoAnotacion(nota)
-                    .filter((parte) => parte !== textoAtleta(nota.atletaApellido ?? '', nota.atletaNombre ?? ''))
-                    .map((parte) => (
-                      <span className="etiqueta-contexto" key={parte}>
-                        {parte}
-                      </span>
-                    ))}
+                  {contexto.map((parte) => (
+                    <Badge key={parte} colors={{ bg: 'bg-black/10 dark:bg-white/10', text: 'text-inherit' }}>
+                      {parte}
+                    </Badge>
+                  ))}
                 </p>
               )}
 
-              <p className="nota-texto">
+              <p className="whitespace-pre-wrap break-words">
                 <TextoConEnlaces texto={nota.texto} />
               </p>
-            </li>
-          ))}
-        </ul>
+
+              <div className="mt-3 flex gap-2">
+                <Button
+                  type="button"
+                  inline
+                  small
+                  rounded
+                  tonal
+                  disabled={ocupado}
+                  onClick={() => editar(nota)}
+                >
+                  Editar
+                </Button>
+                <Button
+                  type="button"
+                  inline
+                  small
+                  rounded
+                  outline
+                  colors={{ outlineBorderIos: 'border-red-500', textIos: 'text-red-500' }}
+                  disabled={ocupado}
+                  onClick={() => void eliminar(nota)}
+                >
+                  Eliminar
+                </Button>
+              </div>
+            </Card>
+          )
+        })
       )}
-    </div>
+    </MarcoPagina>
   )
 }
 

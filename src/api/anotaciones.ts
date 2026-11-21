@@ -20,16 +20,17 @@ function aQuery(filtros: FiltrosAnotacion): string {
 }
 
 export const anotacionesApi = {
-  listar: (filtros: FiltrosAnotacion = {}) =>
-    api.get<AnotacionDto[]>(`/api/anotaciones${aQuery(filtros)}`),
+  listar: (filtros: FiltrosAnotacion = {}, opciones?: RequestInit) =>
+    api.get<AnotacionDto[]>(`/api/anotaciones${aQuery(filtros)}`, opciones),
 
-  crear: (datos: GuardarAnotacionRequest) =>
-    api.post<AnotacionDto>('/api/anotaciones', datos),
+  crear: (datos: GuardarAnotacionRequest, opciones?: RequestInit) =>
+    api.post<AnotacionDto>('/api/anotaciones', datos, opciones),
 
-  actualizar: (id: number, datos: GuardarAnotacionRequest) =>
-    api.put<AnotacionDto>(`/api/anotaciones/${id}`, datos),
+  actualizar: (id: number, datos: GuardarAnotacionRequest, opciones?: RequestInit) =>
+    api.put<AnotacionDto>(`/api/anotaciones/${id}`, datos, opciones),
 
-  eliminar: (id: number) => api.delete(`/api/anotaciones/${id}`),
+  eliminar: (id: number, opciones?: RequestInit) =>
+    api.delete(`/api/anotaciones/${id}`, opciones),
 }
 
 /** "Pérez, Juan" o null si la nota no esta atada a un atleta. */

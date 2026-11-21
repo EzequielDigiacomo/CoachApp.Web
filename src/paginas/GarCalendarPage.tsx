@@ -1,7 +1,9 @@
+import { Badge, Block, Button, Card, Checkbox, Chip, List, ListItem, Preloader, Segmented, SegmentedButton } from 'konsta/react'
 import { useEffect, useState } from 'react'
 import { ApiError } from '../api/cliente'
 import { garminApi } from '../api/garmin'
 import type { AmigoCalendarioGarminDto, CalendarioGarminDto } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 import { fechaCorta, hoyISO, inicioDeMes, lunesDe, sumarDias, sumarMeses, tituloMes } from '../util/fechas'
 
 type Vista = 'semana' | 'mes'
@@ -96,97 +98,115 @@ export function GarCalendarPage() {
   const amigos = calendario?.dias[0]?.amigos ?? []
   const visibles = amigos.filter((amigo) => !ocultos.has(claveDe(amigo))).length
 
+  const COLOR_CARGO = { bg: 'bg-green-500', text: 'text-white' }
+  const COLOR_VACIO = { bg: 'bg-amber-500', text: 'text-white' }
+  const colorChip = (cargo: boolean) => {
+    const bg = cargo ? 'bg-green-500' : 'bg-amber-500'
+    return { fillBgIos: bg, fillBgMaterial: bg, fillTextIos: 'text-white', fillTextMaterial: 'text-white' }
+  }
+
+  function anterior() {
+    setAncla((dia) => (vista === 'semana' ? sumarDias(dia, -7) : sumarMeses(dia, -1)))
+  }
+
+  function actual() {
+    setAncla(vista === 'semana' ? lunesDe(hoyISO()) : inicioDeMes(hoyISO()))
+  }
+
+  function siguiente() {
+    setAncla((dia) => (vista === 'semana' ? sumarDias(dia, 7) : sumarMeses(dia, 1)))
+  }
+
   return (
-    <div className={vista === 'mes' ? 'pagina calendario-mes' : 'pagina'}>
-      <div className="encabezado">
-        <h2>GarCalendar</h2>
-        <div className="semana-nav">
-          <button
-            type="button"
-            className={vista === 'semana' ? 'boton' : 'boton-fantasma'}
-            onClick={() => elegirVista('semana')}
-          >
+    <MarcoPagina
+      titulo="GarCalendar"
+      subtitulo={`${titulo}. Verde si el amigo cargó una actividad, amarillo si no.${
+        amigos.length > 0 ? ` Mostrando ${visibles} de ${amigos.length}.` : ''
+      }`}
+    >
+      <Block className="space-y-3 !mt-3">
+        <Segmented strong rounded>
+          <SegmentedButton active={vista === 'semana'} onClick={() => elegirVista('semana')}>
             Semana
-          </button>
-          <button
-            type="button"
-            className={vista === 'mes' ? 'boton' : 'boton-fantasma'}
-            onClick={() => elegirVista('mes')}
-          >
+          </SegmentedButton>
+          <SegmentedButton active={vista === 'mes'} onClick={() => elegirVista('mes')}>
             Mes
-          </button>
-          {vista === 'semana' ? (
-            <>
-              <button type="button" className="boton-fantasma" onClick={() => setAncla((dia) => sumarDias(dia, -7))}>
-                Anterior
-              </button>
-              <button type="button" className="boton-fantasma" onClick={() => setAncla(lunesDe(hoyISO()))}>
-                Esta
-              </button>
-              <button type="button" className="boton-fantasma" onClick={() => setAncla((dia) => sumarDias(dia, 7))}>
-                Siguiente
-              </button>
-            </>
-          ) : (
-            <>
-              <button type="button" className="boton-fantasma" onClick={() => setAncla((dia) => sumarMeses(dia, -1))}>
-                Anterior
-              </button>
-              <button type="button" className="boton-fantasma" onClick={() => setAncla(inicioDeMes(hoyISO()))}>
-                Este
-              </button>
-              <button type="button" className="boton-fantasma" onClick={() => setAncla((dia) => sumarMeses(dia, 1))}>
-                Siguiente
-              </button>
-            </>
-          )}
+          </SegmentedButton>
+        </Segmented>
+
+        <div className="flex gap-2">
+          <Button small rounded outline className="flex-1" onClick={anterior}>
+            Anterior
+          </Button>
+          <Button small rounded outline className="flex-1" onClick={actual}>
+            {vista === 'semana' ? 'Esta' : 'Este'}
+          </Button>
+          <Button small rounded outline className="flex-1" onClick={siguiente}>
+            Siguiente
+          </Button>
         </div>
-      </div>
 
-      <p className="sutil">
-        {titulo}. Verde si el amigo cargó una actividad, amarillo si no.
-        {amigos.length > 0 && ` Mostrando ${visibles} de ${amigos.length}.`}
-      </p>
-
-      {amigos.length > 0 && (
-        <div className="tarjeta">
-          <button type="button" className="boton-fantasma" onClick={() => setElegir((abierto) => !abierto)}>
+        {amigos.length > 0 && (
+          <Button small rounded tonal onClick={() => setElegir((abierto) => !abierto)}>
             {elegir ? 'Cerrar filtro' : 'Elegir amigos'}
-          </button>
-          {elegir && (
-            <div className="elegir-amigos">
-              <button type="button" className="enlace-texto" onClick={() => guardarOcultos(new Set())}>
-                Ver todos
-              </button>
-              {amigos.map((amigo) => {
-                const clave = claveDe(amigo)
-                return (
-                  <label key={clave} className="casilla">
-                    <input
-                      type="checkbox"
-                      checked={!ocultos.has(clave)}
-                      onChange={() => alternar(clave)}
-                    />
-                    {amigo.nombre}
-                  </label>
-                )
-              })}
-            </div>
-          )}
-        </div>
+          </Button>
+        )}
+      </Block>
+
+      {amigos.length > 0 && elegir && (
+        <List strong inset className="!mt-0">
+          <ListItem
+            link
+            title="Ver todos"
+            onClick={() => guardarOcultos(new Set())}
+          />
+          {amigos.map((amigo) => {
+            const clave = claveDe(amigo)
+            return (
+              <ListItem
+                key={clave}
+                label
+                title={amigo.nombre}
+                media={
+                  <Checkbox
+                    component="div"
+                    checked={!ocultos.has(clave)}
+                    onChange={() => alternar(clave)}
+                  />
+                }
+              />
+            )
+          })}
+        </List>
       )}
 
-      {error && <p className="error">{error}</p>}
-      {cargando && <p className="sutil">Leyendo {vista === 'mes' ? 'el mes' : 'la semana'} en Garmin…</p>}
+      {error && (
+        <Block>
+          <p className="text-[13px] text-red-500">{error}</p>
+        </Block>
+      )}
+
+      {cargando && (
+        <Block className="flex items-center gap-3">
+          <Preloader />
+          <span className="text-[13px] opacity-60">
+            Leyendo {vista === 'mes' ? 'el mes' : 'la semana'} en Garmin…
+          </span>
+        </Block>
+      )}
 
       {calendario && !cargando && (
-        <div className={vista === 'mes' ? 'semana-garmin mes' : 'semana-garmin'}>
+        <div className={`px-4 pb-4 ${vista === 'mes' ? 'semana-garmin mes' : 'semana-garmin'}`}>
           {calendario.dias.map((dia) => {
             const delDia = dia.amigos.filter((amigo) => !ocultos.has(claveDe(amigo)))
             const cargaron = delDia.filter((amigo) => amigo.cargo).length
 
             return (
-              <article key={dia.fecha} className="tarjeta dia-garmin">
+              <Card
+                key={dia.fecha}
+                className="dia-garmin !m-0"
+                contentWrapPadding={vista === 'mes' ? 'p-1.5' : 'p-3'}
+              >
                 <h3>
                   <span className="dia-semana">{fechaCorta(dia.fecha)}</span>
                   <span className="dia-mes">{Number(dia.fecha.slice(8))}</span>
@@ -198,19 +218,29 @@ export function GarCalendarPage() {
                 {delDia.length === 0 ? (
                   <p className="sutil">Nadie elegido.</p>
                 ) : (
-                  <div className="mini-grilla">
-                    {delDia.map((amigo) => (
-                      <span key={claveDe(amigo)} className={`amigo-garmin ${amigo.cargo ? 'cargo' : 'vacio'}`}>
-                        {amigo.nombre}
-                      </span>
-                    ))}
+                  <div className="mini-grilla mt-2">
+                    {delDia.map((amigo) =>
+                      vista === 'mes' ? (
+                        <Badge
+                          key={claveDe(amigo)}
+                          colors={amigo.cargo ? COLOR_CARGO : COLOR_VACIO}
+                          className="max-w-full truncate"
+                        >
+                          {amigo.nombre}
+                        </Badge>
+                      ) : (
+                        <Chip key={claveDe(amigo)} colors={colorChip(amigo.cargo)}>
+                          {amigo.nombre}
+                        </Chip>
+                      ),
+                    )}
                   </div>
                 )}
-              </article>
+              </Card>
             )
           })}
         </div>
       )}
-    </div>
+    </MarcoPagina>
   )
 }

@@ -1,9 +1,11 @@
+import { Block, Button, Card, List, ListInput, Preloader } from 'konsta/react'
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
 import { confirmar } from '../componentes/Confirmacion'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import { esStaff, type NotaAtletaDto } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 
 const MAXIMO = 4000
 
@@ -81,84 +83,109 @@ export function AnotacionAtletaPage() {
   }
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <h2>{staff ? 'Anotación atleta' : 'Anotación'}</h2>
-      </div>
-      {staff ? (
-        <p className="sutil">Lo que escribe cada atleta, de lo más nuevo a lo más viejo.</p>
-      ) : (
-        <form className="tarjeta formulario" onSubmit={(evento) => void guardar(evento)}>
-          <label>
-            Escribí tu anotación
-            <textarea
+    <MarcoPagina
+      titulo={staff ? 'Anotación atleta' : 'Anotación'}
+      subtitulo={staff ? 'Lo que escribe cada atleta, de lo más nuevo a lo más viejo.' : undefined}
+    >
+      {!staff && (
+        <form onSubmit={(evento) => void guardar(evento)}>
+          <List strong inset>
+            <ListInput
+              label="Escribí tu anotación"
+              type="textarea"
               value={texto}
               maxLength={MAXIMO}
-              rows={5}
+              inputClassName="min-h-28"
               onChange={(e) => setTexto(e.target.value)}
               required
             />
-          </label>
-          <div className="acciones-fila">
-            <button type="submit" className="boton" disabled={ocupado || texto.trim().length === 0}>
-              {editando == null ? 'Guardar' : 'Actualizar'}
-            </button>
-            {editando != null && (
-              <button
-                type="button"
-                className="boton-fantasma"
-                onClick={() => {
-                  setEditando(null)
-                  setTexto('')
-                }}
-              >
-                Cancelar
-              </button>
-            )}
-            <span className="sutil">
+          </List>
+          <Block className="!mt-0 space-y-2">
+            <p className="text-[13px] opacity-60 text-right">
               {texto.length}/{MAXIMO}
-            </span>
-          </div>
+            </p>
+            <div className="flex gap-2">
+              <Button type="submit" rounded disabled={ocupado || texto.trim().length === 0}>
+                {editando == null ? 'Guardar' : 'Actualizar'}
+              </Button>
+              {editando != null && (
+                <Button
+                  type="button"
+                  rounded
+                  clear
+                  onClick={() => {
+                    setEditando(null)
+                    setTexto('')
+                  }}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </Block>
         </form>
       )}
-      {error && <p className="error">{error}</p>}
+
+      {error && (
+        <Block>
+          <p className="text-red-500">{error}</p>
+        </Block>
+      )}
+
       {cargando ? (
-        <p className="sutil">Cargando…</p>
+        <Block className="text-center">
+          <Preloader />
+        </Block>
       ) : error ? null : notas.length === 0 ? (
-        <p className="sutil">Todavía no hay anotaciones.</p>
+        <Block>
+          <p className="opacity-60">Todavía no hay anotaciones.</p>
+        </Block>
       ) : (
         notas.map((nota) => (
-          <article key={nota.id} className="tarjeta">
-            {staff && (
-              <p>
+          <Card
+            key={nota.id}
+            header={
+              staff ? (
                 <NombreAtleta
                   nombre={textoAtleta(nota.apellido, nota.nombre)}
                   color={nota.color}
                 />
-              </p>
-            )}
-            <p style={{ whiteSpace: 'pre-wrap' }}>{nota.texto}</p>
-            <p className="sutil">{cuando(nota.fechaCreacion)}</p>
+              ) : undefined
+            }
+            footer={cuando(nota.fechaCreacion)}
+          >
+            <p className="whitespace-pre-wrap break-words">{nota.texto}</p>
             {!staff && (
-              <div className="acciones-fila">
-                <button
+              <div className="mt-3 flex gap-2">
+                <Button
                   type="button"
-                  className="boton-fantasma"
+                  inline
+                  small
+                  rounded
+                  tonal
                   onClick={() => {
                     setEditando(nota.id)
                     setTexto(nota.texto)
                   }}
                 >
                   Editar
-                </button>
-                <button type="button" className="boton-fantasma peligro" onClick={() => void borrar(nota.id)}>
+                </Button>
+                <Button
+                  type="button"
+                  inline
+                  small
+                  rounded
+                  outline
+                  colors={{ outlineBorderIos: 'border-red-500', textIos: 'text-red-500' }}
+                  onClick={() => void borrar(nota.id)}
+                >
                   Borrar
-                </button>
+                </Button>
               </div>
             )}
-          </article>
+          </Card>
         ))
       )}
-    </div>
+    </MarcoPagina>
   )
 }

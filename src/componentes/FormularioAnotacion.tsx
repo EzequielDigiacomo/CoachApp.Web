@@ -1,3 +1,4 @@
+import { Block, Button, List, ListInput } from 'konsta/react'
 import type { AtletaDto } from '../tipos/api'
 
 /** Lo que se escribe en el formulario, tal cual sale de los inputs. */
@@ -37,60 +38,60 @@ export function FormularioAnotacion({
 }: Props) {
   return (
     <form
-      className="nota-form"
       onSubmit={(evento) => {
         evento.preventDefault()
         onGuardar()
       }}
     >
-      <div className="grilla">
-        <label>
-          Título
-          <input
-            value={datos.titulo}
-            onChange={(e) => onCambiar({ titulo: e.target.value })}
-            placeholder="Opcional"
-            maxLength={200}
-          />
-        </label>
+      <List strong inset>
+        <ListInput
+          label="Título"
+          type="text"
+          value={datos.titulo}
+          onChange={(e) => onCambiar({ titulo: e.target.value })}
+          placeholder="Opcional"
+          maxLength={200}
+        />
 
         {atletas && (
-          <label>
-            Atleta
-            <select value={datos.atletaId} onChange={(e) => onCambiar({ atletaId: e.target.value })}>
-              <option value="">General (sin atleta)</option>
-              {atletas.map((atleta) => (
-                <option value={String(atleta.id)} key={atleta.id}>
-                  {atleta.apellido}, {atleta.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ListInput
+            label="Atleta"
+            type="select"
+            dropdown
+            value={datos.atletaId}
+            onChange={(e) => onCambiar({ atletaId: e.target.value })}
+          >
+            <option value="">General (sin atleta)</option>
+            {atletas.map((atleta) => (
+              <option value={String(atleta.id)} key={atleta.id}>
+                {atleta.apellido}, {atleta.nombre}
+              </option>
+            ))}
+          </ListInput>
         )}
-      </div>
 
-      <label>
-        Anotación
-        <textarea
+        <ListInput
+          label="Anotación"
+          type="textarea"
           value={datos.texto}
           onChange={(e) => onCambiar({ texto: e.target.value })}
           placeholder="Qué querés dejar escrito"
-          rows={4}
           maxLength={4000}
           autoFocus={enfocar}
+          inputClassName="min-h-24"
         />
-      </label>
+      </List>
 
-      <div className="form-acciones">
+      <Block className="flex gap-2 justify-end">
         {onCancelar && (
-          <button type="button" className="boton-fantasma" onClick={onCancelar}>
+          <Button type="button" inline rounded clear onClick={onCancelar}>
             Cancelar
-          </button>
+          </Button>
         )}
-        <button type="submit" className="boton" disabled={guardando}>
+        <Button type="submit" inline rounded disabled={guardando}>
           {guardando ? 'Guardando…' : etiquetaGuardar}
-        </button>
-      </div>
+        </Button>
+      </Block>
     </form>
   )
 }

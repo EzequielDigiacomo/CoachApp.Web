@@ -1,4 +1,5 @@
 import { useTema } from '../hooks/useTema'
+import { NavbarLink } from '../ui/NavbarLink'
 
 const propsIcono = {
   viewBox: '0 0 24 24',
@@ -29,19 +30,18 @@ function IconoLuna() {
   )
 }
 
-/** Alterna claro/oscuro. Se puede usar en la barra o en el login. */
+/** Alterna claro/oscuro. Pensado para la Navbar de Konsta. */
 export function BotonTema({ className }: { className?: string }) {
   const { esOscuro, alternar } = useTema()
 
   return (
-    <button
-      type="button"
-      className={['boton-fantasma boton-tema', className].filter(Boolean).join(' ')}
+    <NavbarLink
+      className={className}
       onClick={alternar}
       aria-label={esOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
       title={esOscuro ? 'Modo claro' : 'Modo oscuro'}
     >
       {esOscuro ? <IconoSol /> : <IconoLuna />}
-    </button>
+    </NavbarLink>
   )
 }

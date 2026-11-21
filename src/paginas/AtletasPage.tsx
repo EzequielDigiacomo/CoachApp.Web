@@ -1,13 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDeferredValue, useState } from 'react'
-import { Link } from 'react-router-dom'
+import {
+  Badge,
+  Block,
+  BlockTitle,
+  Button,
+  Link,
+  List,
+  ListInput,
+  ListItem,
+  Navbar,
+  Page,
+  Popup,
+  Preloader,
+  Toggle,
+} from 'konsta/react'
+import { useNavigate } from 'react-router-dom'
 import { api, mensajeApi } from '../api/cliente'
 import { clavesConsulta } from '../api/clavesConsulta'
 import { atletasApi } from '../api/entrenamientos'
 import { confirmar } from '../componentes/Confirmacion'
-import { Modal } from '../componentes/Modal'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import type { AtletaDto, CrearAtletaRequest } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 
 const ATLETA_VACIO: CrearAtletaRequest = {
   nombre: '',
@@ -21,6 +36,7 @@ const ATLETA_VACIO: CrearAtletaRequest = {
 
 export function AtletasPage() {
   const consultas = useQueryClient()
+  const navegar = useNavigate()
   const [busqueda, setBusqueda] = useState('')
   const [incluirInactivos, setIncluirInactivos] = useState(false)
   const [mostrarForm, setMostrarForm] = useState(false)
@@ -97,133 +113,167 @@ export function AtletasPage() {
     : null
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <h2>Atletas</h2>
-        <div className="acciones-fila">
-          <Link className="boton-fantasma enlace" to="/colores">
+    <MarcoPagina
+      titulo="Atletas"
+      right={
+        <>
+          <Button inline small rounded tonal onClick={() => navegar('/colores')}>
             Colores
-          </Link>
-          <button type="button" className="boton" onClick={() => setMostrarForm((v) => !v)}>
+          </Button>
+          <Button inline small rounded onClick={() => setMostrarForm((v) => !v)}>
             {mostrarForm ? 'Cancelar' : 'Nuevo atleta'}
-          </button>
-        </div>
-      </div>
-
+          </Button>
+        </>
+      }
+    >
       {mostrarForm && (
         <FormularioAtleta onGuardado={guardado} onCancelar={() => setMostrarForm(false)} />
       )}
 
-      <div className="filtros">
-        <input
-          className="busqueda"
-          placeholder="Buscar por nombre, apellido o DNI"
+      <List strong inset>
+        <ListInput
+          label="Buscar"
+          type="text"
+          placeholder="Nombre, apellido o DNI"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
-
-        <label className="casilla">
-          <input
-            type="checkbox"
-            checked={incluirInactivos}
-            onChange={(e) => setIncluirInactivos(e.target.checked)}
-          />
-          Incluir dados de baja
-        </label>
-      </div>
-
-      {(error || errorAccion) && <p className="error">{error ?? errorAccion}</p>}
-
-      {listado.isPending ? (
-        <p className="sutil">Cargando…</p>
-      ) : atletas.length === 0 ? (
-        <p className="sutil">No hay atletas{busqueda ? ' para esa búsqueda' : ' cargados'}.</p>
-      ) : (
-        <div className="tarjeta sin-relleno">
-          <table className="tabla">
-            <thead>
-              <tr>
-                <th>Apellido y nombre</th>
-                <th>DNI</th>
-                <th>Edad</th>
-                <th>Club</th>
-                <th>Contacto</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {atletas.map((atleta) => (
-                <tr key={atleta.id} className={atleta.activo ? undefined : 'inactivo'}>
-                  <td>
-                    <NombreAtleta
-                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
-                      color={atleta.color}
-                    />
-                    {(atleta.categorias ?? []).map((categoria) => (
-                      <span className="etiqueta" key={categoria}>
-                        {categoria}
-                      </span>
-                    ))}
-                    {!atleta.activo && <span className="etiqueta baja">baja</span>}
-                  </td>
-                  <td className="mono" data-etiqueta="DNI">
-                    {atleta.dni}
-                  </td>
-                  <td data-etiqueta="Edad">{atleta.edad}</td>
-                  <td data-etiqueta="Club">{atleta.club ?? '—'}</td>
-                  <td data-etiqueta="Contacto">
-                    {atleta.telefono ?? '—'}
-                    {atleta.email && <span className="sutil bloque">{atleta.email}</span>}
-                  </td>
-                  <td className="derecha">
-                    <div className="acciones-fila">
-                      <Link className="boton-fantasma enlace" to={`/atletas/${atleta.id}`}>
-                        Historial
-                      </Link>
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        disabled={cambiarEstado.isPending}
-                        onClick={() => setEnEdicion(atleta)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="boton-fantasma peligro"
-                        disabled={cambiarEstado.isPending}
-                        onClick={() => void pedirCambioEstado(atleta)}
-                      >
-                        {atleta.activo ? 'Dar de baja' : 'Reactivar'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {enEdicion && (
-        <Modal
-          titulo="Editar atleta"
-          subtitulo={
-            <NombreAtleta
-              nombre={textoAtleta(enEdicion.apellido, enEdicion.nombre)}
-              color={enEdicion.color}
+        <ListItem
+          title="Incluir dados de baja"
+          after={
+            <Toggle
+              checked={incluirInactivos}
+              onChange={(e) => setIncluirInactivos(e.target.checked)}
             />
           }
-          onCerrar={() => setEnEdicion(null)}
-        >
-          <FormularioAtleta
-            atleta={enEdicion}
-            onGuardado={guardado}
-            onCancelar={() => setEnEdicion(null)}
-          />
-        </Modal>
+        />
+      </List>
+
+      {(error || errorAccion) && (
+        <Block>
+          <p className="text-red-500">{error ?? errorAccion}</p>
+        </Block>
       )}
-    </div>
+
+      {listado.isPending ? (
+        <Block className="text-center">
+          <Preloader />
+        </Block>
+      ) : atletas.length === 0 ? (
+        <Block>
+          <p className="opacity-60">
+            No hay atletas{busqueda ? ' para esa búsqueda' : ' cargados'}.
+          </p>
+        </Block>
+      ) : (
+        <List strong inset>
+          {atletas.map((atleta) => {
+            const categorias = atleta.categorias ?? []
+            const datosBasicos = [
+              `DNI ${atleta.dni}`,
+              `${atleta.edad} años`,
+              atleta.club,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+            const contacto = [atleta.telefono, atleta.email].filter(Boolean).join(' · ')
+
+            return (
+              <ListItem
+                key={atleta.id}
+                className={atleta.activo ? undefined : 'opacity-60'}
+                title={
+                  <NombreAtleta
+                    nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                    color={atleta.color}
+                  />
+                }
+                subtitle={datosBasicos}
+                text={contacto || undefined}
+                after={
+                  categorias.length > 0 || !atleta.activo ? (
+                    <span className="flex flex-wrap gap-1 justify-end">
+                      {categorias.map((categoria) => (
+                        <Badge key={categoria} colors={{ bg: 'bg-primary' }}>
+                          {categoria}
+                        </Badge>
+                      ))}
+                      {!atleta.activo && <Badge colors={{ bg: 'bg-red-500' }}>baja</Badge>}
+                    </span>
+                  ) : undefined
+                }
+                footer={
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Button
+                      type="button"
+                      inline
+                      small
+                      rounded
+                      tonal
+                      onClick={() => navegar(`/atletas/${atleta.id}`)}
+                    >
+                      Historial
+                    </Button>
+                    <Button
+                      type="button"
+                      inline
+                      small
+                      rounded
+                      tonal
+                      disabled={cambiarEstado.isPending}
+                      onClick={() => setEnEdicion(atleta)}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      inline
+                      small
+                      rounded
+                      outline
+                      colors={atleta.activo ? { outlineBorderIos: 'border-red-500', textIos: 'text-red-500' } : undefined}
+                      disabled={cambiarEstado.isPending}
+                      onClick={() => void pedirCambioEstado(atleta)}
+                    >
+                      {atleta.activo ? 'Dar de baja' : 'Reactivar'}
+                    </Button>
+                  </div>
+                }
+              />
+            )
+          })}
+        </List>
+      )}
+
+      {/* Edición en un Popup de Konsta (reemplaza al Modal propio). */}
+      <Popup opened={enEdicion != null} onBackdropClick={() => setEnEdicion(null)}>
+        <Page>
+          <Navbar
+            title="Editar atleta"
+            right={
+              <Link onClick={() => setEnEdicion(null)}>
+                Cerrar
+              </Link>
+            }
+          />
+          {enEdicion && (
+            <>
+              <BlockTitle>
+                <NombreAtleta
+                  nombre={textoAtleta(enEdicion.apellido, enEdicion.nombre)}
+                  color={enEdicion.color}
+                />
+              </BlockTitle>
+              <FormularioAtleta
+                atleta={enEdicion}
+                onGuardado={guardado}
+                onCancelar={() => setEnEdicion(null)}
+              />
+            </>
+          )}
+        </Page>
+      </Popup>
+    </MarcoPagina>
   )
 }
 
@@ -272,59 +322,53 @@ function FormularioAtleta({ atleta, onGuardado, onCancelar }: PropsFormulario) {
   }
 
   return (
-    <form className="tarjeta formulario" onSubmit={guardar}>
-      <div className="grilla">
-        <label>
-          Nombre
-          <input value={datos.nombre} onChange={campo('nombre')} required />
-        </label>
+    <form onSubmit={guardar}>
+      <List strong inset>
+        <ListInput label="Nombre" type="text" value={datos.nombre} onChange={campo('nombre')} required />
+        <ListInput
+          label="Apellido"
+          type="text"
+          value={datos.apellido}
+          onChange={campo('apellido')}
+          required
+        />
+        <ListInput
+          label="Fecha de nacimiento"
+          type="date"
+          value={datos.fechaNacimiento}
+          onChange={campo('fechaNacimiento')}
+          required
+        />
+        <ListInput label="DNI" type="text" value={datos.dni} onChange={campo('dni')} required />
+        <ListInput label="Club" type="text" value={datos.club ?? ''} onChange={campo('club')} />
+        <ListInput
+          label="Email"
+          type="email"
+          value={datos.email ?? ''}
+          onChange={campo('email')}
+        />
+        <ListInput
+          label="Teléfono"
+          type="tel"
+          value={datos.telefono ?? ''}
+          onChange={campo('telefono')}
+        />
+      </List>
 
-        <label>
-          Apellido
-          <input value={datos.apellido} onChange={campo('apellido')} required />
-        </label>
+      {error && (
+        <Block className="!mt-0">
+          <p className="text-red-500">{error}</p>
+        </Block>
+      )}
 
-        <label>
-          Fecha de nacimiento
-          <input
-            type="date"
-            value={datos.fechaNacimiento}
-            onChange={campo('fechaNacimiento')}
-            required
-          />
-        </label>
-
-        <label>
-          DNI
-          <input value={datos.dni} onChange={campo('dni')} required />
-        </label>
-
-        <label>
-          Club
-          <input value={datos.club ?? ''} onChange={campo('club')} />
-        </label>
-
-        <label>
-          Email
-          <input type="email" value={datos.email ?? ''} onChange={campo('email')} />
-        </label>
-
-        <label>
-          Teléfono
-          <input value={datos.telefono ?? ''} onChange={campo('telefono')} />
-        </label>
-      </div>
-
-      {error && <p className="error">{error}</p>}
-
-      <div className="form-acciones">
-        <button type="button" className="boton-fantasma" onClick={onCancelar}>
+      <Block className="flex gap-2 justify-end !mt-0">
+        <Button type="button" inline rounded clear onClick={onCancelar}>
           Cancelar
-        </button>
-        <button type="submit" className="boton" disabled={guardarMutacion.isPending}>
+        </Button>
+        <Button type="submit" inline rounded disabled={guardarMutacion.isPending}>
           {guardarMutacion.isPending ? 'Guardando…' : atleta ? 'Guardar cambios' : 'Guardar atleta'}
-        </button>
-      </div>
+        </Button>
+      </Block>
     </form>
   )
 }

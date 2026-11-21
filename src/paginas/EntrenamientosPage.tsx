@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDeferredValue, useMemo, useState } from 'react'
+import { Badge, Block, BlockTitle, Button, List, ListInput, ListItem, Preloader } from 'konsta/react'
 import { Link, useNavigate } from 'react-router-dom'
 import { mensajeApi } from '../api/cliente'
 import { clavesConsulta } from '../api/clavesConsulta'
 import { entrenamientosApi, etiquetaTipoTrabajo, etiquetaTurno } from '../api/entrenamientos'
 import { useAuth } from '../auth/contextoAuth'
 import { ModalImportarPlanilla } from '../componentes/ModalImportarPlanilla'
+import { linkRouter } from '../ui/konstaRouter'
+import { MarcoPagina } from '../ui/MarcoPagina'
 import {
   esStaff,
   type CrearEntrenamientoRequest,
@@ -17,6 +20,13 @@ import {
 import { esPasado, fechaCorta, fechaLarga, hoyISO } from '../util/fechas'
 
 const SESIONES = [1, 2, 3, 4, 5]
+
+/** Color de la etiqueta según el tipo de trabajo de la sesión. */
+const COLOR_TIPO: Record<string, string> = {
+  Gimnasio: 'bg-orange-500',
+  Tierra: 'bg-amber-700',
+  Agua: 'bg-sky-500',
+}
 
 export function EntrenamientosPage() {
   const navegar = useNavigate()
@@ -71,41 +81,49 @@ export function EntrenamientosPage() {
   }
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <h2>Entrenamientos</h2>
-        {staff && (
-          <button type="button" className="boton" onClick={() => setMostrarForm((v) => !v)}>
+    <MarcoPagina
+      titulo="Entrenamientos"
+      right={
+        staff ? (
+          <Button inline small rounded onClick={() => setMostrarForm((v) => !v)}>
             {mostrarForm ? 'Cancelar' : 'Nueva sesión'}
-          </button>
-        )}
-      </div>
-
+          </Button>
+        ) : undefined
+      }
+    >
       {mostrarForm && <FormularioEntrenamiento onCreado={creado} />}
 
-      <div className="tarjeta filtros">
-        <label>
-          Desde
-          <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
-        </label>
+      <List strong inset>
+        <ListInput
+          label="Desde"
+          type="date"
+          value={desde}
+          onChange={(e) => setDesde(e.target.value)}
+        />
+        <ListInput
+          label="Hasta"
+          type="date"
+          value={hasta}
+          onChange={(e) => setHasta(e.target.value)}
+        />
+        <ListInput
+          label="Turno"
+          type="select"
+          dropdown
+          value={turno}
+          onChange={(e) => setTurno(e.target.value as Turno | '')}
+        >
+          <option value="">Todos</option>
+          <option value="Manana">Mañana</option>
+          <option value="Tarde">Tarde</option>
+        </ListInput>
+      </List>
 
-        <label>
-          Hasta
-          <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
-        </label>
-
-        <label>
-          Turno
-          <select value={turno} onChange={(e) => setTurno(e.target.value as Turno | '')}>
-            <option value="">Todos</option>
-            <option value="Manana">Mañana</option>
-            <option value="Tarde">Tarde</option>
-          </select>
-        </label>
-
-        <button
+      <Block className="!mt-0">
+        <Button
           type="button"
-          className="boton-fantasma"
+          rounded
+          tonal
           onClick={() => {
             setDesde('')
             setHasta('')
@@ -113,57 +131,67 @@ export function EntrenamientosPage() {
           }}
         >
           Ver todo
-        </button>
-      </div>
+        </Button>
+      </Block>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <Block>
+          <p className="text-red-500">{error}</p>
+        </Block>
+      )}
 
       {listado.isPending ? (
-        <p className="sutil">Cargando…</p>
+        <Block className="text-center">
+          <Preloader />
+        </Block>
       ) : entrenamientos.length === 0 ? (
-        <p className="sutil">No hay sesiones cargadas para esos filtros.</p>
+        <Block>
+          <p className="opacity-60">No hay sesiones cargadas para esos filtros.</p>
+        </Block>
       ) : (
-        <div className="agenda">
-          {porFecha.map(([fecha, sesiones]) => (
-            <section className="dia" key={fecha}>
-              <h3 className={esPasado(fecha) ? 'titulo-dia pasado' : 'titulo-dia'}>
-                {fechaLarga(fecha)}
-                <span className="sutil"> · {fechaCorta(fecha)}</span>
-              </h3>
+        porFecha.map(([fecha, sesiones]) => (
+          <div key={fecha}>
+            <BlockTitle className={esPasado(fecha) ? 'opacity-60' : undefined}>
+              {fechaLarga(fecha)}
+              <span className="font-normal opacity-60"> · {fechaCorta(fecha)}</span>
+            </BlockTitle>
 
-              <div className="sesiones">
-                {sesiones.map((item) => (
-                  <Link className="tarjeta sesion" key={item.id} to={`/entrenamientos/${item.id}`}>
-                    <div className="sesion-titulo">
-                      <span className="etiqueta-sesion">Sesión {item.sesion}</span>
-                      <span className="turno">{etiquetaTurno(item.turno)}</span>
-                      <span
-                        className={`etiqueta-tipo-sesion tipo-${(item.tipo ?? 'Agua').toLowerCase()}`}
-                      >
-                        {etiquetaTipoTrabajo(item.tipo ?? 'Agua')}
-                      </span>
-                    </div>
+            <List strong inset>
+              {sesiones.map((item) => {
+                const tipo = item.tipo ?? 'Agua'
+                const detalle = [
+                  staff
+                    ? item.cantidadAtletas === 0
+                      ? 'Sin atletas'
+                      : `${item.cantidadPresentes}/${item.cantidadAtletas} presentes`
+                    : null,
+                  item.club,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
 
-                    {item.descripcion && <p className="sutil">{item.descripcion}</p>}
-
-                    <div className="sesion-pie">
-                      {staff && (
-                        <span className="sutil">
-                          {item.cantidadAtletas === 0
-                            ? 'Sin atletas'
-                            : `${item.cantidadPresentes}/${item.cantidadAtletas} presentes`}
-                        </span>
-                      )}
-                      {item.club && <span className="sutil">{item.club}</span>}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+                return (
+                  <ListItem
+                    key={item.id}
+                    link
+                    linkComponent={linkRouter(Link)}
+                    linkProps={{ to: `/entrenamientos/${item.id}` }}
+                    title={`Sesión ${item.sesion} · ${etiquetaTurno(item.turno)}`}
+                    subtitle={item.descripcion || undefined}
+                    footer={detalle || undefined}
+                    after={
+                      <Badge colors={{ bg: COLOR_TIPO[tipo] ?? 'bg-primary' }}>
+                        {etiquetaTipoTrabajo(tipo)}
+                      </Badge>
+                    }
+                  />
+                )
+              })}
+            </List>
+          </div>
+        ))
       )}
-    </div>
+    </MarcoPagina>
   )
 }
 
@@ -197,95 +225,82 @@ function FormularioEntrenamiento({ onCreado }: { onCreado: (nuevo: Entrenamiento
 
   return (
     <>
-      <form className="tarjeta formulario" onSubmit={guardar}>
-        <div className="grilla">
-          <label>
-            Fecha
-            <input
-              type="date"
-              value={datos.fecha}
-              onChange={(e) => setDatos((d) => ({ ...d, fecha: e.target.value }))}
-              required
-            />
-          </label>
-
-          <label>
-            Turno
-            <select
-              value={datos.turno}
-              onChange={(e) => setDatos((d) => ({ ...d, turno: e.target.value as Turno }))}
-            >
-              <option value="Manana">Mañana</option>
-              <option value="Tarde">Tarde</option>
-            </select>
-          </label>
-
-          <label>
-            Sesión
-            <select
-              value={datos.sesion}
-              onChange={(e) => setDatos((d) => ({ ...d, sesion: Number(e.target.value) }))}
-            >
-              {SESIONES.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Tipo
-            <select
-              value={datos.tipo}
-              onChange={(e) => setDatos((d) => ({ ...d, tipo: e.target.value as TipoTrabajo }))}
-              required
-            >
-              <option value="Gimnasio">Gimnasio</option>
-              <option value="Tierra">Tierra</option>
-              <option value="Agua">Agua</option>
-            </select>
-          </label>
-
-          <label>
-            Club
-            <input
-              value={datos.club ?? ''}
-              onChange={(e) => setDatos((d) => ({ ...d, club: e.target.value }))}
-            />
-          </label>
-        </div>
-
-        <div className="campo-descripcion">
-          <label>
-            Descripción
-            <input
-              value={datos.descripcion ?? ''}
-              onChange={(e) => setDatos((d) => ({ ...d, descripcion: e.target.value }))}
-              placeholder="Trabajo de velocidad, fondo, técnica…"
-            />
-          </label>
-
-          <button
-            type="button"
-            className="boton-fantasma"
-            onClick={() => setMostrarPlanilla(true)}
+      <form onSubmit={guardar}>
+        <List strong inset>
+          <ListInput
+            label="Fecha"
+            type="date"
+            value={datos.fecha}
+            onChange={(e) => setDatos((d) => ({ ...d, fecha: e.target.value }))}
+            required
+          />
+          <ListInput
+            label="Turno"
+            type="select"
+            dropdown
+            value={datos.turno}
+            onChange={(e) => setDatos((d) => ({ ...d, turno: e.target.value as Turno }))}
           >
+            <option value="Manana">Mañana</option>
+            <option value="Tarde">Tarde</option>
+          </ListInput>
+          <ListInput
+            label="Sesión"
+            type="select"
+            dropdown
+            value={datos.sesion}
+            onChange={(e) => setDatos((d) => ({ ...d, sesion: Number(e.target.value) }))}
+          >
+            {SESIONES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </ListInput>
+          <ListInput
+            label="Tipo"
+            type="select"
+            dropdown
+            value={datos.tipo}
+            onChange={(e) => setDatos((d) => ({ ...d, tipo: e.target.value as TipoTrabajo }))}
+            required
+          >
+            <option value="Gimnasio">Gimnasio</option>
+            <option value="Tierra">Tierra</option>
+            <option value="Agua">Agua</option>
+          </ListInput>
+          <ListInput
+            label="Club"
+            type="text"
+            value={datos.club ?? ''}
+            onChange={(e) => setDatos((d) => ({ ...d, club: e.target.value }))}
+          />
+          <ListInput
+            label="Descripción"
+            type="text"
+            value={datos.descripcion ?? ''}
+            onChange={(e) => setDatos((d) => ({ ...d, descripcion: e.target.value }))}
+            placeholder="Trabajo de velocidad, fondo, técnica…"
+          />
+        </List>
+
+        <Block className="space-y-2 !mt-0">
+          <Button type="button" rounded tonal onClick={() => setMostrarPlanilla(true)}>
             Traer de la planilla
-          </button>
-        </div>
+          </Button>
 
-        {descripcionLarga && (
-          <p className="error">
-            La descripción tiene {datos.descripcion?.length ?? 0} caracteres y el límite es 500.
-          </p>
-        )}
+          {descripcionLarga && (
+            <p className="text-red-500">
+              La descripción tiene {datos.descripcion?.length ?? 0} caracteres y el límite es 500.
+            </p>
+          )}
 
-        {error && <p className="error">{error}</p>}
+          {error && <p className="text-red-500">{error}</p>}
 
-        <button type="submit" className="boton" disabled={crear.isPending || descripcionLarga}>
-          {crear.isPending ? 'Creando…' : 'Crear sesión'}
-        </button>
+          <Button type="submit" rounded disabled={crear.isPending || descripcionLarga}>
+            {crear.isPending ? 'Creando…' : 'Crear sesión'}
+          </Button>
+        </Block>
       </form>
 
       {mostrarPlanilla && (

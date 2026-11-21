@@ -1,9 +1,11 @@
+import { Badge, Block, BlockTitle, Button, Checkbox, List, ListInput, ListItem, Preloader } from 'konsta/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../api/cliente'
 import { atletasApi } from '../api/entrenamientos'
 import { equiposApi } from '../api/equipos'
 import { NombreAtleta, textoAtleta } from '../componentes/NombreAtleta'
 import type { AtletaDto, EquipoDto, TipoBote } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 
 const CUPOS: Record<TipoBote, number> = { K2: 2, K4: 4 }
 
@@ -113,143 +115,139 @@ export function EquiposPage() {
   }
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <h2>K2 / K4</h2>
-      </div>
-      <p className="sutil">Armá botes de equipo para reutilizarlos en las sesiones.</p>
+    <MarcoPagina titulo="K2 / K4" subtitulo="Armá botes de equipo para reutilizarlos en las sesiones.">
+      <List strong inset>
+        <ListInput
+          label="Tipo"
+          type="select"
+          dropdown
+          value={tipo}
+          onChange={(e) => {
+            const nuevo = e.target.value as TipoBote
+            setTipo(nuevo)
+            setElegidos((previos) => previos.slice(0, CUPOS[nuevo]))
+          }}
+        >
+          <option value="K2">K2</option>
+          <option value="K4">K4</option>
+        </ListInput>
+        <ListInput
+          label="Buscar atleta"
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Apellido, nombre o DNI"
+        />
+      </List>
 
-      <div className="tarjeta formulario">
-        <div className="grilla">
-          <label>
-            Tipo
-            <select
-              value={tipo}
-              onChange={(e) => {
-                const nuevo = e.target.value as TipoBote
-                setTipo(nuevo)
-                setElegidos((previos) => previos.slice(0, CUPOS[nuevo]))
-              }}
-            >
-              <option value="K2">K2</option>
-              <option value="K4">K4</option>
-            </select>
-          </label>
-          <label>
-            Buscar atleta
-            <input
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Apellido, nombre o DNI"
+      <BlockTitle>
+        {elegidos.length} de {cupo} elegidos
+        {editando != null && ' · editando bote'}
+      </BlockTitle>
+
+      <List strong inset>
+        {disponibles.map((atleta) => {
+          const marcado = elegidos.includes(atleta.id)
+          return (
+            <ListItem
+              key={atleta.id}
+              label
+              title={
+                <NombreAtleta
+                  nombre={textoAtleta(atleta.apellido, atleta.nombre)}
+                  color={atleta.color}
+                />
+              }
+              after={<span className="opacity-60 text-[13px]">{atleta.dni}</span>}
+              media={
+                <Checkbox
+                  component="div"
+                  checked={marcado}
+                  disabled={!marcado && elegidos.length >= cupo}
+                  onChange={() => alternar(atleta.id)}
+                />
+              }
             />
-          </label>
-        </div>
+          )
+        })}
+      </List>
 
-        <p className="sutil">
-          {elegidos.length} de {cupo} elegidos
-          {editando != null && ' · editando bote'}
-        </p>
-
-        <ul className="lista-disponibles">
-          {disponibles.map((atleta) => {
-            const marcado = elegidos.includes(atleta.id)
-            return (
-              <li key={atleta.id}>
-                <label className="check">
-                  <span className="check-texto">
-                    <NombreAtleta
-                      nombre={textoAtleta(atleta.apellido, atleta.nombre)}
-                      color={atleta.color}
-                    />
-                    <span className="sutil"> · {atleta.dni}</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={marcado}
-                    disabled={!marcado && elegidos.length >= cupo}
-                    onChange={() => alternar(atleta.id)}
-                  />
-                </label>
-              </li>
-            )
-          })}
-        </ul>
-
-        {error && <p className="error">{error}</p>}
-
-        <div className="acciones-fila">
-          <button
-            type="button"
-            className="boton"
-            disabled={ocupado || elegidos.length !== cupo}
-            onClick={() => void guardar()}
-          >
-            {editando == null ? 'Crear bote' : 'Guardar bote'}
-          </button>
-          {editando != null && (
-            <button type="button" className="boton-fantasma" onClick={empezarNuevo}>
-              Cancelar
-            </button>
-          )}
-        </div>
-      </div>
-
-      {cargando ? (
-        <p className="sutil">Cargando…</p>
-      ) : equipos.length === 0 ? (
-        <p className="sutil">Todavía no hay botes armados.</p>
-      ) : (
-        <div className="tarjeta sin-relleno">
-          <table className="tabla">
-            <thead>
-              <tr>
-                <th>Bote</th>
-                <th>Estado</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {equipos.map((equipo) => (
-                <tr key={equipo.id}>
-                  <td>
-                    <strong>{equipo.etiqueta}</strong>
-                    <span className="sutil bloque">
-                      {equipo.miembros.map((m, i) => (
-                        <span key={m.atletaId}>
-                          {i > 0 && ' · '}
-                          <NombreAtleta
-                            nombre={textoAtleta(m.apellido, m.nombre)}
-                            color={m.color}
-                          />
-                        </span>
-                      ))}
-                    </span>
-                  </td>
-                  <td>{equipo.activo ? 'Activo' : 'Pausado'}</td>
-                  <td className="derecha">
-                    <div className="acciones-fila">
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        onClick={() => empezarEdicion(equipo)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="boton-fantasma"
-                        onClick={() => void pausar(equipo)}
-                      >
-                        {equipo.activo ? 'Pausar' : 'Reactivar'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {error && (
+        <Block>
+          <p className="text-red-500">{error}</p>
+        </Block>
       )}
-    </div>
+
+      <Block className="flex gap-2">
+        <Button
+          type="button"
+          rounded
+          disabled={ocupado || elegidos.length !== cupo}
+          onClick={() => void guardar()}
+        >
+          {editando == null ? 'Crear bote' : 'Guardar bote'}
+        </Button>
+        {editando != null && (
+          <Button type="button" rounded clear onClick={empezarNuevo}>
+            Cancelar
+          </Button>
+        )}
+      </Block>
+
+      <BlockTitle>Botes armados</BlockTitle>
+      {cargando ? (
+        <Block className="text-center">
+          <Preloader />
+        </Block>
+      ) : equipos.length === 0 ? (
+        <Block>
+          <p className="opacity-60">Todavía no hay botes armados.</p>
+        </Block>
+      ) : (
+        <List strong inset>
+          {equipos.map((equipo) => (
+            <ListItem
+              key={equipo.id}
+              title={<strong>{equipo.etiqueta}</strong>}
+              subtitle={equipo.miembros.map((m, i) => (
+                <span key={m.atletaId}>
+                  {i > 0 && ' · '}
+                  <NombreAtleta nombre={textoAtleta(m.apellido, m.nombre)} color={m.color} />
+                </span>
+              ))}
+              after={
+                <Badge colors={{ bg: equipo.activo ? 'bg-green-500' : 'bg-gray-400' }}>
+                  {equipo.activo ? 'Activo' : 'Pausado'}
+                </Badge>
+              }
+              footer={
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    type="button"
+                    inline
+                    small
+                    rounded
+                    tonal
+                    onClick={() => empezarEdicion(equipo)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    inline
+                    small
+                    rounded
+                    tonal
+                    onClick={() => void pausar(equipo)}
+                  >
+                    {equipo.activo ? 'Pausar' : 'Reactivar'}
+                  </Button>
+                </div>
+              }
+            />
+          ))}
+        </List>
+      )}
+    </MarcoPagina>
   )
 }

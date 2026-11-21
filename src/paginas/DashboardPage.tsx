@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { anotacionesApi } from '../api/anotaciones'
-import { api, ApiError } from '../api/cliente'
+import { api, mensajeApi } from '../api/cliente'
+import { clavesConsulta } from '../api/clavesConsulta'
 import { useAuth } from '../auth/contextoAuth'
 import { IconoDashboard, type IdIconoDashboard } from '../componentes/IconosDashboard'
 import { esStaff, type AvisoDto } from '../tipos/api'
@@ -156,31 +158,15 @@ function Card({ card }: { card: CardModulo }) {
   )
 }
 
-/** Ultimos avisos activos, a la derecha del saludo (arriba de Controles). */
+/** Ultimos avisos activos, a la derecha del saludo. */
 function BloqueAvisos({ esStaff }: { esStaff: boolean }) {
-  const [avisos, setAvisos] = useState<AvisoDto[] | null>(null)
+  const avisosQuery = useQuery({
+    queryKey: clavesConsulta.avisos,
+    queryFn: ({ signal }) => api.get<AvisoDto[]>('/api/avisos', { signal }),
+  })
 
-  useEffect(() => {
-    let vivo = true
-    void api
-      .get<AvisoDto[]>('/api/avisos')
-      .then((lista) => {
-        if (vivo) {
-          // Staff recibe también ocultos: en el home solo mostramos los activos.
-          setAvisos(lista.filter((aviso) => aviso.activo).slice(0, 3))
-        }
-      })
-      .catch(() => {
-        if (vivo) {
-          setAvisos([])
-        }
-      })
-    return () => {
-      vivo = false
-    }
-  }, [])
-
-  if (avisos == null || avisos.length === 0) {
+  const avisos = (avisosQuery.data ?? []).filter((a) => a.activo).slice(0, 3)
+  if (avisos.length === 0) {
     return null
   }
 
@@ -215,11 +201,23 @@ function BloqueAvisos({ esStaff }: { esStaff: boolean }) {
 /** Anotaciones arriba: ir a la lista a la izquierda, nota rapida a la derecha. */
 function CardAnotacionRapida() {
   const [texto, setTexto] = useState('')
-  const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [ok, setOk] = useState(false)
 
-  async function guardar(evento: React.FormEvent) {
+  const guardar = useMutation({
+    mutationFn: (limpio: string) => anotacionesApi.crear({ texto: limpio }),
+    onSuccess: () => {
+      setTexto('')
+      setOk(true)
+      setError(null)
+    },
+    onError: (e) => {
+      setOk(false)
+      setError(mensajeApi(e, 'No se pudo guardar la anotación.'))
+    },
+  })
+
+  function onSubmit(evento: React.FormEvent) {
     evento.preventDefault()
     const limpio = texto.trim()
     if (!limpio) {
@@ -227,20 +225,7 @@ function CardAnotacionRapida() {
       setOk(false)
       return
     }
-
-    setOcupado(true)
-    setError(null)
-    setOk(false)
-
-    try {
-      await anotacionesApi.crear({ texto: limpio })
-      setTexto('')
-      setOk(true)
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo guardar la anotación.')
-    } finally {
-      setOcupado(false)
-    }
+    guardar.mutate(limpio)
   }
 
   return (
@@ -256,7 +241,7 @@ function CardAnotacionRapida() {
         </span>
       </Link>
 
-      <form className="dashboard-anotacion-rapida" onSubmit={(e) => void guardar(e)}>
+      <form className="dashboard-anotacion-rapida" onSubmit={onSubmit}>
         <label className="dashboard-anotacion-campo">
           <span className="sutil">Nota rápida</span>
           <textarea
@@ -271,15 +256,19 @@ function CardAnotacionRapida() {
             placeholder="Escribí y guardá acá"
             rows={3}
             maxLength={4000}
-            disabled={ocupado}
+            disabled={guardar.isPending}
             enterKeyHint="done"
           />
         </label>
         <div className="dashboard-anotacion-acciones">
           {error && <p className="error">{error}</p>}
           {ok && !error && <p className="sutil dashboard-anotacion-ok">Guardada.</p>}
-          <button type="submit" className="boton" disabled={ocupado || !texto.trim()}>
-            {ocupado ? 'Guardando…' : 'Guardar'}
+          <button
+            type="submit"
+            className="boton"
+            disabled={guardar.isPending || !texto.trim()}
+          >
+            {guardar.isPending ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
       </form>

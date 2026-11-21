@@ -1,8 +1,10 @@
+import { Block, Button, List, ListInput, ListItem, Preloader } from 'konsta/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../api/cliente'
 import { atletasApi } from '../api/entrenamientos'
 import { NombreAtleta, PALETA_ATLETAS, textoAtleta } from '../componentes/NombreAtleta'
 import type { AtletaDto } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 
 /**
  * Modulo staff: asigna un color de identificacion a cada atleta.
@@ -93,73 +95,112 @@ export function ColoresAtletasPage() {
   }
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <div>
-          <h2>Colores de atletas</h2>
-          <p className="sutil">
-            Asigná un color a cada atleta para diferenciarlos en controles, sesiones y listas.
-          </p>
-        </div>
-        <button type="button" className="boton" disabled={ocupado || !hayCambios} onClick={() => void guardar()}>
+    <MarcoPagina
+      titulo="Colores de atletas"
+      subtitulo="Asigná un color a cada atleta para diferenciarlos en controles, sesiones y listas."
+      atras
+      right={
+        <Button
+          inline
+          small
+          rounded
+          disabled={ocupado || !hayCambios}
+          onClick={() => void guardar()}
+        >
           {ocupado ? 'Guardando…' : 'Guardar'}
-        </button>
-      </div>
+        </Button>
+      }
+    >
+      <List strong inset>
+        <ListInput
+          label="Buscar"
+          type="text"
+          placeholder="Buscar atleta…"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+      </List>
 
-      <input
-        className="busqueda"
-        placeholder="Buscar atleta…"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-      />
-
-      {error && <p className="error">{error}</p>}
-      {ok && <p className="exito">{ok}</p>}
+      {error && (
+        <Block>
+          <p className="text-red-500">{error}</p>
+        </Block>
+      )}
+      {ok && (
+        <Block>
+          <p className="text-green-600">{ok}</p>
+        </Block>
+      )}
 
       {cargando ? (
-        <p className="sutil">Cargando…</p>
+        <Block className="text-center">
+          <Preloader />
+        </Block>
       ) : filtrados.length === 0 ? (
-        <p className="sutil">No hay atletas para mostrar.</p>
+        <Block>
+          <p className="opacity-60">No hay atletas para mostrar.</p>
+        </Block>
       ) : (
-        <ul className="colores-atletas-lista">
+        <List strong inset>
           {filtrados.map((atleta) => {
             const color = colores[atleta.id] ?? null
             return (
-              <li className="tarjeta colores-atleta-fila" key={atleta.id}>
-                <div className="colores-atleta-nombre">
-                  <span className="color-punto" style={{ background: color ?? 'transparent' }} />
+              <ListItem
+                key={atleta.id}
+                media={
+                  <span
+                    className="block h-4 w-4 rounded-full border border-black/20"
+                    style={{ background: color ?? 'transparent' }}
+                  />
+                }
+                title={
                   <NombreAtleta
                     nombre={textoAtleta(atleta.apellido, atleta.nombre)}
                     color={color}
                   />
-                  <span className="sutil">DNI {atleta.dni}</span>
-                </div>
-
-                <div className="colores-paleta" role="group" aria-label={`Color de ${atleta.apellido}`}>
-                  {PALETA_ATLETAS.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      className={`color-swatch${color?.toUpperCase() === hex ? ' elegido' : ''}`}
-                      style={{ background: hex }}
-                      title={hex}
-                      aria-label={hex}
-                      onClick={() => elegir(atleta.id, hex)}
-                    />
-                  ))}
-                  <button
-                    type="button"
-                    className={`boton-fantasma color-quitar${color == null ? ' elegido' : ''}`}
-                    onClick={() => elegir(atleta.id, null)}
+                }
+                subtitle={`DNI ${atleta.dni}`}
+                footer={
+                  <div
+                    className="mt-2 flex flex-wrap items-center gap-2"
+                    role="group"
+                    aria-label={`Color de ${atleta.apellido}`}
                   >
-                    Sin color
-                  </button>
-                </div>
-              </li>
+                    {PALETA_ATLETAS.map((hex) => {
+                      const elegido = color?.toUpperCase() === hex
+                      return (
+                        <button
+                          key={hex}
+                          type="button"
+                          title={hex}
+                          aria-label={hex}
+                          aria-pressed={elegido}
+                          className={`h-7 w-7 rounded-full border-2 ${
+                            elegido ? 'scale-110 border-black dark:border-white' : 'border-transparent'
+                          }`}
+                          style={{ background: hex }}
+                          onClick={() => elegir(atleta.id, hex)}
+                        />
+                      )
+                    })}
+                    <Button
+                      type="button"
+                      inline
+                      small
+                      rounded
+                      tonal={color == null}
+                      outline={color != null}
+                      onClick={() => elegir(atleta.id, null)}
+                    >
+                      Sin color
+                    </Button>
+                  </div>
+                }
+              />
             )
           })}
-        </ul>
+        </List>
       )}
-    </div>
+    </MarcoPagina>
   )
 }

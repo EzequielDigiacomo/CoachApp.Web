@@ -12,6 +12,16 @@ npm run lint
 npm test
 ```
 
+## Muestra UI (Konsta + Ionic, estilo Mac)
+
+Prototipo visual aislado (no reemplaza la app actual):
+
+```text
+http://localhost:5173/muestra.html
+```
+
+Chrome de ventana macOS + sidebar; adentro podés alternar **Konsta UI** (theme ios) e **Ionic** (mode ios). Datos de ejemplo.
+
 ## API en desarrollo
 
 El proxy de Vite reenvía `/api` a la API.

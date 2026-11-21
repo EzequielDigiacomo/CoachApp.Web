@@ -1,5 +1,10 @@
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
+
+const raiz = dirname(fileURLToPath(import.meta.url))
 
 // El proxy evita problemas de CORS en desarrollo: el navegador le pide
 // /api/... al mismo servidor de Vite y Vite lo reenvia a la API.
@@ -10,7 +15,7 @@ export default defineConfig(({ mode }) => {
     env.VITE_API_PROXY?.trim() || 'https://coachapp-5kea.onrender.com'
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     server: {
       // Escuchar en IPv4 e IPv6. Sin esto Vite queda solo en ::1 y el navegador,
       // que resuelve localhost a 127.0.0.1, no puede alcanzar ni la app ni el proxy.
@@ -20,6 +25,14 @@ export default defineConfig(({ mode }) => {
           target: api,
           changeOrigin: true,
           secure: true,
+        },
+      },
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(raiz, 'index.html'),
+          muestra: resolve(raiz, 'muestra.html'),
         },
       },
     },

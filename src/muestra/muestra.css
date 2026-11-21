@@ -1,0 +1,448 @@
+@import 'tailwindcss';
+@import 'konsta/react/theme.css';
+
+/* Ionic core + iOS look (solo esta entrada) */
+@import '@ionic/react/css/core.css';
+@import '@ionic/react/css/normalize.css';
+@import '@ionic/react/css/structure.css';
+@import '@ionic/react/css/typography.css';
+@import '@ionic/react/css/padding.css';
+@import '@ionic/react/css/float-elements.css';
+@import '@ionic/react/css/text-alignment.css';
+@import '@ionic/react/css/text-transformation.css';
+@import '@ionic/react/css/flex-utils.css';
+@import '@ionic/react/css/display.css';
+
+@theme {
+  --color-brand-primary: #007aff;
+  --color-brand-secondary: #5856d6;
+  --color-brand-green: #34c759;
+  --color-brand-orange: #ff9500;
+  --color-brand-red: #ff3b30;
+}
+
+:root {
+  --glass-fill: rgba(255, 255, 255, 0.22);
+  --glass-fill-strong: rgba(255, 255, 255, 0.38);
+  --glass-fill-soft: rgba(255, 255, 255, 0.14);
+  --glass-stroke: rgba(255, 255, 255, 0.55);
+  --glass-stroke-dim: rgba(255, 255, 255, 0.28);
+  --glass-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+  --mac-text: #0f172a;
+  --mac-muted: rgba(15, 23, 42, 0.62);
+  --mac-blue: #007aff;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#muestra-root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    'SF Pro Text',
+    'SF Pro Display',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Helvetica,
+    Arial,
+    sans-serif;
+  color: var(--mac-text);
+  /* Fondo vivo: el “liquid glass” necesita color detrás para verse. */
+  background: #7a8aa0;
+  overflow: hidden;
+}
+
+/* Manchas de color animadas (refracción / liquid) */
+.mac-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  overflow: hidden;
+}
+
+.mac-stage::before,
+.mac-stage::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  z-index: -2;
+  filter: blur(40px);
+  animation: liquid-drift 18s ease-in-out infinite alternate;
+}
+
+.mac-stage::before {
+  background:
+    radial-gradient(circle at 20% 30%, #7dd3fc 0%, transparent 42%),
+    radial-gradient(circle at 75% 20%, #f0abfc 0%, transparent 40%),
+    radial-gradient(circle at 50% 80%, #86efac 0%, transparent 45%),
+    radial-gradient(circle at 10% 80%, #fda4af 0%, transparent 38%);
+}
+
+.mac-stage::after {
+  z-index: -1;
+  opacity: 0.85;
+  background:
+    radial-gradient(circle at 80% 70%, #93c5fd 0%, transparent 35%),
+    radial-gradient(circle at 30% 60%, #c4b5fd 0%, transparent 40%);
+  animation-duration: 24s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes liquid-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(1%, -3%, 0) scale(1.02);
+  }
+}
+
+/* —— Liquid glass: superficie con borde especular —— */
+.glass {
+  position: relative;
+  background: var(--glass-fill);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid var(--glass-stroke-dim);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.08) 28%,
+    rgba(255, 255, 255, 0) 48%,
+    rgba(255, 255, 255, 0.12) 72%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  opacity: 0.7;
+  mix-blend-mode: soft-light;
+}
+
+.mac-window {
+  width: min(1120px, 100%);
+  height: min(760px, calc(100vh - 56px));
+  display: grid;
+  grid-template-rows: 44px 1fr;
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: saturate(190%) blur(40px);
+  -webkit-backdrop-filter: saturate(190%) blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 30px 90px rgba(15, 23, 42, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.35);
+}
+
+.mac-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.16) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.mac-traffic {
+  display: flex;
+  gap: 8px;
+}
+
+.mac-traffic span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.mac-traffic .close {
+  background: #ff5f57;
+}
+.mac-traffic .min {
+  background: #febc2e;
+}
+.mac-traffic .max {
+  background: #28c840;
+}
+
+.mac-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mac-muted);
+  letter-spacing: 0.01em;
+}
+
+.mac-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0040a8;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  padding: 3px 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.mac-body {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 0;
+}
+
+.mac-sidebar {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+}
+
+.mac-brand {
+  padding: 8px 10px 14px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.mac-brand small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mac-muted);
+}
+
+.mac-nav-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mac-text);
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mac-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.mac-nav-btn.activo {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #0040a8;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 6px 16px rgba(0, 122, 255, 0.12);
+}
+
+.mac-sidebar-foot {
+  margin-top: auto;
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--mac-muted);
+}
+
+.mac-content {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mac-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.28);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.mac-toolbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.mac-toolbar p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--mac-muted);
+}
+
+.mac-seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  gap: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.mac-seg button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mac-muted);
+  cursor: pointer;
+}
+
+.mac-seg button.activo {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--mac-text);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.mac-panel {
+  padding: 14px 16px 24px;
+}
+
+.mac-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Contenedores de librería también en glass */
+.liquid-panel {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: saturate(170%) blur(22px);
+  -webkit-backdrop-filter: saturate(170%) blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.liquid-panel .k-page,
+.liquid-panel .page {
+  background: transparent !important;
+}
+
+@media (max-width: 900px) {
+  .mac-body {
+    grid-template-columns: 1fr;
+  }
+
+  .mac-sidebar {
+    display: none;
+  }
+
+  .mac-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mac-window {
+    height: auto;
+    min-height: calc(100vh - 56px);
+  }
+
+  body {
+    overflow: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mac-stage::before,
+  .mac-stage::after {
+    animation: none;
+  }
+}
+
+/* Ionic dentro del glass */
+.ionic-host {
+  --ion-font-family: inherit;
+  --ion-color-primary: #007aff;
+  --background: transparent;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: saturate(170%) blur(22px);
+  -webkit-backdrop-filter: saturate(170%) blur(22px);
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.ionic-host ion-content {
+  --background: transparent;
+}
+
+.ionic-host ion-toolbar {
+  --background: rgba(255, 255, 255, 0.35);
+  --border-color: rgba(255, 255, 255, 0.35);
+}

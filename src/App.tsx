@@ -5,6 +5,7 @@ import { RutaProtegida, RutaStaff } from './auth/RutaProtegida'
 import { CargaPagina } from './componentes/CargaPagina'
 import { ProveedorConfirmacion } from './componentes/Confirmacion'
 import { Layout } from './componentes/Layout'
+import { ProveedorKonsta } from './ui/ProveedorKonsta'
 
 const LoginPage = lazy(() =>
   import('./paginas/LoginPage').then((m) => ({ default: m.LoginPage })),
@@ -66,10 +67,11 @@ function Pagina({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <ProveedorAuth>
-        <ProveedorConfirmacion>
-          <Suspense fallback={<CargaPagina />}>
-            <Routes>
+      <ProveedorKonsta>
+        <ProveedorAuth>
+          <ProveedorConfirmacion>
+            <Suspense fallback={<CargaPagina />}>
+              <Routes>
               <Route path="/login" element={<LoginPage />} />
 
               <Route
@@ -228,11 +230,12 @@ export default function App() {
                 }
               />
 
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </ProveedorConfirmacion>
-      </ProveedorAuth>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </ProveedorConfirmacion>
+        </ProveedorAuth>
+      </ProveedorKonsta>
     </BrowserRouter>
   )
 }

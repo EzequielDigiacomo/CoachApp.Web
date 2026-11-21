@@ -1,6 +1,7 @@
+import { Block, BlockFooter, Button, List, ListInput, Navbar, Page } from 'konsta/react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, ApiError } from '../api/cliente'
+import { api, mensajeApi } from '../api/cliente'
 import { useAuth } from '../auth/contextoAuth'
 import { BotonTema } from '../componentes/BotonTema'
 import type { LoginResponse } from '../tipos/api'
@@ -26,62 +27,79 @@ export function LoginPage() {
       })
 
       iniciarSesion({ token: respuesta.token, usuario: respuesta.usuario })
-      // Siempre al dashboard al ingresar, sin volver a la URL previa.
       navegar('/', { replace: true })
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo conectar con el servidor.')
+      setError(mensajeApi(e, 'No se pudo conectar con el servidor.'))
     } finally {
       setEnviando(false)
     }
   }
 
   return (
-    <div className="login">
-      <form className="tarjeta login-tarjeta" onSubmit={enviar}>
-        <div className="login-cabecera">
-          <div className="login-marca">
-            <img
-              className="login-icono"
-              src="/favicon.svg"
-              width={44}
-              height={44}
-              alt=""
-              aria-hidden="true"
-            />
-            <h1>CoachApp</h1>
+    <Page>
+      <Navbar
+        title="CoachApp"
+        right={
+          <div className="pr-2">
+            <BotonTema />
           </div>
-          <BotonTema />
-        </div>
-        <p className="sutil">Entrá con la cuenta que te dio el administrador.</p>
+        }
+      />
 
-        <label>
-          Usuario
-          <input
-            value={nombreUsuario}
-            onChange={(e) => setNombreUsuario(e.target.value)}
-            autoComplete="username"
-            required
-            autoFocus
+      <div className="login-konsta mx-auto w-full max-w-[340px] px-4 pt-8">
+        <Block strong inset className="!mx-0 !mt-0 text-center">
+          <img
+            className="mx-auto mb-3"
+            src="/favicon.svg"
+            width={48}
+            height={48}
+            alt=""
+            aria-hidden="true"
           />
-        </label>
+          <div className="text-[20px] font-semibold tracking-tight text-black dark:text-white">
+            Bienvenido
+          </div>
+          <p className="mt-1 text-[13px] text-black/60 dark:text-white/60">
+            Entrá con la cuenta que te dio el administrador.
+          </p>
+        </Block>
 
-        <label>
-          Contraseña
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </label>
+        <form onSubmit={(e) => void enviar(e)}>
+          <List strong inset className="!mx-0">
+            <ListInput
+              label="Usuario"
+              type="text"
+              placeholder="usuario"
+              value={nombreUsuario}
+              onChange={(e) => setNombreUsuario((e.target as HTMLInputElement).value)}
+              autoComplete="username"
+              autoFocus
+            />
+            <ListInput
+              label="Contraseña"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
+              autoComplete="current-password"
+            />
+          </List>
 
-        {error && <p className="error">{error}</p>}
+          {error && (
+            <Block className="!mx-0 !py-0">
+              <p className="text-center text-[13px] text-red-500">{error}</p>
+            </Block>
+          )}
 
-        <button type="submit" className="boton" disabled={enviando}>
-          {enviando ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
-    </div>
+          <Block className="!mx-0">
+            <Button large rounded type="submit" disabled={enviando}>
+              {enviando ? 'Entrando…' : 'Entrar'}
+            </Button>
+          </Block>
+        </form>
+
+        <BlockFooter className="!mx-0 text-center">CoachApp</BlockFooter>
+      </div>
+    </Page>
   )
 }

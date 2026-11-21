@@ -20,10 +20,12 @@ export function temaInicial(): Tema {
   return 'claro'
 }
 
-/** Aplica el tema al documento (atributo data-tema en <html>). */
+/** Aplica el tema al documento (data-tema + clase .dark para Tailwind/Konsta). */
 export function aplicarTema(tema: Tema) {
+  const oscuro = tema === 'oscuro'
   document.documentElement.dataset.tema = tema
-  document.documentElement.style.colorScheme = tema === 'oscuro' ? 'dark' : 'light'
+  document.documentElement.style.colorScheme = oscuro ? 'dark' : 'light'
+  document.documentElement.classList.toggle('dark', oscuro)
 }
 
 export function guardarTema(tema: Tema) {

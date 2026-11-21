@@ -1,3 +1,14 @@
+import {
+  Badge,
+  Block,
+  BlockTitle,
+  Button,
+  Card,
+  Chip,
+  List,
+  ListItem,
+  Preloader,
+} from 'konsta/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { anotacionesApi, contextoAnotacion, fechaNota } from '../api/anotaciones'
@@ -22,6 +33,7 @@ import type {
   TrabajoDto,
   Turno,
 } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 import { fechaLarga, fechaNumerica } from '../util/fechas'
 
 /** Una sesion del historial. Presente y ausente entran aunque no haya trabajos. */
@@ -139,78 +151,85 @@ export function AtletaHistorialPage() {
   }, [trabajos, grupos])
 
   return (
-    <div className="pagina">
-      <Link className="volver" to="/atletas">
-        ← Volver a atletas
-      </Link>
-
-      <div className="encabezado">
-        <div>
-          <h2>
-            {atleta ? (
-              <NombreAtleta
-                nombre={textoAtleta(atleta.apellido, atleta.nombre)}
-                color={atleta.color}
-              />
-            ) : (
-              'Historial'
-            )}
-            {(atleta?.categorias ?? []).map((categoria) => (
-              <span className="etiqueta" key={categoria}>
-                {categoria}
-              </span>
-            ))}
-          </h2>
-          {atleta && (
-            <p className="sutil">
-              DNI {atleta.dni} · {atleta.edad} años
-              {atleta.club ? ` · ${atleta.club}` : ''}
-              {!atleta.activo && ' · dado de baja'}
-            </p>
-          )}
-        </div>
-
-        <button type="button" className="boton" onClick={() => setMostrarNotas(true)}>
+    <MarcoPagina
+      titulo="Historial"
+      atras="/atletas"
+      right={
+        <Button small rounded onClick={() => setMostrarNotas(true)}>
           Anotaciones
-        </button>
-      </div>
+        </Button>
+      }
+    >
+      {atleta && (
+        <Block strong inset className="!mt-3">
+          <div className="text-[20px] font-semibold">
+            <NombreAtleta nombre={textoAtleta(atleta.apellido, atleta.nombre)} color={atleta.color} />
+          </div>
+          <p className="mt-1 text-[13px] opacity-60">
+            DNI {atleta.dni} · {atleta.edad} años
+            {atleta.club ? ` · ${atleta.club}` : ''}
+            {!atleta.activo && ' · dado de baja'}
+          </p>
+          {(atleta.categorias ?? []).length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {(atleta.categorias ?? []).map((categoria) => (
+                <Chip key={categoria} outline>
+                  {categoria}
+                </Chip>
+              ))}
+            </div>
+          )}
+        </Block>
+      )}
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <Block>
+          <p className="text-[13px] text-red-500">{error}</p>
+        </Block>
+      )}
 
       {!cargando && (
         <>
-          <section className="seccion-controles-gim">
-            <h3 className="titulo-dia">Controles de gim</h3>
+          <BlockTitle>Controles de gim</BlockTitle>
+          <div className="px-4 pb-2">
             <VistaControlGim
               controles={controlesGim}
               vacio="Todavía no hay controles de gimnasio cargados para este atleta."
             />
-          </section>
-          <section className="seccion-controles-gim">
-            <h3 className="titulo-dia">Controles de tierra</h3>
+          </div>
+          <BlockTitle>Controles de tierra</BlockTitle>
+          <div className="px-4 pb-2">
             <VistaControlTierra
               controles={controlesTierra}
               vacio="Todavía no hay controles de tierra cargados para este atleta."
             />
-          </section>
-          <section className="seccion-controles-gim">
-            <h3 className="titulo-dia">Controles de agua</h3>
+          </div>
+          <BlockTitle>Controles de agua</BlockTitle>
+          <div className="px-4 pb-2">
             <VistaControlAgua
               controles={controlesAgua}
               mostrarDiferenciaTestigo
               vacio="Todavía no hay controles de agua cargados para este atleta."
             />
-          </section>
+          </div>
         </>
       )}
 
       {cargando ? (
-        <p className="sutil">Cargando…</p>
+        <Block className="flex items-center gap-3">
+          <Preloader />
+          <span className="text-[13px] opacity-60">Cargando…</span>
+        </Block>
       ) : grupos.length === 0 ? (
-        <p className="sutil">Este atleta todavía no tiene sesiones en el historial.</p>
+        <Block>
+          <p className="text-[13px] opacity-60">
+            Este atleta todavía no tiene sesiones en el historial.
+          </p>
+        </Block>
       ) : (
         <>
-          <div className="resumen">
+          <BlockTitle>Resumen</BlockTitle>
+          <div className="grid grid-cols-3 gap-2 px-4 sm:grid-cols-5">
             <Dato titulo="Trabajos" valor={resumen.total} />
             <Dato titulo="Sesiones" valor={`${resumen.presentes}/${resumen.marcadas}`} />
             <Dato titulo="Gimnasio" valor={resumen.gimnasio} />
@@ -218,68 +237,68 @@ export function AtletaHistorialPage() {
             <Dato titulo="Agua" valor={resumen.agua} />
           </div>
 
-          <div className="sesiones">
+          <BlockTitle>Sesiones</BlockTitle>
+          <List strong inset>
             {grupos.map((grupo) => (
-              <button
-                type="button"
-                className={`tarjeta sesion${grupo.asistio === false ? ' ausente' : ''}`}
+              <ListItem
                 key={grupo.entrenamientoId}
+                link
                 onClick={() => setSesionAbierta(grupo)}
-              >
-                <div>
-                  <p className="sesion-fecha">
-                    {grupo.fecha ? fechaLarga(grupo.fecha) : 'Sesión'}
-                    {grupo.asistio === true && <span className="etiqueta presente">Presente</span>}
-                    {grupo.asistio === false && <span className="etiqueta ausente">Ausente</span>}
-                  </p>
-                  <p className="sutil">
-                    {grupo.fecha && fechaNumerica(grupo.fecha)}
-                    {grupo.turno && ` · ${etiquetaTurno(grupo.turno)}`}
-                    {grupo.sesion !== null && ` · Sesión ${grupo.sesion}`}
-                    {grupo.tipo && ` · ${etiquetaTipoTrabajo(grupo.tipo)}`}
-                  </p>
-                </div>
-                <span className="sutil">{resumenTrabajos(grupo)}</span>
-              </button>
+                title={grupo.fecha ? fechaLarga(grupo.fecha) : 'Sesión'}
+                subtitle={[
+                  grupo.fecha ? fechaNumerica(grupo.fecha) : null,
+                  grupo.turno ? etiquetaTurno(grupo.turno) : null,
+                  grupo.sesion !== null ? `Sesión ${grupo.sesion}` : null,
+                  grupo.tipo ? etiquetaTipoTrabajo(grupo.tipo) : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                text={resumenTrabajos(grupo)}
+                after={
+                  grupo.asistio === true ? (
+                    <Badge colors={{ bg: 'bg-green-500' }}>Presente</Badge>
+                  ) : grupo.asistio === false ? (
+                    <Badge colors={{ bg: 'bg-red-500' }}>Ausente</Badge>
+                  ) : undefined
+                }
+              />
             ))}
-          </div>
+          </List>
         </>
       )}
 
       {notasSueltas.length > 0 && (
-        <section>
-          <h3 className="titulo-dia">Anotaciones del atleta</h3>
-          <ul className="notas-lista ancho">
-            {notasSueltas.map((nota) => (
-              <li className="nota" key={nota.id}>
-                <div className="nota-cabecera">
-                  {nota.titulo && (
+        <>
+          <BlockTitle>Anotaciones del atleta</BlockTitle>
+          {notasSueltas.map((nota) => (
+            <Card
+              key={nota.id}
+              header={
+                nota.titulo ? (
                   <strong>
                     <TextoConEnlaces texto={nota.titulo} />
                   </strong>
-                )}
-                  <span className="sutil">{fechaNota(nota)}</span>
+                ) : undefined
+              }
+              footer={fechaNota(nota)}
+            >
+              {contextoAnotacion(nota).length > 1 && (
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {contextoAnotacion(nota)
+                    .slice(1)
+                    .map((parte) => (
+                      <Chip key={parte} outline>
+                        {parte}
+                      </Chip>
+                    ))}
                 </div>
-
-                {contextoAnotacion(nota).length > 1 && (
-                  <p className="contexto">
-                    {contextoAnotacion(nota)
-                      .slice(1)
-                      .map((parte) => (
-                        <span className="etiqueta-contexto" key={parte}>
-                          {parte}
-                        </span>
-                      ))}
-                  </p>
-                )}
-
-                <p className="nota-texto">
-                  <TextoConEnlaces texto={nota.texto} />
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
+              )}
+              <p className="whitespace-pre-wrap">
+                <TextoConEnlaces texto={nota.texto} />
+              </p>
+            </Card>
+          ))}
+        </>
       )}
 
       {sesionAbierta && (
@@ -352,7 +371,7 @@ export function AtletaHistorialPage() {
           onCerrar={() => setTrabajoParaGrafico(null)}
         />
       )}
-    </div>
+    </MarcoPagina>
   )
 }
 
@@ -428,10 +447,12 @@ function resumenTrabajos(grupo: GrupoSesion): string {
 
 function Dato({ titulo, valor }: { titulo: string; valor: number | string }) {
   return (
-    <div className="dato">
-      <span className="dato-valor">{valor}</span>
-      <span className="sutil">{titulo}</span>
-    </div>
+    <Card className="!m-0" contentWrapPadding="p-2">
+      <div className="text-center">
+        <div className="text-[20px] font-semibold">{valor}</div>
+        <div className="text-[12px] opacity-60">{titulo}</div>
+      </div>
+    </Card>
   )
 }
 

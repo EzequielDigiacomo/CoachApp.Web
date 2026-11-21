@@ -1,3 +1,44 @@
+@import 'tailwindcss';
+@import 'konsta/react/theme.css';
+
+/* Formularios legacy: Tailwind preflight deja inputs sin borde/fondo. */
+@layer base {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  select,
+  textarea {
+    border: 1px solid var(--borde);
+    background: var(--superficie);
+    color: var(--texto);
+    border-radius: var(--radio);
+    padding: 0.5rem 0.65rem;
+    font: inherit;
+  }
+
+  button:not([class]) {
+    font: inherit;
+  }
+}
+
+/* Contenido bajo la Navbar del Layout Konsta */
+.coach-contenido {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+/* ListInput de Konsta: no aplicar el reset de forms legacy */
+.k-list input,
+.k-list select,
+.k-list textarea,
+.list input,
+.list select,
+.list textarea {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
 :root,
 [data-tema='claro'] {
   --fondo: #f6f7f9;

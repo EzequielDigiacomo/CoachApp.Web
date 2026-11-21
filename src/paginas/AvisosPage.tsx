@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Badge, Block, Button, Card, List, ListInput, ListItem, Preloader, Toggle } from 'konsta/react'
 import { useState } from 'react'
 import { api, mensajeApi } from '../api/cliente'
 import { clavesConsulta } from '../api/clavesConsulta'
 import { useAuth } from '../auth/contextoAuth'
 import { confirmar } from '../componentes/Confirmacion'
 import { esStaff, type AvisoDto } from '../tipos/api'
+import { MarcoPagina } from '../ui/MarcoPagina'
 
 const MAX_TITULO = 120
 const MAX_TEXTO = 1000
@@ -108,133 +110,148 @@ export function AvisosPage() {
   const ocupado = guardar.isPending || borrar.isPending
 
   return (
-    <div className="pagina">
-      <div className="encabezado">
-        <h2>Avisos</h2>
-      </div>
-      <p className="sutil">
-        {staff
+    <MarcoPagina
+      titulo="Avisos"
+      subtitulo={
+        staff
           ? 'Mensajes y links que ven los atletas al entrar. Máximo 1000 caracteres.'
-          : 'Novedades del cuerpo técnico.'}
-      </p>
-
+          : 'Novedades del cuerpo técnico.'
+      }
+    >
       {staff && !listado.isPending && !errorLista && (
-        <div className={`tarjeta aviso-estado ${ultimoActivo ? 'aviso-estado-activo' : ''}`}>
+        <Block strong inset>
           {ultimoActivo ? (
             <p>
-              <span className="etiqueta presente">Activo</span>{' '}
+              <Badge colors={{ bg: 'bg-green-500' }}>Activo</Badge>{' '}
               El último aviso visible es <strong>«{ultimoActivo.titulo}»</strong>. Los atletas lo
               ven al entrar al home.
             </p>
           ) : (
-            <p className="sutil">No hay ningún aviso activo. Los atletas no ven nada en el home.</p>
+            <p className="opacity-60">
+              No hay ningún aviso activo. Los atletas no ven nada en el home.
+            </p>
           )}
-        </div>
+        </Block>
       )}
 
       {staff && (
-        <form className="tarjeta formulario" onSubmit={pedirGuardar}>
-          <label>
-            Título
-            <input
+        <form onSubmit={pedirGuardar}>
+          <List strong inset>
+            <ListInput
+              label="Título"
+              type="text"
               value={titulo}
               maxLength={MAX_TITULO}
               onChange={(e) => setTitulo(e.target.value.slice(0, MAX_TITULO))}
               required
             />
-          </label>
-          <label>
-            Mensaje
-            <textarea
+            <ListInput
+              label="Mensaje"
+              type="textarea"
               value={texto}
               maxLength={MAX_TEXTO}
-              rows={4}
+              inputClassName="min-h-24"
               onChange={(e) => setTexto(e.target.value.slice(0, MAX_TEXTO))}
               required
             />
-          </label>
-          <label>
-            Link (opcional)
-            <input
+            <ListInput
+              label="Link (opcional)"
+              type="url"
               value={link}
               maxLength={MAX_LINK}
               placeholder="https://…"
               onChange={(e) => setLink(e.target.value.slice(0, MAX_LINK))}
             />
-          </label>
-          <label className="check">
-            <span className="check-texto">Visible para atletas</span>
-            <input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} />
-          </label>
-          <div className="acciones-fila">
-            <button
-              type="submit"
-              className="boton"
-              disabled={ocupado || titulo.trim().length === 0 || texto.trim().length === 0}
-            >
-              {editando == null ? 'Publicar' : 'Actualizar'}
-            </button>
-            {editando != null && (
-              <button type="button" className="boton-fantasma" onClick={limpiarFormulario}>
-                Cancelar
-              </button>
-            )}
-            <span className="sutil">
+            <ListItem
+              title="Visible para atletas"
+              after={<Toggle checked={activo} onChange={(e) => setActivo(e.target.checked)} />}
+            />
+          </List>
+          <Block className="!mt-0 space-y-2">
+            <p className="text-[13px] opacity-60 text-right">
               {texto.length}/{MAX_TEXTO}
-            </span>
-          </div>
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                rounded
+                disabled={ocupado || titulo.trim().length === 0 || texto.trim().length === 0}
+              >
+                {editando == null ? 'Publicar' : 'Actualizar'}
+              </Button>
+              {editando != null && (
+                <Button type="button" rounded clear onClick={limpiarFormulario}>
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </Block>
         </form>
       )}
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <Block>
+          <p className="text-red-500">{error}</p>
+        </Block>
+      )}
+
       {listado.isPending ? (
-        <p className="sutil">Cargando…</p>
+        <Block className="text-center">
+          <Preloader />
+        </Block>
       ) : errorLista ? null : avisos.length === 0 ? (
-        <p className="sutil">Todavía no hay avisos.</p>
+        <Block>
+          <p className="opacity-60">Todavía no hay avisos.</p>
+        </Block>
       ) : (
         avisos.map((aviso) => (
-          <article
+          <Card
             key={aviso.id}
-            className={['tarjeta', staff && aviso.id === ultimoActivo?.id ? 'aviso-destacado' : '']
-              .filter(Boolean)
-              .join(' ')}
+            header={
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold">{aviso.titulo}</span>
+                <span className="flex gap-1">
+                  {staff && aviso.id === ultimoActivo?.id && (
+                    <Badge colors={{ bg: 'bg-green-500' }}>Activo en el home</Badge>
+                  )}
+                  {staff && aviso.activo && aviso.id !== ultimoActivo?.id && (
+                    <Badge colors={{ bg: 'bg-green-500' }}>Activo</Badge>
+                  )}
+                  {staff && !aviso.activo && <Badge colors={{ bg: 'bg-gray-400' }}>Oculto</Badge>}
+                </span>
+              </div>
+            }
+            footer={cuando(aviso.fechaCreacion)}
           >
-            <div className="encabezado" style={{ marginBottom: 6 }}>
-              <h3 className="titulo-seccion">{aviso.titulo}</h3>
-              {staff && aviso.id === ultimoActivo?.id && (
-                <span className="etiqueta presente">Activo en el home</span>
-              )}
-              {staff && aviso.activo && aviso.id !== ultimoActivo?.id && (
-                <span className="etiqueta presente">Activo</span>
-              )}
-              {staff && !aviso.activo && <span className="etiqueta">Oculto</span>}
-            </div>
-            <p style={{ whiteSpace: 'pre-wrap' }}>{aviso.texto}</p>
+            <p className="whitespace-pre-wrap">{aviso.texto}</p>
             {aviso.link && (
-              <p>
-                <a className="enlace-texto" href={aviso.link} target="_blank" rel="noreferrer">
+              <p className="mt-2">
+                <a className="text-primary" href={aviso.link} target="_blank" rel="noreferrer">
                   Abrir link
                 </a>
               </p>
             )}
-            <p className="sutil">{cuando(aviso.fechaCreacion)}</p>
             {staff && (
-              <div className="acciones-fila">
-                <button type="button" className="boton-fantasma" onClick={() => empezarEdicion(aviso)}>
+              <div className="mt-3 flex gap-2">
+                <Button type="button" inline small rounded tonal onClick={() => empezarEdicion(aviso)}>
                   Editar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="boton-fantasma peligro"
+                  inline
+                  small
+                  rounded
+                  outline
+                  colors={{ outlineBorderIos: 'border-red-500', textIos: 'text-red-500' }}
                   onClick={() => void pedirBorrar(aviso.id)}
                 >
                   Borrar
-                </button>
+                </Button>
               </div>
             )}
-          </article>
+          </Card>
         ))
       )}
-    </div>
+    </MarcoPagina>
   )
 }
