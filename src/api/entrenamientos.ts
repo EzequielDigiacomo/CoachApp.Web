@@ -11,13 +11,16 @@ import type {
   Turno,
 } from '../tipos/api'
 
-function aQuery(filtros: FiltrosEntrenamiento): string {
+function aQuery(filtros: FiltrosEntrenamiento & { pagina?: number; tamano?: number }): string {
   const parametros = new URLSearchParams()
 
   if (filtros.desde) parametros.set('desde', filtros.desde)
   if (filtros.hasta) parametros.set('hasta', filtros.hasta)
   if (filtros.turno) parametros.set('turno', filtros.turno)
   if (filtros.sesion) parametros.set('sesion', String(filtros.sesion))
+  if (filtros.pagina) parametros.set('pagina', String(filtros.pagina))
+  // Por defecto pedimos hasta 200 (tope servidor 500) para no traer historial infinito.
+  parametros.set('tamano', String(filtros.tamano ?? 200))
 
   const cadena = parametros.toString()
   return cadena ? `?${cadena}` : ''

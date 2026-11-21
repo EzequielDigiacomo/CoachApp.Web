@@ -1,32 +1,46 @@
-# React + TypeScript + Vite
+# CoachApp.Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend React 19 + Vite 8 + TypeScript para CoachApp (coaching de canotaje).
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # Vite en http://localhost:5173
+npm run build
+npm run lint
+npm test
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## API en desarrollo
+
+El proxy de Vite reenvía `/api` a la API.
+
+```bash
+# API local (Visual Studio, puerto 5203)
+# .env.local
+VITE_API_PROXY=http://127.0.0.1:5203
+```
+
+Sin `.env.local`, el default apunta al deploy en Render (ver `vite.config.ts`).
+
+Producción (Vercel): `vercel.json` reescribe `/api/*` hacia el host de la API.
+
+## Auth y roles
+
+- Login → JWT en `localStorage` (`coachapp.token`)
+- Roles: `SuperAdmin`, `Entrenador` (staff), `Atleta`
+- Guards: `RutaProtegida`, `RutaStaff`
+
+## Estructura
+
+- `src/api` — cliente HTTP y módulos de dominio
+- `src/auth` — contexto y guards
+- `src/paginas` — pantallas
+- `src/componentes` — UI reutilizable
+- `src/tipos` — DTOs alineados a la API
+
+## Notas
+
+- No levantar la API .NET desde acá: el usuario la inicia en Visual Studio (evita lock de DLL).
+- Listados de entrenamientos piden `tamano=200` por defecto (paginación en API).
